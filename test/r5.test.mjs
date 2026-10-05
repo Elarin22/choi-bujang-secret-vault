@@ -31,27 +31,46 @@ test('build identity uses Vercel Git and deployment metadata', () => {
   assert.throws(() => deploymentIdentity({ ...env, VERCEL_GIT_COMMIT_SHA: 'short' }, config));
 });
 
-test('first attack check reads public data.json without credentials', async () => {
+test('step 2 attack check reads data.json and api without credentials', async () => {
   const originalFetch = globalThis.fetch;
-  let requestUrl;
-  let options;
+  const urls = [];
+  const cfg = { ...config, step: 2 };
   try {
     globalThis.fetch = async (url, init) => {
-      requestUrl = String(url);
-      options = init;
-      return new Response(JSON.stringify({ sampleMarker: 'SAMPLE_NOTE_1', notes: [{ title: '가상' }] }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      });
+      urls.push(String(url));
+      assert.equal(init.redirect, 'error');
+      return String(url).endsWith('/api/notes')
+        ? new Response(JSON.stringify({ notes: [{ title: 'x', content: 'y' }] }), { status: 200 })
+        : new Response('not found', { status: 404 });
     };
-    const [result] = await runAttackChecks(config);
-    assert.equal(requestUrl, 'https://student-defense.vercel.app/data.json');
-    assert.equal(options.redirect, 'error');
-    assert.match(result.observed, /확인 표시가 보임/u);
-    globalThis.fetch = async () => new Response('<html>not the data</html>', { status: 200 });
-    const [failed] = await runAttackChecks(config);
-    assert.match(failed.observed, /보이지 않음/u);
+    const [file, api] = await runAttackChecks(cfg);
+    assert.deepEqual(urls, ['https://student-defense.vercel.app/data.json', 'https://student-defense.vercel.app/api/notes']);
+    assert.match(file.observed, /보이지 않음/u);
+    assert.match(api.observed, /1건/u);
   } finally {
     globalThis.fetch = originalFetch;
+  }
+});
+
+test('notes api rejects non-GET and fails closed without env', async () => {
+  const { default: handler } = await import('../api/notes.js');
+  const make = (method) => {
+    const out = { headers: {} };
+    const res = { setHeader: (k, v) => { out.headers[k] = v; }, status: (c) => { out.code = c; return res; },
+      json: (b) => { out.body = b; return res; } };
+    return [{ method }, res, out];
+  };
+  const saved = { u: process.env.SUPABASE_URL, k: process.env.SUPABASE_SECRET_KEY };
+  delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SECRET_KEY;
+  try {
+    let [req, res, out] = make('POST');
+    await handler(req, res);
+    assert.equal(out.code, 405);
+    [req, res, out] = make('GET');
+    await handler(req, res);
+    assert.equal(out.code, 500);
+  } finally {
+    if (saved.u) process.env.SUPABASE_URL = saved.u;
+    if (saved.k) process.env.SUPABASE_SECRET_KEY = saved.k;
   }
 });
