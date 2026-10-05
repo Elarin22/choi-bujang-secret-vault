@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BYTE BACK | 점령된 자료실</title>
+  <title>BYTE BACK | 자료실</title>
   <style>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; }
     body { margin: 0; min-height: 100vh; background: #101a28; color: #ecf4ff; }
@@ -11,42 +11,131 @@
     .eyebrow { color: #8ad8df; font-size: 14px; font-weight: 700; letter-spacing: .08em; }
     h1 { margin: 16px 0; font-size: clamp(30px, 7vw, 48px); line-height: 1.2; }
     p { font-size: 17px; line-height: 1.7; color: #bfd0e5; }
-    .notice { margin: 26px 0; padding: 18px; border: 1px solid #d07384; border-radius: 14px; color: #ffe3e8; background: #612a3544; }
+    .notice { margin: 20px 0; padding: 14px 18px; border: 1px solid #d07384; border-radius: 14px; color: #ffe3e8; background: #612a3544; }
+    .panel { border: 1px solid #51667c; border-radius: 14px; padding: 18px; background: #1a2a3d; margin: 16px 0; display: grid; gap: 10px; }
+    input, textarea { font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid #51667c; background: #101a28; color: #ecf4ff; width: 100%; box-sizing: border-box; }
+    button { font: inherit; font-weight: 700; padding: 9px 16px; border-radius: 10px; border: 0; background: #2ad6c4; color: #07121c; cursor: pointer; }
+    button.ghost { background: #2a3d55; color: #ecf4ff; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     ul { list-style: none; display: grid; gap: 12px; padding: 0; }
-    li { border: 1px solid #51667c; border-radius: 14px; padding: 17px 19px; background: #1a2a3d; }
-    strong { display: block; font-size: 18px; margin-bottom: 5px; }
-    li span { color: #bfd0e5; }
+    li { border: 1px solid #51667c; border-radius: 14px; padding: 17px 19px; background: #1a2a3d; display: grid; gap: 8px; }
+    strong { font-size: 18px; }
+    li span { color: #bfd0e5; white-space: pre-wrap; }
+    .err { color: #ffb4c0; min-height: 1.4em; }
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body>
   <main>
-    <div class="eyebrow">BYTE BACK · 2단계 자료를 코드 밖으로</div>
-    <h1>점령된 자료실</h1>
-    <p>자료는 이제 학습용 DB에 있고 서버 함수가 읽어 옵니다. 아래 기록은 모두 실습을 위해 만든 가상 자료입니다.</p>
-    <div class="notice">아직 서버 함수 주소는 누구에게나 열려 있습니다. 다음 단계에서 접근을 차례로 막습니다.</div>
-    <ul id="notes" aria-live="polite"><li>가상 자료를 불러오는 중입니다.</li></ul>
+    <div class="eyebrow">BYTE BACK · 3단계 진짜 로그인</div>
+    <h1>자료실</h1>
+    <div class="notice">로그인은 신원 확인일 뿐입니다. 다른 사람의 메모 접근은 4단계에서 막습니다. 가상 자료만 쓰세요.</div>
+    <div class="err" id="err" role="alert"></div>
+
+    <section id="loggedOut" class="panel" hidden>
+      <strong>로그인</strong>
+      <input id="email" type="email" placeholder="이메일" autocomplete="username">
+      <input id="password" type="password" placeholder="비밀번호" autocomplete="current-password">
+      <div class="row"><button id="login">로그인</button></div>
+    </section>
+
+    <section id="loggedIn" hidden>
+      <div class="row"><span id="who"></span><button id="logout" class="ghost">로그아웃</button></div>
+      <div class="panel">
+        <strong>가상 메모 추가</strong>
+        <input id="newTitle" placeholder="제목" maxlength="200">
+        <textarea id="newBody" rows="3" placeholder="내용"></textarea>
+        <div class="row"><button id="add">추가</button></div>
+      </div>
+      <ul id="notes" aria-live="polite"></ul>
+    </section>
   </main>
   <script type="module">
-    const list = document.querySelector('#notes');
-    try {
-      const response = await fetch('/api/notes', { cache: 'no-store' });
-      if (!response.ok) throw new Error('공개 자료를 읽을 수 없습니다.');
-      const data = await response.json();
-      if (!Array.isArray(data.notes)) throw new Error('자료 형식이 맞지 않습니다.');
-      list.replaceChildren(...data.notes.map(note => {
-        const item = document.createElement('li');
-        const title = document.createElement('strong');
-        const content = document.createElement('span');
-        title.textContent = note.title;
-        content.textContent = note.content;
-        item.append(title, content);
-        return item;
-      }));
-    } catch (error) {
-      const item = document.createElement('li');
-      item.textContent = error.message;
-      list.replaceChildren(item);
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm';
+    const $ = (id) => document.getElementById(id);
+    const show = (message = '') => { $('err').textContent = message; };
+    let supabase;
+
+    async function api(path, options = {}) {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      const response = await fetch(path, { ...options, cache: 'no-store', headers: {
+        'Content-Type': 'application/json', Authorization: `Bearer ${token}` } });
+      if (response.status === 401) { await supabase.auth.signOut(); throw new Error('로그인이 필요합니다.'); }
+      if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error ?? `요청 실패 (HTTP ${response.status})`);
+      return response.json();
     }
+
+    function card(note) {
+      const li = document.createElement('li');
+      const view = () => {
+        const title = document.createElement('strong'); title.textContent = note.title;
+        const body = document.createElement('span'); body.textContent = note.body;
+        const row = document.createElement('div'); row.className = 'row';
+        const edit = Object.assign(document.createElement('button'), { textContent: '수정', className: 'ghost' });
+        const del = Object.assign(document.createElement('button'), { textContent: '삭제', className: 'ghost' });
+        edit.onclick = editor;
+        del.onclick = async () => { try { await api(`/api/notes/${note.id}`, { method: 'DELETE' }); await refresh(); } catch (e) { show(e.message); } };
+        row.append(edit, del);
+        li.replaceChildren(title, body, row);
+      };
+      const editor = () => {
+        const title = Object.assign(document.createElement('input'), { value: note.title, maxLength: 200 });
+        const body = Object.assign(document.createElement('textarea'), { value: note.body, rows: 3 });
+        const row = document.createElement('div'); row.className = 'row';
+        const save = Object.assign(document.createElement('button'), { textContent: '저장' });
+        const cancel = Object.assign(document.createElement('button'), { textContent: '취소', className: 'ghost' });
+        save.onclick = async () => {
+          try { note = await api(`/api/notes/${note.id}`, { method: 'PUT', body: JSON.stringify({ title: title.value, body: body.value }) }); show(); view(); }
+          catch (e) { show(e.message); }
+        };
+        cancel.onclick = view;
+        row.append(save, cancel);
+        li.replaceChildren(title, body, row);
+      };
+      view();
+      return li;
+    }
+
+    async function refresh() {
+      const notes = await api('/api/notes');
+      show();
+      $('notes').replaceChildren(...notes.map(card));
+    }
+
+    async function render(session) {
+      $('loggedOut').hidden = !!session;
+      $('loggedIn').hidden = !session;
+      if (!session) { $('notes').replaceChildren(); return; }
+      $('who').textContent = `로그인됨: ${session.user.email}`;
+      try { await refresh(); } catch (e) { show(e.message); }
+    }
+
+    try {
+      const response = await fetch('/api/config', { cache: 'no-store' });
+      if (!response.ok) throw new Error('로그인 설정이 아직 완료되지 않았습니다.');
+      const { supabaseUrl, publishableKey } = await response.json();
+      supabase = createClient(supabaseUrl, publishableKey);
+      supabase.auth.onAuthStateChange((_event, session) => { setTimeout(() => render(session), 0); });
+      render((await supabase.auth.getSession()).data.session);
+    } catch (e) {
+      show(e.message);
+    }
+
+    $('login').onclick = async () => {
+      show();
+      const { error } = await supabase.auth.signInWithPassword({ email: $('email').value, password: $('password').value });
+      if (error) show(`로그인 실패: ${error.message}`);
+      else $('password').value = '';
+    };
+    $('logout').onclick = async () => { await supabase.auth.signOut(); show(); };
+    $('add').onclick = async () => {
+      try {
+        await api('/api/notes', { method: 'POST', body: JSON.stringify({ title: $('newTitle').value, body: $('newBody').value }) });
+        $('newTitle').value = ''; $('newBody').value = '';
+        await refresh();
+      } catch (e) { show(e.message); }
+    };
   </script>
 </body>
 </html>
