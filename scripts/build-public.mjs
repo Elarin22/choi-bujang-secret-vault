@@ -14,6 +14,6 @@ if (!process.argv.includes('--local')) {
   const allowedRoutes = Array.isArray(config.allowedRoutes)
     ? config.allowedRoutes.filter((route) => typeof route === 'string') : [];
   await writeFile(resolve(root, 'public', 'aleph.json'),
-    `${JSON.stringify({ ...identity, allowedRoutes }, null, 2)}\n`, 'utf8');
+    `${JSON.stringify({ ...identity, allowedRoutes, originalApiUrl: config.originalApiUrl ?? null }, null, 2)}\n`, 'utf8');
   console.log('배포 저장소·커밋·주소를 public/aleph.json에 기록했습니다.');
 }
