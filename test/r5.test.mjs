@@ -47,6 +47,15 @@ test('step 3 attack check sends no real credentials and expects rejection', asyn
     globalThis.fetch = async () => new Response(JSON.stringify([{ id: 'a' }]), { status: 200 });
     const open = await runAttackChecks(cfg);
     assert.match(open[1].observed, /거부되지 않음/u);
+    globalThis.fetch = async (url) => {
+      const u = String(url);
+      if (u.endsWith('/api/config')) return new Response(JSON.stringify({ supabaseUrl: 'https://abcdefghij.supabase.co', publishableKey: 'sb_publishable_x' }), { status: 200 });
+      if (u.includes('/rest/v1/')) return new Response('{"code":"42501"}', { status: 401 });
+      return u.endsWith('/data.json') ? new Response('nf', { status: 404 }) : new Response('{}', { status: 401 });
+    };
+    const four = await runAttackChecks({ ...cfg, step: 4 });
+    assert.equal(four.length, 5);
+    assert.match(four[4].observed, /거부/u);
     await assert.rejects(runAttackChecks({ ...cfg, identityProvider: { issuer: 'https://REPLACE-X.supabase.co/auth/v1' } }));
   } finally {
     globalThis.fetch = originalFetch;
