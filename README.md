@@ -1,6 +1,6 @@
 # BYTE BACK 방어전 자료실
 
-## 현재 상태: 4단계 저장점 (로그인해도 내 자료만)
+## 현재 상태: 5단계 저장점 (자료 요청을 서버 한곳으로)
 
 - 화면(`public/index.html`)에서 Supabase Auth 이메일·비밀번호로 로그인·로그아웃하고 가상 메모를 추가·수정·삭제합니다.
 - 서버 함수가 `Authorization: Bearer` 토큰을 `src/verify-login.mjs`로 검사합니다. 토큰이 없거나 가짜면 401과 JSON 오류 문구로 거부합니다.
@@ -9,13 +9,15 @@
   - `GET /api/notes` 내 메모 배열
   - `POST /api/notes` `{id?, title, body}` → `{id}`
   - `GET·PUT·DELETE /api/notes/:id` → `{id,title,body}` (PUT 본문은 `{title,body}`)
-- DB: `notes` 테이블에 RLS를 켜고 anon·PUBLIC 권한을 회수했으며, authenticated에는 SELECT·INSERT·UPDATE·DELETE만 주고 `auth.uid() = owner_id`일 때만 허용합니다(`supabase/stage4-rls.sql`).
+- 브라우저는 메모 자료를 Supabase에서 직접 부르지 않습니다. 읽기·추가·수정·삭제는 모두 `/api/notes` 서버 함수를 거치고, 브라우저의 Supabase 호출은 로그인(Auth)뿐입니다.
+- DB: `notes` 테이블의 PUBLIC·anon·authenticated 직접 권한을 모두 회수했습니다(`supabase/stage5-revoke.sql`). RLS는 켜 둔 채이고, 서버 함수만 서버 전용 키로 접근합니다. 원본 자료 경로는 `aleph.config.json`의 `originalApiUrl`에 적었습니다.
 - 서버 전용 키(`SUPABASE_SECRET_KEY`)는 서버에만 있고 브라우저 파일·응답·로그에 나오지 않습니다.
-- 빌드는 `public/aleph.json`을 만들고, `vercel.json`은 보안 헤더(`X-Content-Type-Options: nosniff`)를 붙입니다.
+- 빌드는 허용 경로(`allowedRoutes`)가 들어간 `public/aleph.json`을 만들고, `vercel.json`은 보안 헤더(`X-Content-Type-Options: nosniff`)를 붙입니다.
 
 ## 알려진 약점 (아직 해결 안 됨)
 
-- 서버 함수는 서버 전용 키(RLS를 우회하는 역할)로 DB를 읽기 때문에, 실제 방어선은 API의 소유자 검사입니다. 이 검사에 빈틈이 생기면 RLS가 막아 주지 못합니다. RLS는 anon 키·authenticated 직접 접근에 대한 보조 방어입니다.
+- 서버 함수는 서버 전용 키(RLS를 우회하는 역할)로 DB를 읽기 때문에, 실제 방어선은 API의 소유자 검사입니다. 이 검사에 빈틈이 생기면 RLS가 막아 주지 못합니다.
+- 화면의 로그인에는 공개용 publishable 키가 필요해서 `/api/config`가 이 키를 브라우저에 줍니다. 직접 권한을 회수했으므로 이 키로는 자료를 읽을 수 없지만, 키 자체는 브라우저에 보입니다.
 - 옛 공개 커밋(예: 첫 커밋 f0e9f7d)과 옛 배포에는 과거 메모가 남아 있어 과거 노출은 해소되지 않았습니다.
 
 ## 환경변수 (Vercel 비밀 입력란에 직접 입력)
@@ -28,10 +30,11 @@
 
 ## 확인 절차
 
-1. Supabase에서 `supabase/stage4-check.sql`을 RLS 적용 전·후에 실행해 anon에는 권한이 없고 authenticated에는 SELECT·INSERT·UPDATE·DELETE만 있는지 대조합니다.
+1. Supabase에서 `supabase/stage5-check.sql`을 `stage5-revoke.sql` 적용 전·후에 실행해 anon·authenticated의 권한이 모두 false로 바뀌고 service_role만 남는지 대조합니다.
 2. B 계정으로 로그인한 창에서 A의 메모가 보이지 않고, A·B가 각자 자기 메모를 추가·수정·삭제할 수 있는지 확인합니다.
 3. 시크릿 창에서 `/api/notes` → 401 + JSON, `/aleph.json` → 열림, `/data.json` → 404.
-4. 저장소 검색: `git grep -n "실습용 가[상]"` → 결과 없음.
+4. 공개 키로 원본 경로를 직접 부르면 권한 오류(401/403)이거나 빈 결과여야 합니다(`npm run bundle`의 직접 점검이 확인).
+5. 저장소 검색: `git grep -n "실습용 가[상]"` → 결과 없음.
 
 ## 다시 실행하는 방법
 

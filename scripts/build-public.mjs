@@ -11,7 +11,9 @@ for (const leftover of ['data.json', 'public/data.json']) {
 await mkdir(resolve(root, 'public'), { recursive: true });
 if (!process.argv.includes('--local')) {
   const identity = deploymentIdentity(process.env, config);
+  const allowedRoutes = Array.isArray(config.allowedRoutes)
+    ? config.allowedRoutes.filter((route) => typeof route === 'string') : [];
   await writeFile(resolve(root, 'public', 'aleph.json'),
-    `${JSON.stringify(identity, null, 2)}\n`, 'utf8');
+    `${JSON.stringify({ ...identity, allowedRoutes }, null, 2)}\n`, 'utf8');
   console.log('배포 저장소·커밋·주소를 public/aleph.json에 기록했습니다.');
 }

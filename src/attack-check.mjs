@@ -16,7 +16,7 @@ async function probe(app, path, init = {}) {
 const rejected = (r) => r.status === 401 || r.status === 403;
 
 export async function runAttackChecks(config) {
-  if (![3, 4].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (![3, 4, 5].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -42,7 +42,9 @@ export async function runAttackChecks(config) {
   if (config.step >= 4) {
     try {
       const conf = await (await fetch(new URL('/api/config', app), { signal: AbortSignal.timeout(10000) })).json();
-      const response = await fetch(new URL('/rest/v1/notes?select=id&limit=1', conf.supabaseUrl), {
+      const original = typeof config.originalApiUrl === 'string' && config.originalApiUrl.startsWith('https://')
+        ? config.originalApiUrl : new URL('/rest/v1/notes', conf.supabaseUrl).href;
+      const response = await fetch(`${original}?select=id&limit=1`, {
         redirect: 'error', signal: AbortSignal.timeout(10000),
         headers: { apikey: conf.publishableKey, Authorization: `Bearer ${conf.publishableKey}` } });
       const rows = response.ok ? await response.json().catch(() => null) : null;

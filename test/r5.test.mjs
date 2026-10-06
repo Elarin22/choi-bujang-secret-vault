@@ -56,6 +56,12 @@ test('step 3 attack check sends no real credentials and expects rejection', asyn
     const four = await runAttackChecks({ ...cfg, step: 4 });
     assert.equal(four.length, 5);
     assert.match(four[4].observed, /거부/u);
+    const seenUrls = [];
+    const inner = globalThis.fetch;
+    globalThis.fetch = async (url, init) => { seenUrls.push(String(url)); return inner(url, init); };
+    const five = await runAttackChecks({ ...cfg, step: 5, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
+    assert.equal(five.length, 5);
+    assert.ok(seenUrls.includes('https://abcdefghij.supabase.co/rest/v1/notes?select=id&limit=1'));
     await assert.rejects(runAttackChecks({ ...cfg, identityProvider: { issuer: 'https://REPLACE-X.supabase.co/auth/v1' } }));
   } finally {
     globalThis.fetch = originalFetch;
