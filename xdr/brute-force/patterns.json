@@ -35,6 +35,34 @@
       "evidence": "T1110.003: 같은 비밀번호를 여러 계정에 한 번씩 대입해 계정 잠금을 피하는 방식이며, 경보에는 비밀번호가 없어 실패한 계정 수로 근사합니다."
     },
     {
+      "id": "rapid_burst",
+      "name": "같은 주소·같은 계정 짧은 시간 폭주 실패",
+      "mitre": {
+        "id": "T1110.001",
+        "name": "Password Guessing"
+      },
+      "condition": "같은 출발 주소에서 같은 계정으로 windowSeconds 안에 로그인 실패가 block 건수 이상 몰린다",
+      "metric": "burst.failuresSameAccount",
+      "windowSeconds": 15,
+      "suspect": 3,
+      "block": 3,
+      "evidence": "T1110.001: 사람이 칠 수 없는 속도의 반복 대입은 자동화된 비밀번호 추측의 직접 신호입니다."
+    },
+    {
+      "id": "fast_spraying",
+      "name": "한 주소에서 짧은 시간에 여러 계정 로그인 실패",
+      "mitre": {
+        "id": "T1110.003",
+        "name": "Password Spraying"
+      },
+      "condition": "같은 출발 주소에서 서로 다른 계정이 windowSeconds 안에 block 개 이상 로그인 실패한다",
+      "metric": "fastSpray.distinctAccounts",
+      "windowSeconds": 30,
+      "suspect": 3,
+      "block": 3,
+      "evidence": "T1110.003: 짧은 간격으로 계정을 바꿔 가며 대입하는 것은 계정 잠금을 피하려는 스프레이 공격의 신호입니다."
+    },
+    {
       "id": "wazuh_correlated_bruteforce",
       "name": "Wazuh 상관 규칙의 무차별 대입 경보",
       "mitre": {

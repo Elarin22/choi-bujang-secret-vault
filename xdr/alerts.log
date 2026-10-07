@@ -1,5 +1,7 @@
-{"at":"2026-10-07T01:00:24.000Z","action":"ALERT","alertId":"1791270005.4005","srcip":"203.0.113.10","account":"admin","confidence":0.5,"reason":"rapid_failed_logins: 같은 주소·같은 계정 로그인 실패 연속 5건/120초 (T1110.001) - 애매함, Jev 응답 없음"}
-{"at":"2026-10-07T01:00:30.000Z","action":"ALERT","alertId":"1791270006.4006","srcip":"203.0.113.10","account":"admin","confidence":0.5,"reason":"rapid_failed_logins: 같은 주소·같은 계정 로그인 실패 연속 6건/120초 (T1110.001) - 애매함, Jev 응답 없음"}
+{"at":"2026-10-07T01:00:12.000Z","action":"BLOCK","alertId":"1791270003.4003","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_burst: 같은 주소·같은 계정 짧은 시간 폭주 실패 3건/15초 (T1110.001) - 기준 초과"}
+{"at":"2026-10-07T01:00:18.000Z","action":"BLOCK","alertId":"1791270004.4004","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_burst: 같은 주소·같은 계정 짧은 시간 폭주 실패 3건/15초 (T1110.001) - 기준 초과"}
+{"at":"2026-10-07T01:00:24.000Z","action":"BLOCK","alertId":"1791270005.4005","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_burst: 같은 주소·같은 계정 짧은 시간 폭주 실패 3건/15초 (T1110.001) - 기준 초과"}
+{"at":"2026-10-07T01:00:30.000Z","action":"BLOCK","alertId":"1791270006.4006","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_burst: 같은 주소·같은 계정 짧은 시간 폭주 실패 3건/15초 (T1110.001) - 기준 초과"}
 {"at":"2026-10-07T01:00:36.000Z","action":"BLOCK","alertId":"1791270007.4007","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_failed_logins: 같은 주소·같은 계정 로그인 실패 연속 7건/120초 (T1110.001) - 기준 초과"}
 {"at":"2026-10-07T01:00:42.000Z","action":"BLOCK","alertId":"1791270008.4008","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_failed_logins: 같은 주소·같은 계정 로그인 실패 연속 8건/120초 (T1110.001) - 기준 초과"}
 {"at":"2026-10-07T01:00:48.000Z","action":"BLOCK","alertId":"1791270009.4009","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_failed_logins: 같은 주소·같은 계정 로그인 실패 연속 9건/120초 (T1110.001) - 기준 초과"}
@@ -8,7 +10,8 @@
 {"at":"2026-10-07T01:01:06.000Z","action":"BLOCK","alertId":"1791270012.4012","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_failed_logins: 같은 주소·같은 계정 로그인 실패 연속 12건/120초 (T1110.001) - 기준 초과"}
 {"at":"2026-10-07T01:01:12.000Z","action":"BLOCK","alertId":"1791270013.4013","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_failed_logins: 같은 주소·같은 계정 로그인 실패 연속 13건/120초 (T1110.001) - 기준 초과"}
 {"at":"2026-10-07T01:01:18.000Z","action":"BLOCK","alertId":"1791270014.4014","srcip":"203.0.113.10","account":"admin","confidence":0.95,"reason":"rapid_failed_logins: 같은 주소·같은 계정 로그인 실패 연속 14건/120초 (T1110.001) - 기준 초과"}
-{"at":"2026-10-07T01:10:45.000Z","action":"ALERT","alertId":"1791270018.4018","srcip":"198.51.100.7","account":"guest","confidence":0.5,"reason":"password_spraying: 한 주소에서 여러 계정에 로그인 실패 4건/300초 (T1110.003) - 애매함, Jev 응답 없음"}
+{"at":"2026-10-07T01:10:30.000Z","action":"BLOCK","alertId":"1791270017.4017","srcip":"198.51.100.7","account":"test","confidence":0.95,"reason":"fast_spraying: 한 주소에서 짧은 시간에 여러 계정 로그인 실패 3건/30초 (T1110.003) - 기준 초과"}
+{"at":"2026-10-07T01:10:45.000Z","action":"BLOCK","alertId":"1791270018.4018","srcip":"198.51.100.7","account":"guest","confidence":0.95,"reason":"fast_spraying: 한 주소에서 짧은 시간에 여러 계정 로그인 실패 3건/30초 (T1110.003) - 기준 초과"}
 {"at":"2026-10-07T01:11:00.000Z","action":"BLOCK","alertId":"1791270019.4019","srcip":"198.51.100.7","account":"oracle","confidence":0.95,"reason":"password_spraying: 한 주소에서 여러 계정에 로그인 실패 5건/300초 (T1110.003) - 기준 초과"}
 {"at":"2026-10-07T01:11:15.000Z","action":"BLOCK","alertId":"1791270020.4020","srcip":"198.51.100.7","account":"postgres","confidence":0.95,"reason":"password_spraying: 한 주소에서 여러 계정에 로그인 실패 6건/300초 (T1110.003) - 기준 초과"}
 {"at":"2026-10-07T01:11:30.000Z","action":"BLOCK","alertId":"1791270021.4021","srcip":"198.51.100.7","account":"ubuntu","confidence":0.95,"reason":"password_spraying: 한 주소에서 여러 계정에 로그인 실패 7건/300초 (T1110.003) - 기준 초과"}

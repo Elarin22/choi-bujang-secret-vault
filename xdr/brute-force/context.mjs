@@ -27,11 +27,17 @@ export function contextFor(prior, row) {
   const sprayMs = windowMs('password_spraying');
   const sameAccount = failures.filter((o) => o.account === row.account && row.ms - o.ms <= rapidMs);
   const spray = failures.filter((o) => row.ms - o.ms <= sprayMs);
+  const burstMs = windowMs('rapid_burst');
+  const fastMs = windowMs('fast_spraying');
+  const burst = failures.filter((o) => o.account === row.account && row.ms - o.ms <= burstMs);
+  const fast = failures.filter((o) => row.ms - o.ms <= fastMs);
   const successAccounts = new Set(before.filter((o) => o.outcome === 'success' && o.account).map((o) => o.account));
   return {
     rapid: { windowSeconds: rapidMs / 1000, failuresSameAccount: sameAccount.length },
     spray: { windowSeconds: sprayMs / 1000, distinctAccounts: new Set(spray.map((o) => o.account)).size,
       failuresFromSource: spray.length },
+    burst: { windowSeconds: burstMs / 1000, failuresSameAccount: burst.length },
+    fastSpray: { windowSeconds: fastMs / 1000, distinctAccounts: new Set(fast.map((o) => o.account)).size },
     sharedAddress: successAccounts.size >= PATTERNS.guards.sharedAddressSuccessAccounts,
   };
 }
