@@ -1,0 +1,68 @@
+{
+  "schema": "xdr.brute-force.result.v1",
+  "fixture": "xdr/fixtures/brute-force.json",
+  "alertCount": 62,
+  "extractedRows": 62,
+  "counts": {
+    "block": 8,
+    "alert": 19,
+    "record": 35
+  },
+  "byLabel": {
+    "attack": {
+      "block": 8,
+      "alert": 9,
+      "record": 7
+    },
+    "ambiguous": {
+      "block": 0,
+      "alert": 10,
+      "record": 11
+    },
+    "normal": {
+      "block": 0,
+      "alert": 0,
+      "record": 17
+    }
+  },
+  "normalBlocked": [],
+  "downgradedToAlert": [],
+  "denyRules": [
+    {
+      "id": "xdr.bruteforce.203.0.113.10",
+      "srcip": "203.0.113.10",
+      "expiresAt": "2026-10-07T02:00:54.000Z",
+      "evidenceAlertIds": [
+        "1791270010.4010",
+        "1791270011.4011",
+        "1791270012.4012",
+        "1791270013.4013",
+        "1791270014.4014"
+      ]
+    },
+    {
+      "id": "xdr.bruteforce.198.51.100.7",
+      "srcip": "198.51.100.7",
+      "expiresAt": "2026-10-07T02:11:45.000Z",
+      "evidenceAlertIds": [
+        "1791270022.4022",
+        "1791270023.4023",
+        "1791270024.4024"
+      ]
+    }
+  ],
+  "replay": {
+    "blocked": {
+      "normal": 0,
+      "ambiguous": 0,
+      "attack": 8
+    },
+    "passed": {
+      "normal": 17,
+      "ambiguous": 21,
+      "attack": 16
+    }
+  },
+  "jev": "not_configured",
+  "note": "가상 Wazuh 경보로 돌린 로컬 연습 결과입니다. 심판 판정이나 실제 차단이 아닙니다."
+}

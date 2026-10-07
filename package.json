@@ -6,6 +6,7 @@
     "build": "node scripts/build-public.mjs",
     "test:r5": "node --test test/*.test.mjs",
     "bundle": "node scripts/bundle.mjs",
+    "xdr:run": "node scripts/xdr-run.mjs",
     "decider:test": "node scripts/decider-test.mjs",
     "detect:test": "node scripts/detect-test.mjs",
     "fixture:7": "node scripts/fixture-7.mjs"

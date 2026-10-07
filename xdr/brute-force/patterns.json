@@ -1,0 +1,30 @@
+{
+  "schema": "xdr.brute-force.patterns.v1",
+  "source": "MITRE ATT&CK T1110 Brute Force (https://attack.mitre.org/techniques/T1110/)",
+  "thresholdNote": "suspect·block 기준 숫자는 학습용 가정이며 MITRE가 정한 값이 아닙니다.",
+  "guards": { "sharedAddressSuccessAccounts": 3 },
+  "patterns": [
+    {
+      "id": "rapid_failed_logins",
+      "name": "같은 주소·같은 계정 로그인 실패 연속",
+      "mitre": { "id": "T1110.001", "name": "Password Guessing" },
+      "condition": "같은 출발 주소에서 같은 계정으로 windowSeconds 안에 로그인 실패가 연속된다",
+      "metric": "rapid.failuresSameAccount",
+      "windowSeconds": 120,
+      "suspect": 5,
+      "block": 10,
+      "evidence": "T1110.001: 한 계정에 비밀번호를 짧은 시간에 반복 대입하는 추측 공격의 대표 신호입니다."
+    },
+    {
+      "id": "password_spraying",
+      "name": "한 주소에서 여러 계정에 로그인 실패",
+      "mitre": { "id": "T1110.003", "name": "Password Spraying" },
+      "condition": "같은 출발 주소에서 서로 다른 계정이 windowSeconds 안에 로그인 실패한다",
+      "metric": "spray.distinctAccounts",
+      "windowSeconds": 300,
+      "suspect": 4,
+      "block": 8,
+      "evidence": "T1110.003: 같은 비밀번호를 여러 계정에 한 번씩 대입해 계정 잠금을 피하는 방식이며, 경보에는 비밀번호가 없어 실패한 계정 수로 근사합니다."
+    }
+  ]
+}

@@ -14,6 +14,17 @@
 - 서버 전용 키(`SUPABASE_SECRET_KEY`)는 서버에만 있고 브라우저 파일·응답·로그에 나오지 않습니다.
 - 빌드는 허용 경로(`allowedRoutes`)가 들어간 `public/aleph.json`을 만들고, `vercel.json`은 보안 헤더(`X-Content-Type-Options: nosniff`)를 붙입니다.
 
+## 보너스 xdr-01: 무차별 로그인 공격 탐지
+
+가상 Wazuh 경보(`xdr/fixtures/brute-force.json`)에서 로그인 실패를 모아 기준을 넘으면 알리고, 아주 명확한 경우에만 그 주소의 거부 규칙을 만듭니다. 판정기(`src/decider.mjs`)는 고치지 않았습니다.
+
+- `xdr/brute-force/read-alerts.mjs`: 경보에서 시각·출발 주소·계정·규칙 수준·설명(과 경보 번호)만 뽑고 비밀값처럼 보이는 값은 가립니다. 원본은 고치지 않습니다.
+- `patterns.json`: MITRE ATT&CK T1110 근거 패턴 2개(같은 주소·같은 계정 실패 연속, 한 주소의 여러 계정 실패). 기준 숫자는 학습용 가정입니다.
+- `decide.mjs`: `decide(alert)` → `{action, confidence, reason}`. 0.85 이상 block, 0.5 이상 alert, 그 아래 record. 기준을 넘은 경우는 바로 block, 애매한 경우만 Jev에게 확신도를 묻고, 응답이 없으면 alert입니다. Jev 주소는 `JEV_URL` 환경변수로 줍니다.
+- `bridge.mjs`: block 후보만 만료 시각(기본 1시간)·근거 경보 번호가 붙은 거부 규칙(`deny-rules.json`)으로 만들고, 내부망·허용 목록 주소는 차단하지 않고 알림만 남깁니다. 알림은 `xdr/alerts.log`에 한 줄씩 쌓입니다.
+- `gate.mjs`: 판정기에 확인 단계로 꽂을 수 있는 부품(`bruteForceStep`). 허용 결정은 만들지 않고 일치하는 거부 규칙만 알려 줍니다. 현재 판정 요청 계약에는 출발 주소가 없어서 아직 `src/decider.mjs`에는 연결하지 않았습니다.
+- 실행: `npm run xdr:run -- brute-force` → `xdr/brute-force/result.json`(counts, 정상 이벤트 block 여부), `deny-rules.json`, `xdr/alerts.log` 갱신. 가상 경보 연습이며 심판 판정이나 실제 차단이 아닙니다.
+
 ## 알려진 약점 (아직 해결 안 됨)
 
 - 서버 함수는 서버 전용 키(RLS를 우회하는 역할)로 DB를 읽기 때문에, 실제 방어선은 API의 소유자 검사입니다. 이 검사에 빈틈이 생기면 RLS가 막아 주지 못합니다.
