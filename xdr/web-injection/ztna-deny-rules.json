@@ -1,0 +1,125 @@
+{
+  "schema": "aleph.xdr.ztna-rules.v1",
+  "rules": [
+    {
+      "id": "web-injection-wi-01",
+      "action": "deny",
+      "effect": "deny",
+      "sourceIp": "203.0.113.10",
+      "match": {
+        "srcip": "203.0.113.10"
+      },
+      "createdAt": "2026-10-07T11:28:46.848Z",
+      "expiresAt": "2026-10-07T12:28:46.848Z",
+      "evidenceAlertId": "wi-01",
+      "evidenceAlertIds": [
+        "wi-01",
+        "wi-02"
+      ],
+      "reason": "repeated_sql_syntax: 같은 주소에서 12번 반복된 주입 표기 (T1190)",
+      "confidence": 0.9
+    },
+    {
+      "id": "web-injection-wi-03",
+      "action": "deny",
+      "effect": "deny",
+      "sourceIp": "198.51.100.15",
+      "match": {
+        "srcip": "198.51.100.15"
+      },
+      "createdAt": "2026-10-07T11:28:46.848Z",
+      "expiresAt": "2026-10-07T12:28:46.848Z",
+      "evidenceAlertId": "wi-03",
+      "evidenceAlertIds": [
+        "wi-03"
+      ],
+      "reason": "repeated_path_traversal: 같은 주소에서 8번 반복된 주입 표기 (T1190)",
+      "confidence": 0.9
+    },
+    {
+      "id": "web-injection-wi-04",
+      "action": "deny",
+      "effect": "deny",
+      "sourceIp": "192.0.2.15",
+      "match": {
+        "srcip": "192.0.2.15"
+      },
+      "createdAt": "2026-10-07T11:28:46.848Z",
+      "expiresAt": "2026-10-07T12:28:46.848Z",
+      "evidenceAlertId": "wi-04",
+      "evidenceAlertIds": [
+        "wi-04"
+      ],
+      "reason": "repeated_sql_syntax: 같은 주소에서 20번 반복된 주입 표기 (T1190)",
+      "confidence": 0.9
+    },
+    {
+      "id": "web-injection-wi-05",
+      "action": "deny",
+      "effect": "deny",
+      "sourceIp": "203.0.113.18",
+      "match": {
+        "srcip": "203.0.113.18"
+      },
+      "createdAt": "2026-10-07T11:28:46.848Z",
+      "expiresAt": "2026-10-07T12:28:46.848Z",
+      "evidenceAlertId": "wi-05",
+      "evidenceAlertIds": [
+        "wi-05"
+      ],
+      "reason": "repeated_sql_syntax: 같은 주소에서 15번 반복된 주입 표기 (T1190)",
+      "confidence": 0.9
+    },
+    {
+      "id": "web-injection-wi-06",
+      "action": "deny",
+      "effect": "deny",
+      "sourceIp": "198.51.100.18",
+      "match": {
+        "srcip": "198.51.100.18"
+      },
+      "createdAt": "2026-10-07T11:28:46.848Z",
+      "expiresAt": "2026-10-07T12:28:46.848Z",
+      "evidenceAlertId": "wi-06",
+      "evidenceAlertIds": [
+        "wi-06"
+      ],
+      "reason": "repeated_command_separator: 같은 주소에서 11번 반복된 주입 표기 (T1190)",
+      "confidence": 0.9
+    },
+    {
+      "id": "web-injection-wi-07",
+      "action": "deny",
+      "effect": "deny",
+      "sourceIp": "192.0.2.21",
+      "match": {
+        "srcip": "192.0.2.21"
+      },
+      "createdAt": "2026-10-07T11:28:46.848Z",
+      "expiresAt": "2026-10-07T12:28:46.848Z",
+      "evidenceAlertId": "wi-07",
+      "evidenceAlertIds": [
+        "wi-07"
+      ],
+      "reason": "repeated_path_traversal: 같은 주소에서 14번 반복된 주입 표기 (T1190)",
+      "confidence": 0.9
+    },
+    {
+      "id": "web-injection-wi-08",
+      "action": "deny",
+      "effect": "deny",
+      "sourceIp": "203.0.113.22",
+      "match": {
+        "srcip": "203.0.113.22"
+      },
+      "createdAt": "2026-10-07T11:28:46.848Z",
+      "expiresAt": "2026-10-07T12:28:46.848Z",
+      "evidenceAlertId": "wi-08",
+      "evidenceAlertIds": [
+        "wi-08"
+      ],
+      "reason": "repeated_sql_syntax: 같은 주소에서 10번 반복된 주입 표기 (T1190)",
+      "confidence": 0.9
+    }
+  ]
+}

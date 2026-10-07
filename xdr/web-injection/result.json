@@ -1,0 +1,167 @@
+{
+  "schema": "aleph.xdr.result.v1",
+  "moduleKey": "web-injection",
+  "decisions": [
+    {
+      "alertId": "wi-01",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "repeated_sql_syntax: 같은 주소에서 12번 반복된 주입 표기 (T1190)"
+    },
+    {
+      "alertId": "wi-02",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "repeated_script_injection: 같은 주소에서 9번 반복된 주입 표기 (T1190)"
+    },
+    {
+      "alertId": "wi-03",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "repeated_path_traversal: 같은 주소에서 8번 반복된 주입 표기 (T1190)"
+    },
+    {
+      "alertId": "wi-04",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "repeated_sql_syntax: 같은 주소에서 20번 반복된 주입 표기 (T1190)"
+    },
+    {
+      "alertId": "wi-05",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "repeated_sql_syntax: 같은 주소에서 15번 반복된 주입 표기 (T1190)"
+    },
+    {
+      "alertId": "wi-06",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "repeated_command_separator: 같은 주소에서 11번 반복된 주입 표기 (T1190)"
+    },
+    {
+      "alertId": "wi-07",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "repeated_path_traversal: 같은 주소에서 14번 반복된 주입 표기 (T1190)"
+    },
+    {
+      "alertId": "wi-08",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "repeated_sql_syntax: 같은 주소에서 10번 반복된 주입 표기 (T1190)"
+    },
+    {
+      "alertId": "wi-09",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_web_input: 주입을 닮은 낱말, 반복·근거 부족 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "wi-10",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_web_input: 주입을 닮은 낱말, 반복·근거 부족 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "wi-11",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_web_input: 주입을 닮은 낱말, 반복·근거 부족 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "wi-12",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_web_input: 주입을 닮은 낱말, 반복·근거 부족 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "wi-13",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_web_input: 주입을 닮은 낱말, 반복·근거 부족 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "wi-14",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_web_input: 주입을 닮은 낱말, 반복·근거 부족 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "wi-15",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_web_input: 주입을 닮은 낱말, 반복·근거 부족 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "wi-16",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_web_input: 주입을 닮은 낱말, 반복·근거 부족 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "wi-17",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_web_input: 주입을 닮은 낱말, 반복·근거 부족 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "wi-18",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_web_request: 낮은 수준의 정상 요청"
+    },
+    {
+      "alertId": "wi-19",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_web_request: 낮은 수준의 정상 요청"
+    },
+    {
+      "alertId": "wi-20",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_web_request: 낮은 수준의 정상 요청"
+    },
+    {
+      "alertId": "wi-21",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_web_request: 낮은 수준의 정상 요청"
+    },
+    {
+      "alertId": "wi-22",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_web_request: 낮은 수준의 정상 요청"
+    },
+    {
+      "alertId": "wi-23",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_web_request: 낮은 수준의 정상 요청"
+    },
+    {
+      "alertId": "wi-24",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_web_request: 낮은 수준의 정상 요청"
+    },
+    {
+      "alertId": "wi-25",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_web_request: 낮은 수준의 정상 요청"
+    },
+    {
+      "alertId": "wi-26",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_web_request: 낮은 수준의 정상 요청"
+    }
+  ],
+  "counts": {
+    "block": 8,
+    "alert": 9,
+    "record": 9
+  }
+}

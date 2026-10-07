@@ -24,6 +24,17 @@
 - 실행기 `scripts/xdr-run.mjs`는 수업에서 준 공식 실행기를 그대로 씁니다. `xdr/fixtures/practice/`는 한 줄씩 들어오는 연습용 원본 경보와 정답표입니다.
 - 실행: `npm run xdr:run -- brute-force` → `xdr/brute-force/result.json`(`aleph.xdr.result.v1`). 시험: `npm run test:r5`. 가상 경보 연습이며 심판 판정이나 실제 차단이 아닙니다.
 
+## 보너스 xdr-02: 웹 주입 공격 탐지
+
+가상 Wazuh 웹 접근 경보(`xdr/fixtures/web-injection.json`)에서 SQL 주입·스크립트 주입·경로 거슬러 올라가기(`../`)·명령 구분자 형태를 가려냅니다. 같은 주소에서 반복되는 명확한 시도만 block, 한두 번뿐이거나 낱말만 닮은 것은 alert, 정상은 record입니다. 근거는 MITRE ATT&CK T1190(MOVEit CVE-2023-34362 같은 사고)이고, 판정기(`src/decider.mjs`)의 규칙은 고치지 않았습니다.
+
+- `xdr/web-injection/read-alerts.mjs`: 경보에서 시각·출발 주소·계정·규칙 수준·설명(과 경보 번호)만 뽑고 요청 주소·비밀값처럼 보이는 값은 출력하지 않습니다. 원본은 고치지 않습니다.
+- `patterns.json`: T1190 근거 패턴 4개(SQL 구문, 스크립트 태그, `../` 반복, 명령 구분자). 패턴마다 이름·조건·근거 한 줄. 기준 숫자는 학습용 가정입니다.
+- `decide.mjs`: **다른 파일을 불러오지 않는 단일 파일** `decide(alert)` → `{action, confidence, reason}`. 공격 표기 + 규칙 수준 10 이상 + 같은 주소 5번 이상 반복이면 block, 애매하면 Jev에게 확신도를 묻고(0.85 이상 block, 0.5 이상 alert, 그 아래 record) 응답이 없으면 alert입니다. reason에는 근거 패턴 이름을 적습니다. "삽입 표식은 아닙니다" 같은 부정 문장은 공격으로 세지 않습니다. 횟수 요약이 없는 원본 경보는 요청 주소의 실제 모양을 보고 같은 주소의 5분 안 반복을 셉니다. Jev 주소는 `JEV_URL` 환경변수.
+- `apply-actions.mjs`(+ 공통 `xdr/shared.mjs`): block의 출발 주소만 만료 시각(실행 시각 + 1시간)·근거 경보 번호가 붙은 거부 규칙(`ztna-deny-rules.json`)으로 만듭니다. 내부망·허용 목록(`allowlist.json`) 주소는 막지 않고 알림만 남깁니다. 알림은 `xdr/alerts.log`에 한 줄씩 쌓이며 `module` 표시로 brute-force·web-injection 줄이 서로 지워지지 않습니다.
+- `gate.mjs`: 판정기에 확인 단계로 꽂을 부품(`webInjectionStep`). 허용 결정은 만들지 않고 일치하는 거부 규칙만 알립니다. 현재 판정 요청 계약에 출발 주소가 없어 아직 `src/decider.mjs`에는 연결하지 않았습니다.
+- 실행: `npm run xdr:run -- web-injection` → `xdr/web-injection/result.json`. 시험: `npm run test:r5`. 가상 경보 연습이며 심판 판정이나 실제 차단이 아닙니다.
+
 ## 알려진 약점 (아직 해결 안 됨)
 
 - 서버 함수는 서버 전용 키(RLS를 우회하는 역할)로 DB를 읽기 때문에, 실제 방어선은 API의 소유자 검사입니다. 이 검사에 빈틈이 생기면 RLS가 막아 주지 못합니다.

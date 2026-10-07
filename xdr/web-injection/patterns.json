@@ -1,0 +1,35 @@
+{
+  "schema": "xdr.web-injection.patterns.v1",
+  "source": "MITRE ATT&CK T1190 Exploit Public-Facing Application (https://attack.mitre.org/techniques/T1190/)",
+  "thresholdNote": "반복 횟수·규칙 수준 기준 숫자는 학습용 가정이며 MITRE가 정한 값이 아닙니다. 이 파일은 근거 설명용이고 실제 판정 기준은 단일 파일 decide.mjs 안에 있습니다.",
+  "patterns": [
+    {
+      "id": "repeated_sql_syntax",
+      "name": "요청 인자 안의 SQL 구문 반복",
+      "mitre": { "id": "T1190", "name": "Exploit Public-Facing Application" },
+      "condition": "같은 출발 주소의 요청 인자에 SQL 구문(UNION SELECT, OR 1=1 등)이나 데이터베이스 조회 표기가 반복되고 규칙 수준이 10 이상",
+      "evidence": "T1190: 공개 웹 입력에 SQL 구문을 이어 붙이는 시도는 MOVEit(CVE-2023-34362)처럼 SQL 주입 취약점을 노리는 신호입니다."
+    },
+    {
+      "id": "repeated_script_injection",
+      "name": "요청 인자 안의 스크립트 태그 반복",
+      "mitre": { "id": "T1190", "name": "Exploit Public-Facing Application" },
+      "condition": "같은 출발 주소의 요청 인자에 스크립트 태그(<script>)나 스크립트 삽입 표기가 반복되고 규칙 수준이 10 이상",
+      "evidence": "T1190: 입력 칸에 스크립트를 반복해 넣는 것은 공개 앱의 입력 검증 허점을 찾는 악용 시도 신호입니다."
+    },
+    {
+      "id": "repeated_path_traversal",
+      "name": "경로 거슬러 올라가기(../) 반복",
+      "mitre": { "id": "T1190", "name": "Exploit Public-Facing Application" },
+      "condition": "같은 출발 주소의 요청 경로에 ../ 가 여러 단계 또는 반복해 나오고 규칙 수준이 10 이상",
+      "evidence": "T1190: 반복된 경로 이탈 표기는 공개 앱의 경로 검증 우회를 노리는 신호입니다."
+    },
+    {
+      "id": "repeated_command_separator",
+      "name": "명령 구분자 반복",
+      "mitre": { "id": "T1190", "name": "Exploit Public-Facing Application" },
+      "condition": "같은 출발 주소의 요청 인자에 명령 구분자(; | &&)가 연속 요청에서 반복되고 규칙 수준이 10 이상",
+      "evidence": "T1190: 입력 뒤에 명령을 이어 붙이려는 반복 시도는 공개 앱을 통한 명령 주입 신호입니다."
+    }
+  ]
+}

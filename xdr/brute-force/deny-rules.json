@@ -9,8 +9,8 @@
       "match": {
         "srcip": "203.0.113.10"
       },
-      "createdAt": "2026-10-07T11:15:57.546Z",
-      "expiresAt": "2026-10-07T12:15:57.546Z",
+      "createdAt": "2026-10-07T11:24:27.181Z",
+      "expiresAt": "2026-10-07T12:24:27.181Z",
       "evidenceAlertId": "bf-01",
       "evidenceAlertIds": [
         "bf-01",
@@ -27,8 +27,8 @@
       "match": {
         "srcip": "198.51.100.20"
       },
-      "createdAt": "2026-10-07T11:15:57.546Z",
-      "expiresAt": "2026-10-07T12:15:57.546Z",
+      "createdAt": "2026-10-07T11:24:27.181Z",
+      "expiresAt": "2026-10-07T12:24:27.181Z",
       "evidenceAlertId": "bf-03",
       "evidenceAlertIds": [
         "bf-03"
@@ -44,8 +44,8 @@
       "match": {
         "srcip": "192.0.2.30"
       },
-      "createdAt": "2026-10-07T11:15:57.546Z",
-      "expiresAt": "2026-10-07T12:15:57.546Z",
+      "createdAt": "2026-10-07T11:24:27.181Z",
+      "expiresAt": "2026-10-07T12:24:27.181Z",
       "evidenceAlertId": "bf-04",
       "evidenceAlertIds": [
         "bf-04"
@@ -61,8 +61,8 @@
       "match": {
         "srcip": "203.0.113.21"
       },
-      "createdAt": "2026-10-07T11:15:57.546Z",
-      "expiresAt": "2026-10-07T12:15:57.546Z",
+      "createdAt": "2026-10-07T11:24:27.181Z",
+      "expiresAt": "2026-10-07T12:24:27.181Z",
       "evidenceAlertId": "bf-05",
       "evidenceAlertIds": [
         "bf-05"
@@ -78,8 +78,8 @@
       "match": {
         "srcip": "198.51.100.44"
       },
-      "createdAt": "2026-10-07T11:15:57.546Z",
-      "expiresAt": "2026-10-07T12:15:57.546Z",
+      "createdAt": "2026-10-07T11:24:27.181Z",
+      "expiresAt": "2026-10-07T12:24:27.181Z",
       "evidenceAlertId": "bf-06",
       "evidenceAlertIds": [
         "bf-06"
@@ -95,8 +95,8 @@
       "match": {
         "srcip": "203.0.113.15"
       },
-      "createdAt": "2026-10-07T11:15:57.546Z",
-      "expiresAt": "2026-10-07T12:15:57.546Z",
+      "createdAt": "2026-10-07T11:24:27.181Z",
+      "expiresAt": "2026-10-07T12:24:27.181Z",
       "evidenceAlertId": "bf-07",
       "evidenceAlertIds": [
         "bf-07"
@@ -112,8 +112,8 @@
       "match": {
         "srcip": "192.0.2.18"
       },
-      "createdAt": "2026-10-07T11:15:57.546Z",
-      "expiresAt": "2026-10-07T12:15:57.546Z",
+      "createdAt": "2026-10-07T11:24:27.181Z",
+      "expiresAt": "2026-10-07T12:24:27.181Z",
       "evidenceAlertId": "bf-08",
       "evidenceAlertIds": [
         "bf-08"
@@ -129,8 +129,8 @@
       "match": {
         "srcip": "198.51.100.8"
       },
-      "createdAt": "2026-10-07T11:15:57.546Z",
-      "expiresAt": "2026-10-07T12:15:57.546Z",
+      "createdAt": "2026-10-07T11:24:27.181Z",
+      "expiresAt": "2026-10-07T12:24:27.181Z",
       "evidenceAlertId": "bf-09",
       "evidenceAlertIds": [
         "bf-09"
@@ -146,8 +146,8 @@
       "match": {
         "srcip": "203.0.113.40"
       },
-      "createdAt": "2026-10-07T11:15:57.546Z",
-      "expiresAt": "2026-10-07T12:15:57.546Z",
+      "createdAt": "2026-10-07T11:24:27.181Z",
+      "expiresAt": "2026-10-07T12:24:27.181Z",
       "evidenceAlertId": "bf-10",
       "evidenceAlertIds": [
         "bf-10"
