@@ -1,4 +1,5 @@
-import { PATTERNS } from './context.mjs';
+import { PATTERNS, contextFor, withOutcome } from './context.mjs';
+import { extract } from './read-alerts.mjs';
 
 export const BLOCK_AT = 0.85;
 export const ALERT_AT = 0.5;
@@ -34,12 +35,53 @@ async function ask(askJev, payload, timeoutMs) {
   }
 }
 
-// alert: one row from read-alerts.mjs after enrich(). Returns { action, confidence, reason }.
-export async function decide(alert, { askJev = defaultAskJev, timeoutMs = 5000 } = {}) {
+// Sequential state so decide(alert) also works when alerts arrive one by one (raw Wazuh alerts or extracted rows).
+const MAX_HISTORY = 5000;
+const BLOCK_MEMORY_MS = 3600 * 1000;
+let history = [];
+let blocked = new Map();
+export function resetState() { history = []; blocked = new Map(); }
+
+function normalize(alert) {
+  if (alert && alert.outcome && 'context' in alert) return { row: alert, supplied: true };
+  const looksRaw = alert && typeof alert === 'object' && (alert.rule || alert.data || alert.timestamp);
+  const base = looksRaw ? extract(alert, history.length) : { alertId: alert?.alertId ?? `row-${history.length + 1}`, at: alert?.at ?? null,
+    srcip: alert?.srcip ?? null, account: alert?.account ?? null, level: Number.isFinite(Number(alert?.level)) ? Number(alert.level) : null,
+    description: typeof alert?.description === 'string' ? alert.description : '' };
+  return { row: withOutcome(base), supplied: false };
+}
+
+// alert: a raw Wazuh alert, a row from read-alerts.mjs, or an enriched row. Returns { action, confidence, reason }.
+export async function decide(alert, options = {}) {
+  const { row, supplied } = normalize(alert);
+  let enriched = row;
+  if (!supplied) {
+    const seen = history.some((o) => o.alertId === row.alertId && o.at === row.at);
+    enriched = { ...row, context: contextFor(history, row) };
+    if (!seen) { history.push(row); if (history.length > MAX_HISTORY) history.shift(); }
+  }
+  const out = await judge(enriched, options);
+  const ms = Number.isFinite(row.ms) ? row.ms : Date.parse(row.at);
+  if (row.srcip && Number.isFinite(ms)) {
+    if (out.action === 'block') blocked.set(row.srcip, ms + BLOCK_MEMORY_MS);
+    else if ((blocked.get(row.srcip) ?? 0) > ms) {
+      return { action: 'block', confidence: 0.9, reason: 'already_blocked: 이미 차단된 주소의 후속 경보' };
+    }
+  }
+  return out;
+}
+
+async function judge(alert, { askJev = defaultAskJev, timeoutMs = 5000 } = {}) {
+  if (alert?.outcome === 'correlated' && alert.srcip) {
+    const c = PATTERNS.patterns.find((p) => p.id === 'wazuh_correlated_bruteforce');
+    return alert.context?.sharedAddress
+      ? { action: 'alert', confidence: 0.6, reason: `${c.id}: ${c.name} (${c.mitre.id}) - 여러 계정이 성공한 공유 주소로 보여 알림만` }
+      : { action: 'block', confidence: STRONG_CONFIDENCE, reason: `${c.id}: ${c.name} 수준 ${alert.level} (${c.mitre.id})` };
+  }
   if (alert?.outcome !== 'failure' || !alert.context) {
     return { action: 'record', confidence: NONE_CONFIDENCE, reason: 'no_pattern: 로그인 실패 경보가 아니거나 출발 주소가 없음' };
   }
-  const hits = PATTERNS.patterns.map((p) => {
+  const hits = PATTERNS.patterns.filter((p) => p.metric).map((p) => {
     const value = pick(alert.context, p.metric);
     return { p, value, tier: value >= p.block ? 'strong' : value >= p.suspect ? 'weak' : 'none' };
   }).filter((h) => h.tier !== 'none').sort((a, b) => (b.tier === 'strong') - (a.tier === 'strong') || b.value / b.p.block - a.value / a.p.block);

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { readAlerts } from './read-alerts.mjs';
 import { enrich } from './context.mjs';
-import { decide } from './decide.mjs';
+import { decide, resetState } from './decide.mjs';
 import { createBridge } from './bridge.mjs';
 import { findRule } from './gate.mjs';
 
@@ -13,6 +13,7 @@ export async function runBruteForce({ fixture, labels, allowlist, askJev, ttlSec
   const raw = JSON.parse(await readFile(fixtureUrl, 'utf8'));
   const labelMap = JSON.parse(await readFile(labels ?? new URL('../fixtures/brute-force.labels.json', import.meta.url), 'utf8'));
   const list = allowlist ?? JSON.parse(await readFile(here('allowlist.json'), 'utf8')).srcips;
+  resetState();
   const bridge = createBridge({ allowlist: list, ttlSeconds });
   const enriched = enrich(rows);
   const counts = { block: 0, alert: 0, record: 0 };

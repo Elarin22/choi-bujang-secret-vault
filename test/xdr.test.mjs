@@ -69,3 +69,24 @@ test('bridge refuses internal and allow-listed addresses and the gate never allo
   assert.equal(bruteForceStep({}, { rules: bridge.rules(), now: Date.parse('2026-10-07T02:00:00.000Z'), sourceOf }), null);
   assert.equal(bruteForceStep({}, { rules: bridge.rules(), now: at }), null);
 });
+
+test('decide also works on raw Wazuh alerts fed one by one, and trusts Wazuh correlation alerts', async () => {
+  const { decide: d, resetState } = await import('../xdr/brute-force/decide.mjs');
+  const alerts = JSON.parse(readFileSync(fixture, 'utf8'));
+  const labels = JSON.parse(readFileSync(new URL('../xdr/fixtures/brute-force.labels.json', import.meta.url), 'utf8'));
+  resetState();
+  const seen = { block: 0, alert: 0, record: 0 };
+  for (const alert of alerts) {
+    const out = await d(alert);
+    seen[out.action] += 1;
+    if (labels[alert.id] === 'normal') assert.notEqual(out.action, 'block', alert.id);
+  }
+  assert.ok(seen.block > 0 && seen.alert > 0 && seen.record > 0);
+  assert.equal((await d(alerts[0])).action !== undefined, true);
+  resetState();
+  const correlated = { timestamp: '2026-10-07T03:00:00.000+0000', id: 'c1', rule: { id: '5712', level: 10, description: 'sshd: brute force trying to get access to the system. Authentication failed.' }, data: { srcip: '203.0.113.50', dstuser: 'root' } };
+  const out = await d(correlated);
+  assert.equal(out.action, 'block');
+  assert.match(out.reason, /^wazuh_correlated_bruteforce:/u);
+  resetState();
+});

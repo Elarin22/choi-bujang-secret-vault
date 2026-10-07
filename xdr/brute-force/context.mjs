@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 
 export const PATTERNS = JSON.parse(readFileSync(new URL('./patterns.json', import.meta.url), 'utf8'));
-const windowOf = (id) => PATTERNS.patterns.find((p) => p.id === id).windowSeconds * 1000;
+const byId = (id) => PATTERNS.patterns.find((p) => p.id === id);
+const windowMs = (id) => byId(id).windowSeconds * 1000;
+const CORRELATION = byId('wazuh_correlated_bruteforce');
 
 export function classify(description) {
   const text = String(description).toLowerCase();
@@ -10,28 +12,39 @@ export function classify(description) {
   return 'other';
 }
 
-// Adds, for every login failure, how many failures the same address made inside each pattern window.
+// A Wazuh correlation alert already summarizes earlier failures, so it is not counted as one more failure.
+export function classifyRow(row) {
+  if (row.level >= CORRELATION.minLevel && new RegExp(CORRELATION.descriptionPattern, 'iu').test(row.description)) return 'correlated';
+  return classify(row.description);
+}
+
+// prior: rows seen before (outcome and ms already set). Counts only prior rows plus the row itself.
+export function contextFor(prior, row) {
+  if (!['failure', 'correlated'].includes(row.outcome) || !row.srcip || !Number.isFinite(row.ms)) return null;
+  const before = prior.filter((o) => o.srcip === row.srcip && Number.isFinite(o.ms) && o.ms <= row.ms);
+  const failures = [...before, row].filter((o) => o.outcome === 'failure');
+  const rapidMs = windowMs('rapid_failed_logins');
+  const sprayMs = windowMs('password_spraying');
+  const sameAccount = failures.filter((o) => o.account === row.account && row.ms - o.ms <= rapidMs);
+  const spray = failures.filter((o) => row.ms - o.ms <= sprayMs);
+  const successAccounts = new Set(before.filter((o) => o.outcome === 'success' && o.account).map((o) => o.account));
+  return {
+    rapid: { windowSeconds: rapidMs / 1000, failuresSameAccount: sameAccount.length },
+    spray: { windowSeconds: sprayMs / 1000, distinctAccounts: new Set(spray.map((o) => o.account)).size,
+      failuresFromSource: spray.length },
+    sharedAddress: successAccounts.size >= PATTERNS.guards.sharedAddressSuccessAccounts,
+  };
+}
+
+export function withOutcome(row) {
+  return { ...row, outcome: classifyRow(row), ms: row.at ? Date.parse(row.at) : Number.POSITIVE_INFINITY };
+}
+
 export function enrich(rows) {
-  const items = rows.map((row, index) => ({
-    ...row, index, outcome: classify(row.description),
-    ms: row.at ? Date.parse(row.at) : Number.POSITIVE_INFINITY,
-  }));
+  const items = rows.map((row, index) => ({ ...withOutcome(row), index }));
   items.sort((a, b) => (a.ms - b.ms) || (a.index - b.index));
-  const rapidMs = windowOf('rapid_failed_logins');
-  const sprayMs = windowOf('password_spraying');
   return items.map((item, k) => {
     const { index, ms, ...row } = item;
-    if (item.outcome !== 'failure' || !item.srcip || !Number.isFinite(ms)) return { ...row, context: null };
-    const before = items.slice(0, k + 1).filter((o) => o.srcip === item.srcip && Number.isFinite(o.ms));
-    const failures = before.filter((o) => o.outcome === 'failure');
-    const sameAccount = failures.filter((o) => o.account === item.account && ms - o.ms <= rapidMs);
-    const spray = failures.filter((o) => ms - o.ms <= sprayMs);
-    const successAccounts = new Set(before.filter((o) => o.outcome === 'success' && o.account).map((o) => o.account));
-    return { ...row, context: {
-      rapid: { windowSeconds: rapidMs / 1000, failuresSameAccount: sameAccount.length },
-      spray: { windowSeconds: sprayMs / 1000, distinctAccounts: new Set(spray.map((o) => o.account)).size,
-        failuresFromSource: spray.length },
-      sharedAddress: successAccounts.size >= PATTERNS.guards.sharedAddressSuccessAccounts,
-    } };
+    return { ...row, context: contextFor(items.slice(0, k), item) };
   });
 }
