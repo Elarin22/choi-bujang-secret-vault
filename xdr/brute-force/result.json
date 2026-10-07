@@ -1,78 +1,179 @@
 {
-  "schema": "xdr.brute-force.result.v1",
-  "fixture": "xdr/fixtures/brute-force.json",
-  "alertCount": 62,
-  "extractedRows": 62,
-  "counts": {
-    "block": 20,
-    "alert": 10,
-    "record": 32
-  },
-  "byLabel": {
-    "attack": {
-      "block": 20,
-      "alert": 0,
-      "record": 4
-    },
-    "ambiguous": {
-      "block": 0,
-      "alert": 10,
-      "record": 11
-    },
-    "normal": {
-      "block": 0,
-      "alert": 0,
-      "record": 17
-    }
-  },
-  "normalBlocked": [],
-  "downgradedToAlert": [],
-  "denyRules": [
+  "schema": "aleph.xdr.result.v1",
+  "moduleKey": "brute-force",
+  "decisions": [
     {
-      "id": "xdr.bruteforce.203.0.113.10",
-      "srcip": "203.0.113.10",
-      "expiresAt": "2026-10-07T02:00:12.000Z",
-      "evidenceAlertIds": [
-        "1791270003.4003",
-        "1791270004.4004",
-        "1791270005.4005",
-        "1791270006.4006",
-        "1791270007.4007",
-        "1791270008.4008",
-        "1791270009.4009",
-        "1791270010.4010",
-        "1791270011.4011",
-        "1791270012.4012"
-      ]
+      "alertId": "bf-01",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "same_source_rapid_failures: 같은 주소의 짧은 시간 로그인 실패 폭주 (T1110.001)"
     },
     {
-      "id": "xdr.bruteforce.198.51.100.7",
-      "srcip": "198.51.100.7",
-      "expiresAt": "2026-10-07T02:10:30.000Z",
-      "evidenceAlertIds": [
-        "1791270017.4017",
-        "1791270018.4018",
-        "1791270019.4019",
-        "1791270020.4020",
-        "1791270021.4021",
-        "1791270022.4022",
-        "1791270023.4023",
-        "1791270024.4024"
-      ]
+      "alertId": "bf-02",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "same_password_many_accounts: 한 주소가 여러 계정에 같은 비밀번호 대입 (T1110.003)"
+    },
+    {
+      "alertId": "bf-03",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "same_source_rapid_failures: 같은 주소의 짧은 시간 로그인 실패 폭주 (T1110.001)"
+    },
+    {
+      "alertId": "bf-04",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "same_source_rapid_failures: 같은 주소의 짧은 시간 로그인 실패 폭주 (T1110.001)"
+    },
+    {
+      "alertId": "bf-05",
+      "action": "block",
+      "confidence": 0.98,
+      "reason": "same_source_rapid_failures: 같은 주소의 짧은 시간 로그인 실패 폭주 (T1110.001)"
+    },
+    {
+      "alertId": "bf-06",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "same_source_rapid_failures: 같은 주소의 짧은 시간 로그인 실패 폭주 (T1110.001)"
+    },
+    {
+      "alertId": "bf-07",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "same_source_rapid_failures: 같은 주소의 짧은 시간 로그인 실패 폭주 (T1110.001)"
+    },
+    {
+      "alertId": "bf-08",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "same_source_rapid_failures: 같은 주소의 짧은 시간 로그인 실패 폭주 (T1110.001)"
+    },
+    {
+      "alertId": "bf-09",
+      "action": "block",
+      "confidence": 0.98,
+      "reason": "same_source_rapid_failures: 같은 주소의 짧은 시간 로그인 실패 폭주 (T1110.001)"
+    },
+    {
+      "alertId": "bf-10",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "same_source_rapid_failures: 같은 주소의 짧은 시간 로그인 실패 폭주 (T1110.001)"
+    },
+    {
+      "alertId": "bf-11",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_login_failures: 기준 미만의 로그인 실패 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "bf-12",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_login_failures: 기준 미만의 로그인 실패 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "bf-13",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_login_failures: 기준 미만의 로그인 실패 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "bf-14",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_login_failures: 기준 미만의 로그인 실패 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "bf-15",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_login_failures: 기준 미만의 로그인 실패 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "bf-16",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_login_failures: 기준 미만의 로그인 실패 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "bf-17",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_login_failures: 기준 미만의 로그인 실패 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "bf-18",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_login_failures: 기준 미만의 로그인 실패 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "bf-19",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ambiguous_login_failures: 기준 미만의 로그인 실패 - 애매함, Jev 응답 없음"
+    },
+    {
+      "alertId": "bf-20",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_login_event: 낮은 수준의 정상 이벤트"
+    },
+    {
+      "alertId": "bf-21",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_login_event: 낮은 수준의 정상 이벤트"
+    },
+    {
+      "alertId": "bf-22",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_login_event: 낮은 수준의 정상 이벤트"
+    },
+    {
+      "alertId": "bf-23",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_login_event: 낮은 수준의 정상 이벤트"
+    },
+    {
+      "alertId": "bf-24",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_login_event: 낮은 수준의 정상 이벤트"
+    },
+    {
+      "alertId": "bf-25",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_login_event: 낮은 수준의 정상 이벤트"
+    },
+    {
+      "alertId": "bf-26",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_login_event: 낮은 수준의 정상 이벤트"
+    },
+    {
+      "alertId": "bf-27",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_login_event: 낮은 수준의 정상 이벤트"
+    },
+    {
+      "alertId": "bf-28",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_login_event: 낮은 수준의 정상 이벤트"
     }
   ],
-  "replay": {
-    "blocked": {
-      "normal": 0,
-      "ambiguous": 0,
-      "attack": 20
-    },
-    "passed": {
-      "normal": 17,
-      "ambiguous": 21,
-      "attack": 4
-    }
-  },
-  "jev": "not_configured",
-  "note": "가상 Wazuh 경보로 돌린 로컬 연습 결과입니다. 심판 판정이나 실제 차단이 아닙니다."
+  "counts": {
+    "block": 10,
+    "alert": 9,
+    "record": 9
+  }
 }

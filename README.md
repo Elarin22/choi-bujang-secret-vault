@@ -16,14 +16,13 @@
 
 ## 보너스 xdr-01: 무차별 로그인 공격 탐지
 
-가상 Wazuh 경보(`xdr/fixtures/brute-force.json`)에서 로그인 실패를 모아 기준을 넘으면 알리고, 아주 명확한 경우에만 그 주소의 거부 규칙을 만듭니다. 판정기(`src/decider.mjs`)는 고치지 않았습니다.
+가상 Wazuh 경보(`xdr/fixtures/brute-force.json`, 형식 `aleph.xdr.fixture.v1`)에서 로그인 실패를 가려 명확한 공격만 차단 후보로 두고, 애매한 건 알리고, 정상은 기록만 합니다. 판정기(`src/decider.mjs`)는 고치지 않았습니다.
 
-- `xdr/brute-force/read-alerts.mjs`: 경보에서 시각·출발 주소·계정·규칙 수준·설명(과 경보 번호)만 뽑고 비밀값처럼 보이는 값은 가립니다. 원본은 고치지 않습니다.
-- `patterns.json`: MITRE ATT&CK T1110 근거 패턴 2개(같은 주소·같은 계정 실패 연속, 한 주소의 여러 계정 실패). 기준 숫자는 학습용 가정입니다.
-- `decide.mjs`: `decide(alert)` → `{action, confidence, reason}`. 0.85 이상 block, 0.5 이상 alert, 그 아래 record. 기준을 넘은 경우는 바로 block, 애매한 경우만 Jev에게 확신도를 묻고, 응답이 없으면 alert입니다. Jev 주소는 `JEV_URL` 환경변수로 줍니다.
-- `bridge.mjs`: block 후보만 만료 시각(기본 1시간)·근거 경보 번호가 붙은 거부 규칙(`deny-rules.json`)으로 만들고, 내부망·허용 목록 주소는 차단하지 않고 알림만 남깁니다. 알림은 `xdr/alerts.log`에 한 줄씩 쌓입니다.
-- `gate.mjs`: 판정기에 확인 단계로 꽂을 수 있는 부품(`bruteForceStep`). 허용 결정은 만들지 않고 일치하는 거부 규칙만 알려 줍니다. 현재 판정 요청 계약에는 출발 주소가 없어서 아직 `src/decider.mjs`에는 연결하지 않았습니다.
-- 실행: `npm run xdr:run -- brute-force` → `xdr/brute-force/result.json`(counts, 정상 이벤트 block 여부), `deny-rules.json`, `xdr/alerts.log` 갱신. 가상 경보 연습이며 심판 판정이나 실제 차단이 아닙니다.
+- `xdr/brute-force/decide.mjs`: **다른 파일을 불러오지 않는 단일 파일**입니다. `decide(alert)` → `{action, confidence, reason}`. 한국어·영어 경보 설명 모두에서 로그인 실패를 알아봅니다. 규칙 수준 10 이상이면서 실패 10건 이상이거나, 여러 계정에 같은 비밀번호 대입이면 block, 기준에 못 미치는 실패는 Jev에게 확신도를 묻고(0.85 이상 block, 0.5 이상 alert, 그 아래 record) 응답이 없으면 alert, 정상은 record입니다. Jev 주소는 `JEV_URL` 환경변수로 줍니다. 횟수 요약이 없는 원본 경보가 한 줄씩 들어오면 같은 주소의 앞선 경보를 기억해 셉니다.
+- `xdr/brute-force/apply-actions.mjs`: `npm run xdr:run -- brute-force` 때 실행기가 불러, block 결정의 출발 주소를 **만료 시각(실행 시각 + 1시간)과 근거 경보 번호가 붙은 거부 규칙**(`ztna-deny-rules.json`, 같은 내용의 `deny-rules.json`)으로 만듭니다. 내부망·허용 목록(`allowlist.json`) 주소는 차단하지 않고 알림만 남깁니다. block·alert 알림은 `xdr/alerts.log`에 쌓입니다.
+- `read-alerts.mjs`: 경보에서 필요한 값만 뽑고 비밀값처럼 보이는 값을 가립니다. `gate.mjs`: 판정기에 꽂을 수 있는 거부 규칙 확인 부품이며 허용 결정은 만들지 않습니다(현재 판정 요청 계약에 출발 주소가 없어 `src/decider.mjs`에는 연결하지 않았습니다). `patterns.json`: MITRE ATT&CK T1110 근거 설명(기준 숫자는 학습용 가정).
+- 실행기 `scripts/xdr-run.mjs`는 수업에서 준 공식 실행기를 그대로 씁니다. `xdr/fixtures/practice/`는 한 줄씩 들어오는 연습용 원본 경보와 정답표입니다.
+- 실행: `npm run xdr:run -- brute-force` → `xdr/brute-force/result.json`(`aleph.xdr.result.v1`). 시험: `npm run test:r5`. 가상 경보 연습이며 심판 판정이나 실제 차단이 아닙니다.
 
 ## 알려진 약점 (아직 해결 안 됨)
 

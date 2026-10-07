@@ -1,11 +1,31 @@
 {
-  "schema": "xdr.brute-force.patterns.v1",
+  "schema": "xdr.brute-force.patterns.v2",
   "source": "MITRE ATT&CK T1110 Brute Force (https://attack.mitre.org/techniques/T1110/)",
   "thresholdNote": "suspect·block 기준 숫자는 학습용 가정이며 MITRE가 정한 값이 아닙니다.",
   "guards": {
     "sharedAddressSuccessAccounts": 3
   },
   "patterns": [
+    {
+      "id": "same_source_rapid_failures",
+      "name": "같은 주소의 짧은 시간 로그인 실패 폭주 (요약 경보)",
+      "mitre": {
+        "id": "T1110.001",
+        "name": "Password Guessing"
+      },
+      "condition": "규칙 수준이 10 이상이고 로그인 실패 건수가 10건 이상이다",
+      "evidence": "T1110: 짧은 시간에 반복되는 인증 실패는 무차별 대입의 대표 신호입니다."
+    },
+    {
+      "id": "same_password_many_accounts",
+      "name": "한 주소가 여러 계정에 같은 비밀번호 대입 (요약 경보)",
+      "mitre": {
+        "id": "T1110.003",
+        "name": "Password Spraying"
+      },
+      "condition": "규칙 수준이 10 이상이고 계정 5개 이상(또는 '여러 계정' 표현)에 같은 비밀번호 실패가 이어진다",
+      "evidence": "T1110.003: 여러 계정에 같은 비밀번호를 한 번씩 넣어 계정 잠금을 피하는 방식입니다."
+    },
     {
       "id": "rapid_failed_logins",
       "name": "같은 주소·같은 계정 로그인 실패 연속",
@@ -75,5 +95,6 @@
       "descriptionPattern": "brute force|multiple authentication failures",
       "evidence": "Wazuh 상관 규칙이 같은 주소의 반복된 인증 실패를 이미 묶어 높은 수준으로 올린 경보라서 T1110의 직접 신호입니다."
     }
-  ]
+  ],
+  "note": "이 파일은 근거 설명용입니다. 실제 판정 기준은 단일 파일 xdr/brute-force/decide.mjs 안에 들어 있습니다."
 }
