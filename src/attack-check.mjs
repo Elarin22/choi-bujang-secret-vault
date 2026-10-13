@@ -16,7 +16,7 @@ async function probe(app, path, init = {}) {
 const rejected = (r) => r.status === 401 || r.status === 403;
 
 export async function runAttackChecks(config) {
-  if (![3, 4, 5, 6, 7, 8, 9, 10].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (![3, 4, 5, 6, 7, 8, 9, 10, 11].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -98,6 +98,16 @@ export async function runAttackChecks(config) {
       policyLocal = `안전 정책 사본 검증 실패(${error.message}). 복원은 중단해야 함`;
     }
   }
+  let deviceLocal = null;
+  if (config.step >= 11) {
+    const { connectionView } = await import('../public/connection-model.js');
+    const now = Date.now();
+    const live = await probe(app, '/api/device-status');
+    const liveView = connectionView(live.data, true, now);
+    const fresh = (approval) => ({ schema: 'vault.connection.v1', authority: 'ALEPH SDP engine', connected: true, approval, checkedAt: new Date(now).toISOString() });
+    const installOnly = connectionView({ ...fresh('approved'), authority: 'student_server' }, true, now);
+    deviceLocal = `실제 요청 /api/device-status HTTP ${live.status}: 자료 열기 ${liveView.canOpen ? '가능' : '불가'}(${liveView.label}). 로컬 판정: 승인 대기 ${connectionView(fresh('pending'), true, now).canOpen ? '열림' : '닫힘'}, 서버가 아닌 출처의 승인 표시 ${installOnly.canOpen ? '열림' : '닫힘'}, 엔진 확인 승인 ${connectionView(fresh('approved'), true, now).canOpen ? '열림' : '닫힘'}. 공식 어댑터 연결과 실제 승인 기기 시험은 미실행`;
+  }
   let notice = null;
   if (config.step >= 8) {
     const id = '00000000-0000-4000-8000-000000000000';
@@ -128,6 +138,7 @@ export async function runAttackChecks(config) {
       { attackId: 'anonymous_notice_edit', expected: '로그인 없이 공지 수정은 거부',
         observed: rejected(notice.edit) ? `비로그인 공지 수정이 거부됨 (HTTP ${notice.edit.status})` : `비로그인 공지 수정이 거부되지 않음 (HTTP ${notice.edit.status})` },
       { attackId: 'zone_rules_local', expected: '자기 메모 읽기 allow, 공지·메모 쓰기(소유자·강사 확인 불가)·알 수 없는 경로·export 자리 deny', observed: zoneLocal }] : []),
+    ...(deviceLocal ? [{ attackId: 'device_gate_local', expected: '승인이 서버에서 확인되기 전에는 자료 화면이 열리지 않음(설치·요청 표시만으로는 안 열림)', observed: deviceLocal }] : []),
     ...(policyLocal ? [{ attackId: 'policy_backup_local', expected: '검증된 안전 정책 사본이 있고 현재 메모 정책과 대조됨', observed: policyLocal }] : []),
     ...(detectLocal ? [{ attackId: 'burst_detect_local', expected: '정상 조회는 observe, 10분 안 120건 초과만 propose_revocation(burst_read)', observed: detectLocal }] : []),
     ...(direct ? [{ attackId: 'anon_data_api_read', expected: 'anon 키로 Supabase Data API에서 notes를 직접 읽을 수 없어야 함',

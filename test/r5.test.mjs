@@ -78,6 +78,9 @@ test('step 3 attack check sends no real credentials and expects rejection', asyn
     const ten = await runAttackChecks({ ...cfg, step: 10, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes', repoUrl: real.repoUrl, allowedRoutes: real.allowedRoutes, policyRevision: real.policyRevision });
     assert.ok(ten.some((r) => r.attackId === 'policy_backup_local' && /검증 통과/u.test(r.observed)));
     assert.ok(ten.length <= 20);
+    const eleven = await runAttackChecks({ ...cfg, step: 11, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes', repoUrl: real.repoUrl, allowedRoutes: real.allowedRoutes, policyRevision: real.policyRevision });
+    assert.ok(eleven.some((r) => r.attackId === 'device_gate_local' && /자료 열기 불가/u.test(r.observed) && /승인 대기 닫힘/u.test(r.observed)));
+    assert.ok(eleven.length <= 20 && eleven.every((r) => r.observed.length <= 300));
     await assert.rejects(runAttackChecks({ ...cfg, identityProvider: { issuer: 'https://REPLACE-X.supabase.co/auth/v1' } }));
   } finally {
     globalThis.fetch = originalFetch;

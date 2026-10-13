@@ -5,7 +5,7 @@
   "outputDirectory": "public",
   "functions": {
   "api/**/*.js": {
-    "includeFiles": "{aleph.config.json,backups/**,lib/**,src/**}"
+    "includeFiles": "{aleph.config.json,backups/**,lib/**,public/**,src/**}"
   }
 },
   "headers": [

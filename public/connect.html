@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a28">
+  <title>BYTE BACK | 내 자료실 접속</title>
+  <link rel="manifest" href="/connect.webmanifest">
+  <link rel="icon" href="/connect-icon.svg" type="image/svg+xml">
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; min-height: 100vh; background: #101a28; color: #ecf4ff; }
+    main { max-width: 760px; margin: 0 auto; padding: 44px 22px 64px; }
+    .eyebrow { color: #8ad8df; font-size: 14px; font-weight: 700; letter-spacing: .08em; }
+    h1 { margin: 16px 0; font-size: clamp(30px, 7vw, 48px); line-height: 1.2; }
+    p, small { font-size: 17px; line-height: 1.7; color: #bfd0e5; }
+    .card { border: 1px solid #51667c; border-radius: 14px; padding: 18px; background: #1a2a3d; margin: 16px 0; }
+    .muted { font-size: 15px; }
+    button { font: inherit; font-weight: 700; padding: 9px 16px; margin: 4px 6px 4px 0; border-radius: 10px; border: 0; background: #2ad6c4; color: #07121c; cursor: pointer; }
+    button.ghost { background: #2a3d55; color: #ecf4ff; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    a { color: #8ad8df; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">BYTE BACK · 내 자료실 접속</div>
+    <h1>내 기기의 승인 상태</h1>
+    <p>서버가 확인한 승인 결과가 있을 때만 자료실을 엽니다. 이 화면에는 보호 자료나 기기 키가 없습니다.</p>
+    <section class="card" aria-labelledby="approval-state">
+      <h2 id="approval-state">서버 상태 미확인</h2>
+      <p id="approval-detail" role="status">연결을 확인합니다.</p>
+      <small id="checked-at">서버 상태 미확인</small>
+      <p>
+        <button id="refresh-approval" class="ghost">승인 상태 다시 확인</button>
+        <button id="request-approval" class="ghost">기기 승인 요청</button>
+        <button id="open-vault" disabled>승인된 기기로 자료실 열기</button>
+      </p>
+    </section>
+    <section class="card">
+      <h2>설치와 오프라인 안내</h2>
+      <p>이 화면은 앱처럼 설치할 수 있습니다. 하지만 <strong>설치했다는 표시만으로 기기가 확인된 것은 아닙니다.</strong> 승인 여부는 서버와 판정기가 정합니다.</p>
+      <p>연결이 끊기면 자료실 열기를 멈추고 이 안내만 보여 줍니다. 오프라인에는 이 안내 화면만 보관하며 메모·API 응답·토큰·기기 키는 저장하지 않습니다.</p>
+    </section>
+    <p class="muted"><a href="/">자료실로 이동</a> · 기기 등록, 키 보관, 요청 서명은 제공된 ALEPH SDP 엔진과 공식 접속 도구의 역할이며, 이 앱은 따로 접속 프로그램을 설치하지 않습니다.</p>
+  </main>
+  <script type="module" src="/connect.js"></script>
+</body>
+</html>

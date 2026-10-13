@@ -1,0 +1,12 @@
+{
+  "name": "BYTE BACK 내 자료실 접속",
+  "short_name": "내 자료실",
+  "description": "승인된 내 기기에서만 자료실을 여는 접속 화면입니다. 이 앱에는 자료·토큰·기기 키가 저장되지 않습니다.",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101a28",
+  "theme_color": "#101a28",
+  "icons": [{ "src": "/connect-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
