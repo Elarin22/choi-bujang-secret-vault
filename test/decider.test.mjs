@@ -79,3 +79,17 @@ test('zone rules: own notes allowed, notice edit and unknown or look-alike paths
   // unregistered devices are still refused first, even on a known route
   assert.equal((await d({ ...req('GET', '/notes', 'GET /notes'), deviceRegistered: false })).reasonCode, 'device_not_registered');
 });
+
+test('decider keeps no memory of who asked first: the same request gets the same decision in any order', async () => {
+  const { decide: d } = await import('../src/decider.mjs');
+  const { normal } = fixtureRequests();
+  const noteId = '7a1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d';
+  const req = (subjectId) => ({ ...normal, subjectId, method: 'GET', path: `/notes/${noteId}`, route: 'GET /notes/:id' });
+  const first = await d(req('learner_B'));
+  const second = await d(req('learner_A'));
+  const again = await d(req('learner_B'));
+  assert.deepEqual([first.decision, second.decision, again.decision], ['allow', 'allow', 'allow']);
+  assert.deepEqual(first.ruleIds, second.ruleIds);
+  // ownership is not decided here: the notes API answers 403 not_owner (see notes.test.mjs)
+  assert.equal((await d({ ...req('learner_B'), method: 'PUT', path: `/notices/${noteId}`, route: 'PUT /notices/:id' })).reasonCode, 'zone_not_allowed');
+});
