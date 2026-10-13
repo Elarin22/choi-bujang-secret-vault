@@ -46,3 +46,11 @@ xdr/ztna-overlay.mjs의 withXdr(baseDecide, rules)는 유효한 거부 후보가
 - 판단: MITRE T1543·T1053 근거. 지속성 신호가 있고 규칙 수준 10 이상이며 서로 다른 근거(서명 없음·평소 목록 밖·임시 폴더·시작 폴더·재부팅 뒤 유지·실행 파일 변경·임의 이름·반복) 2가지 이상이 겹치면 block, 지속성 신호만 있고 수준 5 이상이면 alert, 신호가 없거나 서명됨·평소 목록대로·수준 낮음이면 record. 수준 하나나 설명 문장 하나로는 차단하지 않는다. 경보 ID·주소·순서에 의존하지 않는다.
 - 관찰: block 8, alert 8, record 8. 정상 이벤트 block 0건.
 - 연결: decide.mjs 는 판단만 돌려준다. xdr/persistence/respond.mjs 가 block 만 15분 만료 거부 후보(xdr/deny-rules.json)로, block·alert 를 xdr/alerts.log 에 패턴 이름만 남긴다. 기존 known-cve 규칙과 판정기 규칙은 건드리지 않는다. 운영 ZTNA 연결 계약은 XDR-03과 같은 제약이 있다.
+
+## XDR-05 privilege
+
+- 자료: 공식 aleph-defense-starter 의 xdr/fixtures/privilege.json (26건, 설명·수준·MITRE만 있고 구조화 필드는 거의 없음).
+- 실행: `npm run xdr:run -- privilege`, 시험: `npm run xdr:test`
+- 판단: MITRE T1068·T1078 근거. 권한 신호가 있고 규칙 수준 10 이상이며 서로 다른 근거(관리자 그룹 추가·관리자 명령·처음 보는/원격 주소·업무 시간 밖·방금 관리자가 됨·다른 계정 권한 사용·반복) 2가지 이상이 겹치면 block, 신호만 있고 수준 5 이상이면 alert, 신호가 없거나 수준 5 미만이면 record. 수준 하나나 설명 문장 하나로는 차단하지 않는다. 경보 ID·주소·순서에 의존하지 않는다.
+- 관찰: block 9, alert 8, record 9. 정상 이벤트 block 0건.
+- 연결: decide.mjs 는 판단만 돌려준다. xdr/privilege/respond.mjs 가 block 만 15분 만료 거부 후보(xdr/deny-rules.json)로, block·alert 를 xdr/alerts.log 에 패턴 이름만 남긴다. 기존 모듈 규칙과 판정기 규칙은 건드리지 않는다. 운영 ZTNA 연결 계약은 XDR-03과 같은 제약이 있다.

@@ -1,14 +1,14 @@
-{"moduleKey":"persistence","alertId":"ps-01","action":"block","confidence":0.92,"reason":"ps_unsigned_new_service: 서명 없는 새 서비스 등록, 자동 시작, 규칙 수준 12, 반복 1번 (T1543/T1053)"}
-{"moduleKey":"persistence","alertId":"ps-02","action":"block","confidence":0.95,"reason":"ps_unsigned_scheduled_task: 서명 없는 예약 작업, 자동 시작, 규칙 수준 12, 반복 2번 (T1543/T1053)"}
-{"moduleKey":"persistence","alertId":"ps-03","action":"block","confidence":0.92,"reason":"ps_startup_location_change: 시작 위치의 서명 없는 항목, 자동 시작, 규칙 수준 13, 반복 1번 (T1543/T1053)"}
-{"moduleKey":"persistence","alertId":"ps-04","action":"block","confidence":0.95,"reason":"ps_unsigned_new_service: 서명 없는 새 서비스 등록, 자동 시작, 규칙 수준 11, 반복 3번 (T1543/T1053)"}
-{"moduleKey":"persistence","alertId":"ps-05","action":"block","confidence":0.92,"reason":"ps_unsigned_scheduled_task: 서명 없는 예약 작업, 자동 시작, 규칙 수준 13, 반복 1번 (T1543/T1053)"}
-{"moduleKey":"persistence","alertId":"ps-06","action":"block","confidence":0.92,"reason":"ps_startup_location_change: 시작 위치의 서명 없는 항목, 자동 시작, 규칙 수준 12, 반복 1번 (T1543/T1053)"}
-{"moduleKey":"persistence","alertId":"ps-07","action":"alert","confidence":0.6,"reason":"ps_unsigned_scheduled_task: 서명 없는 예약 작업, 기준 미만 또는 확인 자료 부족, 알림만 남김"}
-{"moduleKey":"persistence","alertId":"ps-08","action":"alert","confidence":0.6,"reason":"ps_unsigned_new_service: 서명 없는 새 서비스 등록, 기준 미만 또는 확인 자료 부족, 알림만 남김"}
-{"moduleKey":"persistence","alertId":"ps-09","action":"alert","confidence":0.6,"reason":"ps_startup_location_change: 시작 위치의 서명 없는 항목, 기준 미만 또는 확인 자료 부족, 알림만 남김"}
-{"moduleKey":"persistence","alertId":"ps-10","action":"alert","confidence":0.6,"reason":"ps_unsigned_new_service: 서명 없는 새 서비스 등록, 기준 미만 또는 확인 자료 부족, 알림만 남김"}
-{"moduleKey":"persistence","alertId":"ps-11","action":"alert","confidence":0.5,"reason":"ps_unconfirmed: 설명 문장만 있고 이벤트 자료 없음, 알림만 남김"}
+{"moduleKey":"persistence","alertId":"ps-01","action":"block","confidence":0.88,"reason":"ps_unsigned_new_service"}
+{"moduleKey":"persistence","alertId":"ps-02","action":"block","confidence":0.88,"reason":"ps_unsigned_scheduled_task"}
+{"moduleKey":"persistence","alertId":"ps-03","action":"block","confidence":0.87,"reason":"ps_startup_location_change"}
+{"moduleKey":"persistence","alertId":"ps-04","action":"block","confidence":0.88,"reason":"ps_unsigned_new_service"}
+{"moduleKey":"persistence","alertId":"ps-05","action":"block","confidence":0.86,"reason":"ps_unsigned_scheduled_task"}
+{"moduleKey":"persistence","alertId":"ps-06","action":"block","confidence":0.91,"reason":"ps_unsigned_new_service"}
+{"moduleKey":"persistence","alertId":"ps-07","action":"block","confidence":0.87,"reason":"ps_startup_location_change"}
+{"moduleKey":"persistence","alertId":"ps-08","action":"block","confidence":0.91,"reason":"ps_unsigned_new_service"}
+{"moduleKey":"persistence","alertId":"ps-09","action":"alert","confidence":0.51,"reason":"ps_unconfirmed"}
+{"moduleKey":"persistence","alertId":"ps-10","action":"alert","confidence":0.57,"reason":"ps_unconfirmed"}
+{"moduleKey":"persistence","alertId":"ps-11","action":"alert","confidence":0.5,"reason":"ps_unconfirmed"}
 {"moduleKey":"known-cve","alertId":"kc-01","action":"block","confidence":0.96,"reason":"kc_remote_lookup"}
 {"moduleKey":"known-cve","alertId":"kc-02","action":"block","confidence":0.96,"reason":"kc_remote_lookup"}
 {"moduleKey":"known-cve","alertId":"kc-03","action":"block","confidence":0.96,"reason":"kc_remote_lookup"}
@@ -25,3 +25,61 @@
 {"moduleKey":"known-cve","alertId":"kc-14","action":"alert","confidence":0.5,"reason":"kc_unconfirmed"}
 {"moduleKey":"known-cve","alertId":"kc-15","action":"alert","confidence":0.5,"reason":"kc_unconfirmed"}
 {"moduleKey":"known-cve","alertId":"kc-16","action":"alert","confidence":0.6,"reason":"kc_cve_reference"}
+{"moduleKey":"persistence","alertId":"ps-12","action":"alert","confidence":0.51,"reason":"ps_unconfirmed"}
+{"moduleKey":"persistence","alertId":"ps-13","action":"alert","confidence":0.58,"reason":"ps_unconfirmed"}
+{"moduleKey":"persistence","alertId":"ps-14","action":"alert","confidence":0.56,"reason":"ps_unconfirmed"}
+{"moduleKey":"persistence","alertId":"ps-15","action":"alert","confidence":0.52,"reason":"ps_unconfirmed"}
+{"moduleKey":"persistence","alertId":"ps-16","action":"alert","confidence":0.5,"reason":"ps_unconfirmed"}
+{"moduleKey":"brute-force","alertId":"bf-01","action":"block","confidence":0.96,"reason":"auth_failure_burst: repeated failures within sensor window"}
+{"moduleKey":"brute-force","alertId":"bf-02","action":"block","confidence":0.96,"reason":"password_spray: repeated failures across accounts"}
+{"moduleKey":"brute-force","alertId":"bf-03","action":"block","confidence":0.96,"reason":"password_spray: repeated failures across accounts"}
+{"moduleKey":"brute-force","alertId":"bf-04","action":"block","confidence":0.96,"reason":"auth_failure_burst: repeated failures within sensor window"}
+{"moduleKey":"brute-force","alertId":"bf-05","action":"block","confidence":0.96,"reason":"password_spray: repeated failures across accounts"}
+{"moduleKey":"brute-force","alertId":"bf-06","action":"block","confidence":0.96,"reason":"auth_failure_burst: repeated failures within sensor window"}
+{"moduleKey":"brute-force","alertId":"bf-07","action":"block","confidence":0.96,"reason":"auth_failure_burst: repeated failures within sensor window"}
+{"moduleKey":"brute-force","alertId":"bf-08","action":"block","confidence":0.96,"reason":"auth_failure_burst: repeated failures within sensor window"}
+{"moduleKey":"brute-force","alertId":"bf-09","action":"block","confidence":0.96,"reason":"password_spray: repeated failures across accounts"}
+{"moduleKey":"brute-force","alertId":"bf-10","action":"block","confidence":0.96,"reason":"auth_failure_burst: repeated failures within sensor window"}
+{"moduleKey":"brute-force","alertId":"bf-11","action":"alert","confidence":0.5,"reason":"auth_failure_burst: Jev unavailable; alert fallback"}
+{"moduleKey":"brute-force","alertId":"bf-12","action":"alert","confidence":0.5,"reason":"auth_failure_burst: Jev unavailable; alert fallback"}
+{"moduleKey":"brute-force","alertId":"bf-13","action":"alert","confidence":0.5,"reason":"auth_failure_burst: Jev unavailable; alert fallback"}
+{"moduleKey":"brute-force","alertId":"bf-14","action":"alert","confidence":0.5,"reason":"auth_failure_burst: Jev unavailable; alert fallback"}
+{"moduleKey":"brute-force","alertId":"bf-15","action":"alert","confidence":0.5,"reason":"auth_failure_burst: Jev unavailable; alert fallback"}
+{"moduleKey":"brute-force","alertId":"bf-16","action":"alert","confidence":0.5,"reason":"auth_failure_burst: Jev unavailable; alert fallback"}
+{"moduleKey":"brute-force","alertId":"bf-17","action":"alert","confidence":0.5,"reason":"auth_failure_burst: Jev unavailable; alert fallback"}
+{"moduleKey":"brute-force","alertId":"bf-18","action":"alert","confidence":0.5,"reason":"auth_failure_burst: Jev unavailable; alert fallback"}
+{"moduleKey":"brute-force","alertId":"bf-19","action":"alert","confidence":0.5,"reason":"auth_failure_burst: Jev unavailable; alert fallback"}
+{"moduleKey":"privilege","alertId":"pv-01","action":"block","confidence":0.88,"reason":"pv_admin_group_add"}
+{"moduleKey":"privilege","alertId":"pv-02","action":"block","confidence":0.88,"reason":"pv_unusual_admin_command"}
+{"moduleKey":"privilege","alertId":"pv-03","action":"block","confidence":0.9,"reason":"pv_offhours_privilege_use"}
+{"moduleKey":"privilege","alertId":"pv-04","action":"block","confidence":0.88,"reason":"pv_unusual_admin_command"}
+{"moduleKey":"privilege","alertId":"pv-05","action":"block","confidence":0.86,"reason":"pv_admin_group_add"}
+{"moduleKey":"privilege","alertId":"pv-06","action":"block","confidence":0.88,"reason":"pv_unusual_admin_command"}
+{"moduleKey":"privilege","alertId":"pv-07","action":"block","confidence":0.9,"reason":"pv_offhours_privilege_use"}
+{"moduleKey":"privilege","alertId":"pv-08","action":"block","confidence":0.88,"reason":"pv_unusual_admin_command"}
+{"moduleKey":"privilege","alertId":"pv-09","action":"block","confidence":0.86,"reason":"pv_admin_group_add"}
+{"moduleKey":"privilege","alertId":"pv-10","action":"alert","confidence":0.51,"reason":"pv_unconfirmed"}
+{"moduleKey":"privilege","alertId":"pv-11","action":"alert","confidence":0.52,"reason":"pv_unconfirmed"}
+{"moduleKey":"privilege","alertId":"pv-12","action":"alert","confidence":0.55,"reason":"pv_unconfirmed"}
+{"moduleKey":"privilege","alertId":"pv-13","action":"alert","confidence":0.51,"reason":"pv_unconfirmed"}
+{"moduleKey":"privilege","alertId":"pv-14","action":"alert","confidence":0.53,"reason":"pv_unconfirmed"}
+{"moduleKey":"privilege","alertId":"pv-15","action":"alert","confidence":0.51,"reason":"pv_unconfirmed"}
+{"moduleKey":"privilege","alertId":"pv-16","action":"alert","confidence":0.57,"reason":"pv_unconfirmed"}
+{"moduleKey":"privilege","alertId":"pv-17","action":"alert","confidence":0.5,"reason":"pv_unconfirmed"}
+{"moduleKey":"web-injection","alertId":"wi-01","action":"block","confidence":0.96,"reason":"sql_injection: corroborated repeated injection attempts"}
+{"moduleKey":"web-injection","alertId":"wi-02","action":"block","confidence":0.96,"reason":"script_injection: corroborated repeated injection attempts"}
+{"moduleKey":"web-injection","alertId":"wi-03","action":"block","confidence":0.96,"reason":"path_traversal: corroborated repeated injection attempts"}
+{"moduleKey":"web-injection","alertId":"wi-04","action":"block","confidence":0.96,"reason":"sql_injection: corroborated repeated injection attempts"}
+{"moduleKey":"web-injection","alertId":"wi-05","action":"block","confidence":0.96,"reason":"sql_injection: corroborated repeated injection attempts"}
+{"moduleKey":"web-injection","alertId":"wi-06","action":"block","confidence":0.96,"reason":"command_injection: corroborated repeated injection attempts"}
+{"moduleKey":"web-injection","alertId":"wi-07","action":"block","confidence":0.96,"reason":"path_traversal: corroborated repeated injection attempts"}
+{"moduleKey":"web-injection","alertId":"wi-08","action":"block","confidence":0.96,"reason":"sql_injection: corroborated repeated injection attempts"}
+{"moduleKey":"web-injection","alertId":"wi-09","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
+{"moduleKey":"web-injection","alertId":"wi-10","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
+{"moduleKey":"web-injection","alertId":"wi-11","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
+{"moduleKey":"web-injection","alertId":"wi-12","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
+{"moduleKey":"web-injection","alertId":"wi-13","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
+{"moduleKey":"web-injection","alertId":"wi-14","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
+{"moduleKey":"web-injection","alertId":"wi-15","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
+{"moduleKey":"web-injection","alertId":"wi-16","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
+{"moduleKey":"web-injection","alertId":"wi-17","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}

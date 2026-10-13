@@ -1,0 +1,42 @@
+{
+  "schema": "xdr.privilege.patterns.v1",
+  "source": "MITRE ATT&CK T1068 권한 상승 악용 (https://attack.mitre.org/techniques/T1068/) / T1078 정상 계정 도용 (https://attack.mitre.org/techniques/T1078/)",
+  "thresholdNote": "규칙 수준 10 이상·근거 2가지 이상·알림 수준 5 이상은 학습용 가정입니다. 이 파일은 근거 설명용이고 실제 판정 기준은 단일 파일 decide.mjs 안에 있습니다.",
+  "patterns": [
+    {
+      "name": "pv_admin_group_add",
+      "confidence": 0.86,
+      "condition": "관리자 그룹 추가·재가입 경보이고 규칙 수준이 10 이상이며, 원격·처음 보는 주소·반복·여러 계정 동시 추가 가운데 서로 다른 근거가 2가지 이상 겹침",
+      "evidence": "T1078: 평범한 계정이 갑자기 관리자 그룹에 들어가는 것은 정상 계정을 도용해 권한을 얻는 대표 신호입니다.",
+      "sources": ["MITRE ATT&CK T1078"]
+    },
+    {
+      "name": "pv_unusual_admin_command",
+      "confidence": 0.86,
+      "condition": "관리자 명령 실행·방금 관리자가 된 계정·다른 계정의 권한 사용 경보이고 규칙 수준이 10 이상이며, 처음 보는 주소·관리자 그룹 추가 등 서로 다른 근거가 2가지 이상 겹침",
+      "evidence": "T1068: 평소 없던 관리자 명령이나 다른 계정 권한 사용은 권한 상승을 악용하는 신호입니다.",
+      "sources": ["MITRE ATT&CK T1068"]
+    },
+    {
+      "name": "pv_offhours_privilege_use",
+      "confidence": 0.86,
+      "condition": "수업·업무 시간 밖에 관리자 그룹 추가나 관리자 명령이 일어났고 규칙 수준이 10 이상이며 서로 다른 근거가 2가지 이상 겹침",
+      "evidence": "T1068/T1078: 업무 시간 밖의 권한 사용은 탈취한 계정으로 눈에 띄지 않게 움직이는 신호입니다.",
+      "sources": ["MITRE ATT&CK T1068", "MITRE ATT&CK T1078"]
+    },
+    {
+      "name": "pv_unconfirmed",
+      "confidence": 0.5,
+      "condition": "권한 신호(T1068/T1078 또는 관리자 그룹·관리자 명령 언급)는 있고 규칙 수준이 5 이상이지만 겹친 근거가 부족하거나 수준이 10 미만",
+      "evidence": "근거가 부족한 권한 변경 후보는 차단하지 않고 사람이 확인하도록 알림만 남깁니다.",
+      "sources": ["학습용 정책"]
+    },
+    {
+      "name": "pv_normal",
+      "confidence": 0.05,
+      "condition": "권한 상승 신호가 없는 로그인·로그아웃·조회이거나 규칙 수준이 5 미만",
+      "evidence": "일반 로그인과 조회는 기록만 합니다.",
+      "sources": ["학습용 정책"]
+    }
+  ]
+}
