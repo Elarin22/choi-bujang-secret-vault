@@ -1,6 +1,19 @@
 # BYTE BACK 방어전 자료실
 
-## 현재 상태: 7단계 저장점 (평소와 다른 접속은 다시 확인합니다)
+## 현재 상태: 8단계 저장점 (자료마다 갈 수 있는 구역을 나눕니다)
+
+8단계 변경
+- 자원 ID(`lib/resources.mjs`): 자료실을 메모(`note`)와 강사 공지(`notice`) 구역으로 나눠, API 응답 헤더 `X-Resource-Id: note:<id>` / `notice:<id>`(목록은 `X-Resource-Kind`)로 서버가 구별합니다. 기존 자료 id·주소·응답 모양과 화면은 그대로입니다.
+- 판정기(`src/decider.mjs`) 구역 규칙: `exact_route_only`, `own_notes_zone`, `notice_zone`을 더했고 이전 규칙은 유지합니다. 엔진이 확인한 method·route·path를 정확히 대조합니다.
+  - 허용: `GET·POST /notes`, `GET·PUT·DELETE /notes/:id`, `GET /notices`, `GET /notices/:id`
+  - 거부: `PUT /notices/:id`(`zone_not_allowed`), 알 수 없는 경로·메서드와 `:id` 자리의 `export` 같은 기능 이름(`route_not_allowed`)
+  - 쿼리는 보지 않고 자료 ID만 고릅니다. 요청 계약에 소유자와 강사 역할이 없어서, 남의 메모 차단과 강사 확인은 판정기가 아니라 자료 API가 저장된 값으로 다시 합니다.
+- 자료 API 재확인: 남의 메모는 `403 {reason:'not_owner'}`, 공지 수정은 저장된 `staff_roles` 표에 강사로 적힌 사용자만 가능하고 아니면 `403 {reason:'instructor_only'}`입니다. 화면 메뉴·요청 본문의 role·토큰 이름표는 믿지 않습니다.
+- 공지 API: `GET /api/notices`, `GET·PUT /api/notices/:id` (`allowedRoutes`에 추가). 표 생성은 `supabase/stage8.sql`(RLS 켬, 직접 권한 회수).
+- 확인: `npm run decider:test`, `npm run test:r5`(메모·공지 API와 구역 규칙 시험). 가상 요청 연습이며 심판 판정이 아닙니다.
+- 미실행: 실제 강사 계정으로 공지를 수정하는 배포 환경 시험은 하지 않았습니다.
+
+## 7단계 저장점 (평소와 다른 접속은 다시 확인합니다)
 
 7단계 변경: `src/decider.mjs`에 `step_up_required` 규칙을 더했고 기존 `device_registered`는 그대로 둡니다(`RULE_IDS = ['device_registered', 'step_up_required']`).
 - 입력 검사: 엔진이 검증해 넘긴 접속 신호(`signals.source`가 `judge_fixture`)만 읽습니다. 현재 실제 경로의 `none`이나 알 수 없는 출처는 신호로 쓰지 않고, 없는 값을 정상값으로 채우지도 않습니다. 요청의 다른 이름(헤더·위치 등)은 읽지 않습니다.

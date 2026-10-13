@@ -67,6 +67,10 @@ test('step 3 attack check sends no real credentials and expects rejection', asyn
     const seven = await runAttackChecks({ ...cfg, step: 7, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
     assert.ok(seven.some((r) => r.attackId === 'step_up_local' && /복합 이상 step_up\(step_up_required\)/u.test(r.observed)));
     assert.ok(seven.some((r) => r.attackId === 'step_up_real_block' && r.observed.startsWith('미실행')));
+    const eight = await runAttackChecks({ ...cfg, step: 8, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
+    assert.ok(eight.some((r) => r.attackId === 'zone_rules_local' && /공지 수정 deny\(zone_not_allowed\)/u.test(r.observed)));
+    assert.ok(eight.filter((r) => r.attackId.startsWith('anonymous_notice')).every((r) => /거부됨/u.test(r.observed)));
+    assert.ok(eight.length <= 20);
     await assert.rejects(runAttackChecks({ ...cfg, identityProvider: { issuer: 'https://REPLACE-X.supabase.co/auth/v1' } }));
   } finally {
     globalThis.fetch = originalFetch;

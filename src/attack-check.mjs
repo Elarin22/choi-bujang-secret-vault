@@ -16,7 +16,7 @@ async function probe(app, path, init = {}) {
 const rejected = (r) => r.status === 401 || r.status === 403;
 
 export async function runAttackChecks(config) {
-  if (![3, 4, 5, 6, 7].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (![3, 4, 5, 6, 7, 8].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -53,6 +53,7 @@ export async function runAttackChecks(config) {
   }
   let local = null;
   let stepUpLocal = null;
+  let zoneLocal = null;
   if (config.step >= 6) {
     const { decide } = await import('./decider.mjs');
     const { fixtureRequests } = await import('../scripts/fixture-7.mjs');
@@ -66,7 +67,22 @@ export async function runAttackChecks(config) {
     if (config.step >= 7) {
       stepUpLocal = `로컬 가상 사건: 정상 ${ok.decision}, 복합 이상 ${risky.decision}(${risky.reasonCode}), 다시 확인 뒤 ${again.decision}, 출처 위조 신호 ${forged.decision}(신호로 쓰지 않음). 심판 판정이 아님`;
     }
+    if (config.step >= 8) {
+      const own = await decide({ ...normal, requestId: normal.requestId });
+      const edit = await decide({ ...normal, requestId: normal.requestId, method: 'PUT', path: '/notices/demo', route: 'PUT /notices/:id' });
+      const unknown = await decide({ ...normal, requestId: normal.requestId, path: '/notes/export', route: 'GET /notes/:id' });
+      const other = await decide({ ...normal, requestId: normal.requestId, method: 'GET', path: '/admin', route: 'GET /admin' });
+      zoneLocal = `로컬 가상 요청: 자기 메모 ${own.decision}, 공지 수정 ${edit.decision}(${edit.reasonCode}), :id 자리 export ${unknown.decision}, 알 수 없는 경로 ${other.decision}(${other.reasonCode}). 심판 판정이 아님`;
+    }
     local = `로컬 가상 요청: 등록 기기 ${ok.decision}(${ok.reasonCode}), 미등록 기기 ${bad.decision}(${bad.reasonCode}). 심판 판정이 아님`;
+  }
+  let notice = null;
+  if (config.step >= 8) {
+    const id = '00000000-0000-4000-8000-000000000000';
+    notice = {
+      read: await probe(app, '/api/notices'),
+      edit: await probe(app, `/api/notices/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'x' }) }),
+    };
   }
   const seen = (r) => Array.isArray(r.data) && r.data.length > 0;
   return [
@@ -84,6 +100,12 @@ export async function runAttackChecks(config) {
       { attackId: 'step_up_local', expected: '정상 사건은 allow, 복합 이상 사건은 step_up, 다시 확인 뒤 allow', observed: stepUpLocal },
       { attackId: 'step_up_real_block', expected: '다시 로그인 전에는 실제 자료가 막히고 새 로그인 뒤 허용됨',
         observed: '미실행: 이 저장소 자료 API는 판정기 결과를 받지 않아 실제 재로그인 차단은 시험하지 않음' }] : []),
+    ...(notice ? [
+      { attackId: 'anonymous_notice_read', expected: '로그인 없이 공지 목록을 부르면 거부',
+        observed: rejected(notice.read) ? `비로그인 공지 조회가 거부됨 (HTTP ${notice.read.status})` : `비로그인 공지 조회가 거부되지 않음 (HTTP ${notice.read.status})` },
+      { attackId: 'anonymous_notice_edit', expected: '로그인 없이 공지 수정은 거부',
+        observed: rejected(notice.edit) ? `비로그인 공지 수정이 거부됨 (HTTP ${notice.edit.status})` : `비로그인 공지 수정이 거부되지 않음 (HTTP ${notice.edit.status})` },
+      { attackId: 'zone_rules_local', expected: '자기 메모 allow, 공지 수정·알 수 없는 경로·export 자리 deny', observed: zoneLocal }] : []),
     ...(direct ? [{ attackId: 'anon_data_api_read', expected: 'anon 키로 Supabase Data API에서 notes를 직접 읽을 수 없어야 함',
       observed: direct.status === 0 ? 'Data API 직접 확인 실패(주소·키 설정 확인 필요)'
         : direct.status >= 400 || direct.rows === 0

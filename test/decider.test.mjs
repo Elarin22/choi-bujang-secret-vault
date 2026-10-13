@@ -5,7 +5,7 @@ import { fixtureRequests } from '../scripts/fixture-7.mjs';
 import { RULE_IDS, decide } from '../src/decider.mjs';
 
 test('device_registered: registered device allowed, unregistered or missing value denied', async () => {
-  assert.deepEqual([...RULE_IDS], ['device_registered', 'step_up_required']);
+  assert.deepEqual([...RULE_IDS], ['device_registered', 'step_up_required', 'exact_route_only', 'own_notes_zone', 'notice_zone']);
   const results = await checkDecider({ decide, ruleIds: RULE_IDS });
   assert.ok(results.length >= 2 && results.every((r) => r.passed));
   const { normal } = fixtureRequests();
@@ -46,4 +46,36 @@ test('step_up_required: only the combined unusual event asks again; region alone
   }
   assert.equal((await d({ ...suspicious, signals: undefined })).decision, 'allow');
   assert.equal((await d({ ...suspicious, deviceRegistered: false })).reasonCode, 'device_not_registered');
+});
+
+test('zone rules: own notes allowed, notice edit and unknown or look-alike paths denied', async () => {
+  const { decide: d, RULE_IDS: ids } = await import('../src/decider.mjs');
+  const { normal } = fixtureRequests();
+  const req = (method, path, route) => ({ ...normal, method, path, route });
+  const uuid = '3f2b8c1e-5d4a-4b6e-9c7d-1a2b3c4d5e6f';
+  for (const [m, p, r] of [['GET', '/notes', 'GET /notes'], ['POST', '/notes', 'POST /notes'], ['GET', `/notes/${uuid}`, 'GET /notes/:id'],
+    ['PUT', `/notes/${uuid}`, 'PUT /notes/:id'], ['DELETE', `/notes/${uuid}`, 'DELETE /notes/:id'], ['GET', '/api/notes', 'GET /api/notes'],
+    ['GET', '/notices', 'GET /notices'], ['GET', `/notices/${uuid}`, 'GET /notices/:id']]) {
+    const out = await d(req(m, p, r));
+    assert.equal(out.decision, 'allow', `${m} ${p}`);
+    assert.ok(out.ruleIds.every((id) => ids.includes(id)));
+  }
+  const noticeEdit = await d(req('PUT', `/notices/${uuid}`, 'PUT /notices/:id'));
+  assert.deepEqual([noticeEdit.decision, noticeEdit.reasonCode], ['deny', 'zone_not_allowed']);
+  const denied = [
+    ['GET', '/notes/export', 'GET /notes/:id'], ['GET', '/notes/EXPORT', 'GET /notes/:id'], ['GET', '/admin', 'GET /admin'],
+    ['PATCH', `/notes/${uuid}`, 'PATCH /notes/:id'], ['POST', '/notices', 'POST /notices'], ['DELETE', `/notices/${uuid}`, 'DELETE /notices/:id'],
+    ['GET', `/notes/${uuid}/export`, 'GET /notes/:id'], ['GET', '/notes/../notices', 'GET /notes/:id'], ['GET', `/notes/${uuid}?export=1`, 'GET /notes/:id'],
+    ['GET', `/notes/${uuid}`, 'GET /notices/:id'], ['GET', '', ''],
+  ];
+  for (const [m, p, r] of denied) {
+    const out = await d(req(m, p, r));
+    assert.equal(out.decision, 'deny', `${m} ${p}`);
+    assert.equal(out.reasonCode, 'route_not_allowed');
+    assert.deepEqual(out.ruleIds, ['exact_route_only']);
+  }
+  // the query never selects a feature: same decision with or without a query length
+  assert.equal((await d({ ...normal, queryLength: 7 })).decision, 'allow');
+  // unregistered devices are still refused first, even on a known route
+  assert.equal((await d({ ...req('GET', '/notes', 'GET /notes'), deviceRegistered: false })).reasonCode, 'device_not_registered');
 });
