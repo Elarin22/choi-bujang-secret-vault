@@ -7,6 +7,7 @@ export const STATUS_LABEL = Object.freeze({
   declared_code: '코드에 적힘 · 시험하지 않음',
   not_connected: '미연결',
   not_run: '미실행',
+  recorded: '기록된 실측',
 });
 export const statusLabel = (status) => STATUS_LABEL[status] ?? '미확인';
 
@@ -32,6 +33,29 @@ export function summaryRows(summary) {
     { area: '복구 버전', item: '메모 한 건 복원 실행', value: '실행 기록 없음', status: recovery?.noteRestoreRun?.status },
   ];
   return rows.map((row) => ({ ...row, label: statusLabel(row.status) }));
+}
+
+const RESULT_LABEL = Object.freeze({ passed: '기대와 같음', failed: '기대와 다름', not_run: '미실행' });
+
+// 정상·금지 요청 표: 서버가 다시 계산해 준 result만 보여 줍니다. 값이 없으면 미실행으로 둡니다.
+export function matrixRows(summary) {
+  if (!summary || summary.schema !== SUMMARY_SCHEMA || !Array.isArray(summary.matrix?.rows)) return [];
+  return summary.matrix.rows.map((r) => ({
+    stage: count(r.stage), kind: r.kind === 'normal' ? '정상' : r.kind === 'forbidden' ? '금지' : '미확인',
+    title: text(r.title), request: `${text(r.method)} ${text(r.path)}`, expected: text(r.expected),
+    actual: Number.isSafeInteger(r.actual) ? `HTTP ${r.actual}` : '없음',
+    requestId: typeof r.requestId === 'string' && r.requestId ? r.requestId : '없음',
+    checkedAt: typeof r.checkedAt === 'string' && r.checkedAt ? r.checkedAt : '없음',
+    result: RESULT_LABEL[r.result] ?? '미확인', raw: r.result ?? 'unknown',
+  }));
+}
+
+export function matrixCounts(summary) {
+  const m = summary?.matrix;
+  if (!summary || summary.schema !== SUMMARY_SCHEMA || !m) return '표를 받지 못했습니다. 아무 항목도 확인된 것이 아닙니다.';
+  const head = `표 ${count(m.total)}행: 기대와 같음 ${count(m.passed)}, 기대와 다름 ${count(m.failed)}, 미실행 ${count(m.notRun)} (정상 ${count(m.normalPassed)}건·금지 ${count(m.forbiddenPassed)}건 확인)`;
+  const when = typeof m.recordedAt === 'string' && m.recordedAt ? ` · 실측 기록 시각 ${m.recordedAt}` : ' · 실측 기록 없음';
+  return `${head}${when} · 41종 공격 시험: ${statusLabel(m.suite41?.status)}`;
 }
 
 // 요약 속 승인 상태와 같은 때 따로 부른 /api/device-status 응답을 맞대어 봅니다.

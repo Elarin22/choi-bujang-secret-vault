@@ -1,0 +1,168 @@
+{
+  "schema": "vault.ops.matrix.v1",
+  "baseUrl": "https://choi-bujang-secret-vault-two.vercel.app",
+  "runAt": "2026-10-13T05:36:54.667Z",
+  "results": [
+    {
+      "id": "s1_data_json",
+      "ran": true,
+      "requestId": "ops-f40e21a0-ce36-4fe7-b964-a34b6fe73a3d",
+      "edgeId": "icn1::67tlz-1791869769283-5c14c1867e15",
+      "checkedAt": "2026-10-13T05:36:44.626Z",
+      "observed": {
+        "status": 404
+      }
+    },
+    {
+      "id": "s2_config_normal",
+      "ran": true,
+      "requestId": "ops-562c5b4d-3ff0-4279-ba87-07ca7ea9543e",
+      "edgeId": "icn1::iad1::9td6p-1791869769397-685a4f78d522",
+      "checkedAt": "2026-10-13T05:36:45.708Z",
+      "observed": {
+        "status": 200,
+        "hasKeys": true
+      }
+    },
+    {
+      "id": "s3_anon_list",
+      "ran": true,
+      "requestId": "ops-ae3a42a7-3989-4cdd-97ca-719c0676b7bc",
+      "edgeId": "icn1::iad1::5xgr4-1791869770422-8a37b6d22e3c",
+      "checkedAt": "2026-10-13T05:36:46.606Z",
+      "observed": {
+        "status": 401
+      }
+    },
+    {
+      "id": "s3_forged_token",
+      "ran": true,
+      "requestId": "ops-5bcd1eb4-ef66-4beb-b833-448e293f50a6",
+      "edgeId": "icn1::iad1::7vpjp-1791869771322-98dc8af12f03",
+      "checkedAt": "2026-10-13T05:36:47.395Z",
+      "observed": {
+        "status": 401
+      }
+    },
+    {
+      "id": "s3_anon_write",
+      "ran": true,
+      "requestId": "ops-36589c71-bd54-411e-ba23-77e7f27e5784",
+      "edgeId": "icn1::iad1::qs77v-1791869772131-dd820e7bee6c",
+      "checkedAt": "2026-10-13T05:36:47.644Z",
+      "observed": {
+        "status": 401
+      }
+    },
+    {
+      "id": "s4_anon_item",
+      "ran": true,
+      "requestId": "ops-8f8994e5-a72a-43c4-97ca-efab85a89842",
+      "edgeId": "icn1::iad1::vsf2k-1791869772374-3b3a63c7fc3d",
+      "checkedAt": "2026-10-13T05:36:48.441Z",
+      "observed": {
+        "status": 401
+      }
+    },
+    {
+      "id": "s4_own_list",
+      "ran": false,
+      "reason": "env_missing"
+    },
+    {
+      "id": "s4_other_owner",
+      "ran": false,
+      "reason": "env_missing"
+    },
+    {
+      "id": "s5_direct_data_api",
+      "ran": true,
+      "requestId": "ops-2c4e7975-b48e-4a36-9942-ccaebc065a1e",
+      "checkedAt": "2026-10-13T05:36:48.441Z",
+      "observed": {
+        "status": 401,
+        "rows": 0
+      }
+    },
+    {
+      "id": "s8_anon_notice_read",
+      "ran": true,
+      "requestId": "ops-49b704a8-7051-45af-84d8-b9fe36e86f62",
+      "edgeId": "icn1::iad1::h2qtz-1791869774573-033d2eaa1dac",
+      "checkedAt": "2026-10-13T05:36:50.688Z",
+      "observed": {
+        "status": 401
+      }
+    },
+    {
+      "id": "s8_anon_notice_edit",
+      "ran": true,
+      "requestId": "ops-0a977bf1-bafe-4797-99fe-35b8e91cbd9d",
+      "edgeId": "icn1::iad1::g6gxt-1791869775412-f99a2f31f987",
+      "checkedAt": "2026-10-13T05:36:51.512Z",
+      "observed": {
+        "status": 401
+      }
+    },
+    {
+      "id": "s8_student_notice_edit",
+      "ran": false,
+      "reason": "env_missing"
+    },
+    {
+      "id": "s10_anon_restore",
+      "ran": true,
+      "requestId": "ops-a0c83ac3-3dd6-4ddb-b4fd-d3ac30f7bd23",
+      "edgeId": "icn1::iad1::tv888-1791869776230-ab0362d7cfa1",
+      "checkedAt": "2026-10-13T05:36:52.394Z",
+      "observed": {
+        "status": 401
+      }
+    },
+    {
+      "id": "s11_device_status",
+      "ran": true,
+      "requestId": "ops-8fd1ce17-02ca-4460-b9c9-d58a30d2d6d1",
+      "edgeId": "icn1::iad1::zrd4b-1791869777118-9fd2e60a45ed",
+      "checkedAt": "2026-10-13T05:36:53.070Z",
+      "observed": {
+        "status": 200,
+        "schema": "vault.connection.v1",
+        "approval": "unavailable"
+      }
+    },
+    {
+      "id": "s11_device_request",
+      "ran": true,
+      "requestId": "ops-e3f80557-efa8-4892-8f30-045ce683fd9e",
+      "edgeId": "icn1::iad1::qfqt8-1791869777797-1f75f037f7e2",
+      "checkedAt": "2026-10-13T05:36:53.765Z",
+      "observed": {
+        "status": 503,
+        "schema": "vault.connection.v1",
+        "approval": "unavailable"
+      }
+    },
+    {
+      "id": "s12_ops_summary",
+      "ran": true,
+      "requestId": "ops-46163cc8-7baf-413e-b5df-99b4c7465d78",
+      "edgeId": "icn1::iad1::fqkds-1791869778494-3bee489f0b90",
+      "checkedAt": "2026-10-13T05:36:54.442Z",
+      "observed": {
+        "status": 200,
+        "schema": "vault.ops.summary.v1"
+      }
+    },
+    {
+      "id": "s12_ops_write",
+      "ran": true,
+      "requestId": "ops-d5f073a4-cac1-450a-a934-af34ecd1f2f3",
+      "edgeId": "icn1::iad1::4stk2-1791869779157-43e1622fba0d",
+      "checkedAt": "2026-10-13T05:36:54.667Z",
+      "observed": {
+        "status": 405
+      }
+    }
+  ]
+}

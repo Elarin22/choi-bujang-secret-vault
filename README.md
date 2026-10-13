@@ -1,6 +1,41 @@
 # BYTE BACK 방어전 자료실
 
-## 현재 상태: 11단계 저장점 (나만의 접속 앱을 완성합니다)
+## 현재 상태: 12단계 저장점 (탈환 작전실을 완성합니다)
+
+이 안내는 `git log -1`로 보이는 12단계 저장점 커밋을 기준으로 씁니다. 실제로 실행하지 않은 것은 「미실행」으로 적었습니다.
+
+### 누가 만들었나 (출처 구분)
+
+| 구분 | 무엇 | 파일 |
+| --- | --- | --- |
+| **ALEPH SDP 엔진 사용(제공)** | 심판 접수 서버 주소(`judgeIssuer`), 판정 요청·응답 계약 문서, 공식 실행기, 제출 묶음 도구, 가상 경보 자료. 이 저장소에 코드가 복사된 것이며 학생이 만든 것이 아닙니다. | `aleph.config.json`의 `judgeIssuer`, `docs/DECIDER_REQUEST.md`, `docs/DETECT_EVENTS.md`, `scripts/xdr-run.mjs`, `scripts/bundle.mjs`, `xdr/fixtures/` |
+| **ALEPH SDP 엔진 사용(미연결)** | 기기 등록·승인 확인을 하는 공식 접속 도구(어댑터). 연결 안내를 받지 못해 `lib/device.mjs`의 `officialAdapter`가 `null`입니다. | (없음) |
+| **학생이 만든 판정기** | `decide(request)`와 규칙 6개 | `src/decider.mjs` |
+| **학생이 만든 탐지 규칙** | `burst_read` 하나(10분 안 같은 사용자의 GET 120건 초과 → 회수 제안만), 무차별 로그인·웹 주입 가상 경보 판정 | `src/detect.mjs`, `xdr/brute-force/`, `xdr/web-injection/` |
+| **학생이 만든 접속 앱** | 승인 상태 화면, 설치형 웹앱, 서비스 워커, 서버 승인 전달 | `public/connect*.{html,js,webmanifest,svg}`, `public/connection-model.js`, `public/approved-access.js`, `lib/device.mjs`, `api/device-*.js` |
+| **학생이 만든 자료실** | 로그인 화면, 메모·공지·복원 API, 정책 사본·복구 | `public/index.html`, `api/`, `lib/`, `src/verify-login.mjs`, `src/policy-recovery.mjs`, `backups/`, `supabase/` |
+| **학생이 만든 작전실(12단계)** | 서버 요약 API, 작전실 화면, 정상·금지 요청 표 | `api/ops-summary.js`, `lib/ops-summary.mjs`, `lib/ops-matrix.mjs`, `public/ops*.{html,js}`, `scripts/ops-matrix.mjs`, `ops/matrix.json` |
+
+### 12단계 변경
+
+- 탈환 작전실(`/ops.html`): `GET /api/ops-summary` 응답만 그려 판정기 규칙, 탐지 사건, 회수 상태, 복구 버전을 보여 줍니다. 화면은 성공 문구를 만들지 않고 서버가 준 상태 이름(서버가 방금 확인함 / 코드에 적힘 · 시험하지 않음 / 기록된 실측 / 미연결 / 미실행)을 그대로 라벨로 바꿉니다. 가상 메모 본문·토큰·확인 코드·키는 응답에 없습니다.
+- 교차 확인: 화면이 `/api/device-status`를 따로 불러 요약 속 승인 값과 맞대어 보고, 다르면 「이 화면의 수치를 믿지 마세요」라고 표시합니다.
+- 정상·금지 요청 표(제작 2): `lib/ops-matrix.mjs`가 1~12단계 요청 17행(정상·금지, 기대 결과)을 정의합니다. `npm run ops:matrix`가 배포 주소로 실제 요청을 보내 상태 번호·요청 ID·확인 시각만 `ops/matrix.json`에 남기고, 서버는 저장된 「통과」 글자를 믿지 않고 관측값으로 다시 계산해 보여 줍니다. 실행하지 않은 행(토큰이 필요한 행 등)은 미실행입니다.
+- 점검기: `src/attack-check.mjs`가 12단계를 받고(`ops_room_live`), `Buffer`를 `node:buffer`에서 가져옵니다.
+- **미실행:** 41종 공격 시험은 이 저장소에서 실행하지 않았고 표에도 넣지 않았습니다. 표의 「기대와 같음」은 그 표에 있는 요청의 결과일 뿐 41종 방어 증거가 아닙니다. 배포 화면에서의 확인, 토큰이 필요한 정상 요청(내 메모 목록)·남의 메모·일반 학생 공지 수정 행도 해당 환경변수를 넣고 실행하기 전까지 미실행입니다.
+
+### 설치·실행·중지·복구 (재현 순서)
+
+1. 설치: Node 22 이상에서 `npm ci`. 비밀값은 코드·Git에 넣지 않고 Vercel 비밀 입력란(아래 환경변수 표)에만 입력합니다.
+2. 로컬 시험: `npm run test:r5` → 모든 시험 통과. 이어서 `npm run decider:test`, `npm run detect:test`(가상 요청 연습이며 심판 판정이 아님).
+3. 배포: 저장소를 Vercel에 연결해 배포합니다(`npm run build`가 `public/aleph.json`을 만듭니다). `aleph.config.json`의 `publicAppUrl`이 실제 배포 주소와 같아야 합니다.
+4. 실행 확인: 배포 주소에서 `/connect.html`(접속 앱), `/`(자료실), `/ops.html`(작전실)을 엽니다. 승인 상태는 공식 어댑터가 없어 「미연결」로 보이는 것이 정상입니다.
+5. 실측 표 만들기: `npm run ops:matrix` → 행마다 `통과/실패/미실행`, 기대·실제 결과, 요청 ID, 확인 시각이 출력되고 `ops/matrix.json`이 갱신됩니다. 커밋하고 다시 배포하면 `/ops.html` 표에 같은 수치가 보입니다. 토큰이 필요한 행은 터미널에서만 `OPS_TOKEN_A`, `OPS_TOKEN_B`, `OPS_NOTE_ID_A`, `OPS_NOTICE_ID`를 넣습니다(값을 파일·README·답변에 쓰지 않습니다).
+6. 중지: 자료 API를 서버에서 닫으려면 Vercel 환경변수 `REQUIRE_DEVICE_APPROVAL=1`을 켜고 다시 배포합니다. 어댑터가 없는 지금은 메모·공지·복원 API가 403/503으로 닫힙니다. 접속 앱과 자료실 화면은 서버 승인이 확인되기 전에는 열리지 않습니다.
+7. 복구: `npm run policy:diff`로 정책 차이를 보고, 나온 확인 코드로 `npm run policy:restore -- --apply <확인코드>`를 실행합니다. 메모 한 건은 `POST /api/restore/:noteId`(본인 로그인, `supabase/stage10.sql` 적용 필요). 복구 뒤 `npm run test:r5`와 `npm run ops:matrix`를 다시 실행합니다.
+8. 제출: 커밋한 뒤 `npm run bundle`. `bundle-notes.json`과 `artifacts/`는 커밋하지 않습니다.
+
+## 11단계 기록 (나만의 접속 앱을 완성합니다)
 
 11단계 변경
 - 설치형 웹앱(제작 1): `public/connect.webmanifest`(앱 이름·아이콘·standalone), `public/connect-icon.svg`, `public/connect-sw.js`(서비스 워커). 서비스 워커는 공개 안내 화면(`connect.html`·`connect.js`·`connection-model.js`·manifest·아이콘)만 보관하고 `/api/` 요청은 절대 가로채거나 저장하지 않습니다. 오프라인에서 자료실을 열면 `connect.html`의 오프라인 안내로 보냅니다. 메모·API 응답·로그인 정보는 캐시하지 않고, 이 앱은 따로 설치하는 접속 프로그램이 아닙니다.

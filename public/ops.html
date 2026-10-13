@@ -20,6 +20,7 @@
     tr[data-status="confirmed_now"] td:last-child { color: #7ee2a8; }
     tr[data-status="declared_code"] td:last-child { color: #f1d27a; }
     tr[data-status="not_connected"] td:last-child, tr[data-status="not_run"] td:last-child, tr[data-status="unknown"] td:last-child { color: #ffb4c0; }
+    tr[data-result="passed"] td:nth-child(7) { color: #7ee2a8; } tr[data-result="failed"] td:nth-child(7), tr[data-result="not_run"] td:nth-child(7), tr[data-result="unknown"] td:nth-child(7) { color: #ffb4c0; }
     #cross[data-match="true"] { color: #7ee2a8; } #cross[data-match="false"] { color: #ffb4c0; }
     button { font: inherit; font-weight: 700; padding: 9px 16px; border-radius: 10px; border: 0; background: #2a3d55; color: #ecf4ff; cursor: pointer; }
     a { color: #8ad8df; }
@@ -42,7 +43,16 @@
         <tbody id="rows"></tbody>
       </table>
     </section>
-    <p><small>확인 상태 뜻: 「서버가 방금 확인함」은 이 요청 중 서버가 실제 파일·엔진 응답으로 읽은 값입니다. 「코드에 적힘」은 코드 속 값을 읽었을 뿐 시험한 것이 아닙니다. 「미연결」「미실행」은 확인하지 못한 값입니다.</small></p>
+    <section class="card" aria-label="정상·금지 요청 표">
+      <h2>1~11단계 정상·금지 요청 표</h2>
+      <p id="matrix-counts">표를 받지 못했습니다. 아무 항목도 확인된 것이 아닙니다.</p>
+      <table>
+        <thead><tr><th>단계</th><th>구분</th><th>요청 이름</th><th>요청</th><th>기대</th><th>실제 결과</th><th>판정</th><th>요청 ID</th><th>확인 시각</th></tr></thead>
+        <tbody id="matrix-rows"></tbody>
+      </table>
+      <small>이 표는 <code>npm run ops:matrix</code>로 실제 요청을 보낸 기록입니다. 실행하지 않은 행은 「미실행」이고, 표에 없는 41종 공격 시험은 통과로 채우지 않습니다.</small>
+    </section>
+    <p><small>확인 상태 뜻: 「서버가 방금 확인함」은 이 요청 중 서버가 실제 파일·엔진 응답으로 읽은 값입니다. 「코드에 적힘」은 코드 속 값을 읽었을 뿐 시험한 것이 아닙니다. 「기록된 실측」은 앞서 실제 요청을 보내 남긴 기록입니다. 「미연결」「미실행」은 확인하지 못한 값입니다.</small></p>
     <p><a href="/">자료실</a> · <a href="/connect.html">내 기기 승인 상태</a></p>
   </main>
   <script type="module" src="/ops.js"></script>

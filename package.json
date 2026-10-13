@@ -6,6 +6,7 @@
     "build": "node scripts/build-public.mjs",
     "test:r5": "node --test test/*.test.mjs",
     "bundle": "node scripts/bundle.mjs",
+    "ops:matrix": "node scripts/ops-matrix.mjs",
     "policy:diff": "node scripts/policy-restore.mjs",
     "policy:restore": "node scripts/policy-restore.mjs",
     "xdr:run": "node scripts/xdr-run.mjs",
