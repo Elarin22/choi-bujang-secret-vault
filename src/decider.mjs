@@ -1,7 +1,7 @@
 // ALEPH SDP 엔진이 확인한 요청만 받는 학생 판정기입니다.
 // 요청 본문의 userId, role, 기기 키, 토큰을 별도로 믿거나 저장하지 마세요.
 // 규칙을 하나씩 추가하며, RULE_IDS에는 실제로 구현한 규칙 이름만 둡니다.
-export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required', 'exact_route_only', 'own_notes_zone', 'notice_zone']);
+export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required', 'exact_route_only', 'own_notes_zone', 'notice_zone', 'write_not_allowed']);
 
 // 7단계 입력 검사: 엔진이 검증해 넘긴 접속 신호의 출처만 믿습니다.
 // 현재 실제 경로의 source는 'none'이라 신호를 쓰지 않고, 없는 값을 정상값으로 채우지도 않습니다.
@@ -48,22 +48,20 @@ const reverified = (request) => request?.stepUp?.verified === true
   && Number.isFinite(request.stepUp.authAgeSeconds)
   && request.stepUp.authAgeSeconds >= 0 && request.stepUp.authAgeSeconds <= MAX_STEP_UP_AGE_SECONDS;
 
-// 8단계 구역 규칙: 엔진이 확인한 service·method·route·path만 정확히 대조합니다. 알 수 없는 경로는 거부합니다.
+// 8단계 구역 규칙: 엔진이 확인한 method·route·path만 정확히 대조합니다. 알 수 없는 경로는 거부합니다.
 // 쿼리는 보지 않습니다(자료 ID만 고르고 기능은 경로로만 고름). :id 자리에 export 같은 기능 이름은 받지 않습니다.
-// 이 요청 계약에는 메모 소유자·강사 역할 증거가 없고 subjectId는 Supabase 사용자 번호와 비교할 수 없습니다.
-// 그래서 증거 없이는 허용하지 않습니다: 누구의 목록인지 모호한 GET /notes와 소유·강사 증거 없는 쓰기는 거부하고,
-// 자기 목록은 서버가 로그인 사용자로 거르는 GET /my/notes로만 허용합니다. 개별 자료의 소유·강사 확인은 자료 API가 합니다.
+// 이 요청 계약에는 소유자와 강사 역할이 없어서, 남의 메모 차단과 강사 확인은 자료 API가 저장된 값으로 다시 합니다.
 const RESERVED_IDS = Object.freeze(['export', 'import', 'search', 'list', 'all', 'admin', 'new', 'bulk', 'download', 'upload']);
 const ID = '[A-Za-z0-9][A-Za-z0-9_-]{0,63}';
 const ROUTES = Object.freeze([
-  ['GET', '/my/notes', 'own_notes', true],
-  ['GET', '/notes/:id', 'own_notes', true],
-  ['GET', '/notices', 'notice_read', true], ['GET', '/notices/:id', 'notice_read', true],
-  ['GET', '/notes', 'own_notes', false], ['POST', '/notes', 'own_notes', false],
-  ['PUT', '/notes/:id', 'own_notes', false], ['DELETE', '/notes/:id', 'own_notes', false],
-  ['PUT', '/notices/:id', 'notice_edit', false],
-].map(([method, template, zone, allowed]) => Object.freeze({ method, template, zone, allowed,
+  ['GET', '/notes', 'own_notes'], ['GET', '/notes/:id', 'own_notes'],
+  ['GET', '/notices', 'notice_read'], ['GET', '/notices/:id', 'notice_read'],
+].map(([method, template, zone]) => Object.freeze({ method, template, zone,
   regex: new RegExp(`^${template.replace(':id', `(${ID})`)}$`, 'u') })));
+
+// 쓰기(추가·수정·삭제)는 엔진 요청 계약에 소유자·강사 정보가 없어 판정기가 허용할 근거가 없습니다.
+// 그래서 판정기에서는 거부하고, 자료 API가 검증된 사용자와 저장된 소유자·강사 권한으로 다시 판단합니다.
+const WRITE_METHODS = Object.freeze(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 export function matchRoute(request) {
   const { method, route, path } = request ?? {};
@@ -89,10 +87,14 @@ export async function decide(request) {
   if (request?.deviceRegistered !== true) {
     return { ...base, decision: 'deny', reasonCode: 'device_not_registered', ruleIds: ['device_registered'] };
   }
+  if (WRITE_METHODS.includes(request?.method)) {
+    return { ...base, decision: 'deny', reasonCode: 'write_not_allowed', ruleIds: ['write_not_allowed'] };
+  }
   const hit = matchRoute(request);
-  if (!hit) return { ...base, decision: 'deny', reasonCode: 'route_not_allowed', ruleIds: ['exact_route_only'] };
+  if (!hit || request.service !== 'notes' || request.queryLength !== 0) {
+    return { ...base, decision: 'deny', reasonCode: 'route_not_allowed', ruleIds: ['exact_route_only'] };
+  }
   const zoneRule = hit.zone === 'own_notes' ? 'own_notes_zone' : 'notice_zone';
-  if (!hit.allowed) return { ...base, decision: 'deny', reasonCode: 'zone_not_allowed', ruleIds: [zoneRule] };
   if (describeRisk(request).risky) {
     return reverified(request)
       ? { ...base, decision: 'allow', reasonCode: 'approved', ruleIds: ['device_registered', 'step_up_required', zoneRule] }

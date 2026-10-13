@@ -70,9 +70,10 @@ export async function runAttackChecks(config) {
     if (config.step >= 8) {
       const own = await decide({ ...normal, requestId: normal.requestId });
       const edit = await decide({ ...normal, requestId: normal.requestId, method: 'PUT', path: '/notices/demo', route: 'PUT /notices/:id' });
+      const write = await decide({ ...normal, requestId: normal.requestId, method: 'PUT', path: '/notes/demo', route: 'PUT /notes/:id' });
       const unknown = await decide({ ...normal, requestId: normal.requestId, path: '/notes/export', route: 'GET /notes/:id' });
       const other = await decide({ ...normal, requestId: normal.requestId, method: 'GET', path: '/admin', route: 'GET /admin' });
-      zoneLocal = `로컬 가상 요청: 자기 메모 ${own.decision}, 공지 수정 ${edit.decision}(${edit.reasonCode}), :id 자리 export ${unknown.decision}, 알 수 없는 경로 ${other.decision}(${other.reasonCode}). 심판 판정이 아님`;
+      zoneLocal = `로컬 가상 요청: 자기 메모 ${own.decision}, 공지 수정 ${edit.decision}(${edit.reasonCode}), 메모 수정 ${write.decision}(${write.reasonCode}), :id 자리 export ${unknown.decision}, 알 수 없는 경로 ${other.decision}(${other.reasonCode}). 심판 판정이 아님`;
     }
     local = `로컬 가상 요청: 등록 기기 ${ok.decision}(${ok.reasonCode}), 미등록 기기 ${bad.decision}(${bad.reasonCode}). 심판 판정이 아님`;
   }
@@ -105,7 +106,7 @@ export async function runAttackChecks(config) {
         observed: rejected(notice.read) ? `비로그인 공지 조회가 거부됨 (HTTP ${notice.read.status})` : `비로그인 공지 조회가 거부되지 않음 (HTTP ${notice.read.status})` },
       { attackId: 'anonymous_notice_edit', expected: '로그인 없이 공지 수정은 거부',
         observed: rejected(notice.edit) ? `비로그인 공지 수정이 거부됨 (HTTP ${notice.edit.status})` : `비로그인 공지 수정이 거부되지 않음 (HTTP ${notice.edit.status})` },
-      { attackId: 'zone_rules_local', expected: '자기 메모 allow, 공지 수정·알 수 없는 경로·export 자리 deny', observed: zoneLocal }] : []),
+      { attackId: 'zone_rules_local', expected: '자기 메모 읽기 allow, 공지·메모 쓰기(소유자·강사 확인 불가)·알 수 없는 경로·export 자리 deny', observed: zoneLocal }] : []),
     ...(direct ? [{ attackId: 'anon_data_api_read', expected: 'anon 키로 Supabase Data API에서 notes를 직접 읽을 수 없어야 함',
       observed: direct.status === 0 ? 'Data API 직접 확인 실패(주소·키 설정 확인 필요)'
         : direct.status >= 400 || direct.rows === 0
