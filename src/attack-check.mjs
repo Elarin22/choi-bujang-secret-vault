@@ -16,7 +16,7 @@ async function probe(app, path, init = {}) {
 const rejected = (r) => r.status === 401 || r.status === 403;
 
 export async function runAttackChecks(config) {
-  if (![3, 4, 5, 6, 7, 8].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (![3, 4, 5, 6, 7, 8, 9, 10].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -86,6 +86,18 @@ export async function runAttackChecks(config) {
     const burstOut = detect(reads(121, 'learner_fixture'));
     detectLocal = `로컬 가상 사건: 정상 30건 ${normalOut.action}, 10분 안 121건 ${burstOut.action}(${burstOut.reasonCode ?? '-'}). 실제 회수·시간은 심판이 확인하며 이 점검은 심판 판정이 아님`;
   }
+  let policyLocal = null;
+  if (config.step >= 10) {
+    try {
+      const { readFileSync } = await import('node:fs');
+      const { planPolicyRestore } = await import('./policy-recovery.mjs');
+      const backup = JSON.parse(readFileSync(new URL('../backups/safe-policy.json', import.meta.url), 'utf8'));
+      const plan = planPolicyRestore({ projectId: config.repoUrl, policyRevision: config.policyRevision ?? 1, allowedRoutes: config.allowedRoutes ?? [], audit: [] }, backup);
+      policyLocal = `로컬 확인: 안전 정책 사본 검증 통과, 현재 메모 정책과 차이 ${plan.unchanged ? '없음' : `있음(추가 ${plan.added.length}, 제거 ${plan.removed.length})`}. 실제 복원·배포 시험은 미실행`;
+    } catch (error) {
+      policyLocal = `안전 정책 사본 검증 실패(${error.message}). 복원은 중단해야 함`;
+    }
+  }
   let notice = null;
   if (config.step >= 8) {
     const id = '00000000-0000-4000-8000-000000000000';
@@ -116,6 +128,7 @@ export async function runAttackChecks(config) {
       { attackId: 'anonymous_notice_edit', expected: '로그인 없이 공지 수정은 거부',
         observed: rejected(notice.edit) ? `비로그인 공지 수정이 거부됨 (HTTP ${notice.edit.status})` : `비로그인 공지 수정이 거부되지 않음 (HTTP ${notice.edit.status})` },
       { attackId: 'zone_rules_local', expected: '자기 메모 읽기 allow, 공지·메모 쓰기(소유자·강사 확인 불가)·알 수 없는 경로·export 자리 deny', observed: zoneLocal }] : []),
+    ...(policyLocal ? [{ attackId: 'policy_backup_local', expected: '검증된 안전 정책 사본이 있고 현재 메모 정책과 대조됨', observed: policyLocal }] : []),
     ...(detectLocal ? [{ attackId: 'burst_detect_local', expected: '정상 조회는 observe, 10분 안 120건 초과만 propose_revocation(burst_read)', observed: detectLocal }] : []),
     ...(direct ? [{ attackId: 'anon_data_api_read', expected: 'anon 키로 Supabase Data API에서 notes를 직접 읽을 수 없어야 함',
       observed: direct.status === 0 ? 'Data API 직접 확인 실패(주소·키 설정 확인 필요)'

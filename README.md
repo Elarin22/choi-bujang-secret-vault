@@ -1,6 +1,26 @@
 # BYTE BACK 방어전 자료실
 
-## 현재 상태: 9단계 저장점 (도플갱어를 찾고 권한을 거둡니다)
+## 현재 상태: 10단계 저장점 (백업에서 자료실을 되살립니다)
+
+10단계 변경
+- 안전 정책 사본(`backups/safe-policy.json`): 침해 전에 검증한 메모(notes) 서비스 정책(허용 경로 5개, 정책 버전 1)입니다. `src/policy-recovery.mjs`의 `SAFE_POLICY_HASH`(SHA-256)와 프로젝트 주소·서비스·버전을 모두 대조하고, 하나라도 다르거나 사본이 없으면 복원을 중단합니다.
+- 차이 보기(제작 1): `npm run policy:diff` — 복원할 사본 버전, 추가·제거될 경로, 보존될 다른 서비스 규칙·감사 기록 수, 확인 코드를 보여 줍니다. 아무것도 쓰지 않습니다. 실제 운영 정책은 건드리지 않고 이 저장소의 시험 정책(`aleph.config.json`의 `allowedRoutes`)만 대상으로 합니다.
+- 정책 되돌리기(제작 2): `npm run policy:restore -- --apply <확인코드>` — 미리보기에 나온 확인 코드를 그대로 줘야만 메모 서비스 경로를 사본 버전으로 되돌립니다. 공지 등 다른 서비스 규칙은 그대로 두고, 감사 기록(`backups/policy-audit.jsonl`)은 지우지 않고 한 줄만 더합니다.
+- 메모 한 건 복원(제작 3): **서비스 `notes`, 경로 `POST /api/restore/:noteId`**(`aleph.config.json`의 `restoreRoute`, 서버 함수 `api/restore/[noteId].js`, 로직 `lib/restore.mjs`). 본문은 비어 있어야 하고, 소유자는 로그인 검증 결과로만 정합니다. 복원 직전에 정책 사본을 다시 읽어 검증하고, 현재 메모 정책이 사본과 다르면 `503 policy_restore_required`로 저장소를 건드리지 않습니다. DB의 `restore_note` 함수가 검증된 소유자의 사본 한 건만 ID·소유자·내용 해시를 다시 계산해 대조한 뒤 되돌리고(다른 메모는 그대로), 복원 기록 표(`restore_audit`)에 한 줄을 더합니다. 남의 사본·없는 사본은 404, 거부는 409입니다. 판정기는 모든 쓰기를 거부하므로 이 경로는 판정기 허용 목록(`allowedRoutes`)에 넣지 않았습니다.
+- DB 준비: `supabase/stage10.sql`을 Supabase SQL Editor에서 한 번 실행합니다(사본 표·복원 함수, RLS 켬, 직접 권한 회수, service_role만 사용). `supabase/stage10-check.sql`은 가상 ID로 변조·삭제 복원과 남의 사본 거부를 확인하고 모두 rollback합니다.
+- 복구 뒤 재시험 순서(미실행 — 아래 항목은 직접 실행하고 결과를 적기 전까지 미실행입니다):
+  1. `npm run policy:diff` — 정책 차이가 없는지(또는 되돌린 뒤 없음) 확인. 미실행
+  2. `npm run test:r5` — 1~9단계 자동 시험 전체. 미실행
+  3. `npm run detect:test`, `npm run decider:test` — 9·6~8단계 가상 요청 연습. 미실행
+  4. 1단계: `/data.json` 404, 공개 가상 메모 확인. 미실행
+  5. 3~5단계: 시크릿 창에서 `/api/notes` 401, 가짜 토큰 거부, 공개 키로 원본 경로 직접 읽기 거부. 미실행
+  6. 8단계: B 계정으로 A의 메모 요청 → 403, 일반 학생의 공지 수정 → 403, A 본인 메모는 정상. 미실행
+  7. 복구: B 계정으로 자기 메모 한 건 `POST /api/restore/:noteId` → 200, 같은 요청을 A 계정으로 → 404. 미실행
+  8. `npm run bundle` 직접 점검 결과 확인. 미실행
+- 확인한 것: `npm run test:r5`(정책 사본 검증·미리보기·확인 코드·복원 경로 시험). 가상 요청 연습이며 심판 판정이나 실제 복구 증거가 아닙니다.
+- 미실행: Supabase에 `stage10.sql` 적용, 실제 계정으로 배포 환경 복원, 위 재시험 순서.
+
+## 9단계 기록 (도플갱어를 찾고 권한을 거둡니다)
 
 9단계 변경
 - 탐지 함수(`src/detect.mjs`): `detect(events)`는 가상 사건에서 가명 주체(`identity.sub`)·요청 종류(`method`)·시각(`at`) 세 값만 읽습니다. 메모 내용·토큰·실명 같은 다른 값은 읽거나 저장하거나 출력하지 않고, 형식이 맞지 않는 사건은 세지 않습니다.

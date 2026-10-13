@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { deploymentIdentity } from '../scripts/deployment-identity.mjs';
@@ -71,6 +72,12 @@ test('step 3 attack check sends no real credentials and expects rejection', asyn
     assert.ok(eight.some((r) => r.attackId === 'zone_rules_local' && /공지 수정 deny\(write_not_allowed\)/u.test(r.observed)));
     assert.ok(eight.filter((r) => r.attackId.startsWith('anonymous_notice')).every((r) => /거부됨/u.test(r.observed)));
     assert.ok(eight.length <= 20);
+    const nine = await runAttackChecks({ ...cfg, step: 9, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
+    assert.ok(nine.some((r) => r.attackId === 'burst_detect_local' && /propose_revocation\(burst_read\)/u.test(r.observed)));
+    const real = JSON.parse(readFileSync(new URL('../aleph.config.json', import.meta.url), 'utf8'));
+    const ten = await runAttackChecks({ ...cfg, step: 10, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes', repoUrl: real.repoUrl, allowedRoutes: real.allowedRoutes, policyRevision: real.policyRevision });
+    assert.ok(ten.some((r) => r.attackId === 'policy_backup_local' && /검증 통과/u.test(r.observed)));
+    assert.ok(ten.length <= 20);
     await assert.rejects(runAttackChecks({ ...cfg, identityProvider: { issuer: 'https://REPLACE-X.supabase.co/auth/v1' } }));
   } finally {
     globalThis.fetch = originalFetch;
