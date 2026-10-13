@@ -1,0 +1,380 @@
+{
+  "schema": "aleph.xdr.fixture.v1",
+  "moduleKey": "persistence",
+  "note": "연습용으로 직접 만든 경보 묶음입니다. 공식 persistence 경보 묶음이 있으면 이 파일을 그것으로 덮어쓰세요. 주소는 문서용 대역이고 계정은 가상입니다.",
+  "alerts": [
+    {
+      "id": "ps-01",
+      "timestamp": "2026-10-13T09:02:11+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 12,
+        "description": "서명 없는 새 서비스가 자동 시작으로 등록됐습니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.21",
+        "srcuser": "user01",
+        "event": "service_created",
+        "path": "C:\\ProgramData\\doc\\svc.exe",
+        "signed": false,
+        "baseline": "none",
+        "autostart": true,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-02",
+      "timestamp": "2026-10-13T09:10:40+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 12,
+        "description": "서명 없는 예약 작업이 로그온 때 실행되도록 생겼습니다.",
+        "mitre": [
+          "T1053"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.21",
+        "srcuser": "user01",
+        "event": "task_created",
+        "path": "C:\\ProgramData\\doc\\task.exe",
+        "signed": false,
+        "baseline": "none",
+        "autostart": true,
+        "count": "2"
+      }
+    },
+    {
+      "id": "ps-03",
+      "timestamp": "2026-10-13T09:18:05+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 13,
+        "description": "시작 폴더에 서명 없는 파일이 새로 생겼습니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.33",
+        "srcuser": "user01",
+        "event": "file_changed",
+        "path": "C:\\Users\\user01\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\doc-helper.lnk",
+        "signed": false,
+        "baseline": "none",
+        "autostart": true,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-04",
+      "timestamp": "2026-10-13T09:32:27+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 11,
+        "description": "서명 없는 서비스가 재부팅 뒤에도 실행되도록 3번 반복 등록됐습니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.21",
+        "srcuser": "user01",
+        "event": "service_created",
+        "path": "C:\\ProgramData\\doc\\svc2.exe",
+        "signed": false,
+        "baseline": "none",
+        "autostart": true,
+        "count": "3"
+      }
+    },
+    {
+      "id": "ps-05",
+      "timestamp": "2026-10-13T10:05:19+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 13,
+        "description": "서명 없는 예약 작업이 새로 만들어졌습니다. 평소 목록에 없습니다.",
+        "mitre": [
+          "T1053"
+        ]
+      },
+      "data": {
+        "srcip": "192.0.2.44",
+        "srcuser": "user01",
+        "event": "task_created",
+        "path": "C:\\ProgramData\\doc\\task2.exe",
+        "signed": false,
+        "baseline": "none",
+        "autostart": true,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-06",
+      "timestamp": "2026-10-13T10:41:50+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 12,
+        "description": "시작 폴더의 기존 항목이 서명 없는 파일로 바뀌었습니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.52",
+        "srcuser": "user01",
+        "event": "file_changed",
+        "path": "C:\\Users\\user01\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\doc-helper.lnk",
+        "signed": false,
+        "baseline": "none",
+        "autostart": true,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-07",
+      "timestamp": "2026-10-13T11:03:12+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 8,
+        "description": "서명 없는 예약 작업이 한 번 생겼습니다. 자동 시작 여부는 확인되지 않았습니다.",
+        "mitre": [
+          "T1053"
+        ]
+      },
+      "data": {
+        "srcip": "192.0.2.61",
+        "srcuser": "user01",
+        "event": "task_created",
+        "path": "C:\\Tools\\note-sync.exe",
+        "signed": false,
+        "baseline": "none",
+        "autostart": false,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-08",
+      "timestamp": "2026-10-13T11:20:44+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 7,
+        "description": "새 서비스가 등록됐습니다. 서명 확인 결과는 없습니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.62",
+        "srcuser": "user01",
+        "event": "service_created",
+        "path": "C:\\Tools\\dochelper.exe",
+        "baseline": "none",
+        "autostart": true,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-09",
+      "timestamp": "2026-10-13T11:35:09+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 6,
+        "description": "시작 폴더에 서명 없는 바로가기가 생겼습니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.63",
+        "srcuser": "user01",
+        "event": "file_changed",
+        "path": "C:\\Users\\user01\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\doc-helper.lnk",
+        "signed": false,
+        "baseline": "none",
+        "autostart": true,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-10",
+      "timestamp": "2026-10-13T11:48:30+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 9,
+        "description": "서명 없는 새 서비스가 한 번 등록됐지만 자동 시작은 아닙니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "192.0.2.64",
+        "srcuser": "user01",
+        "event": "service_created",
+        "path": "C:\\Tools\\oneshot.exe",
+        "signed": false,
+        "baseline": "none",
+        "autostart": false,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-11",
+      "timestamp": "2026-10-13T12:05:02+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 6,
+        "description": "서명 없는 서비스 등록이라는 문구만 있고 이벤트 자료는 없습니다.",
+        "mitre": []
+      },
+      "data": {
+        "srcip": "203.0.113.65",
+        "srcuser": "user01"
+      }
+    },
+    {
+      "id": "ps-12",
+      "timestamp": "2026-10-13T12:20:14+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 3,
+        "description": "서명된 서비스가 업데이트됐습니다. 평소 목록에 있습니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.70",
+        "srcuser": "user02",
+        "event": "service_created",
+        "path": "C:\\Program Files\\Vendor\\svc.exe",
+        "signed": true,
+        "baseline": "listed",
+        "autostart": true,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-13",
+      "timestamp": "2026-10-13T12:31:40+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 2,
+        "description": "서명된 예약 작업이 평소 목록대로 실행됐습니다.",
+        "mitre": [
+          "T1053"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.71",
+        "srcuser": "user02",
+        "event": "task_created",
+        "path": "C:\\Windows\\System32\\Tasks\\backup",
+        "signed": true,
+        "baseline": "listed",
+        "autostart": true,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-14",
+      "timestamp": "2026-10-13T12:44:18+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 3,
+        "description": "문서 폴더의 파일이 저장됐습니다. 시작 위치가 아닙니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.72",
+        "srcuser": "user01",
+        "event": "file_changed",
+        "path": "C:\\Users\\user01\\Documents\\report.docx",
+        "autostart": false,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-15",
+      "timestamp": "2026-10-13T13:02:27+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 3,
+        "description": "운영 도구가 서명 없는 서비스를 평소 목록대로 등록했습니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.73",
+        "srcuser": "user03",
+        "event": "service_created",
+        "path": "C:\\Ops\\agent.exe",
+        "signed": false,
+        "baseline": "listed",
+        "autostart": true,
+        "count": "1"
+      }
+    },
+    {
+      "id": "ps-16",
+      "timestamp": "2026-10-13T13:15:55+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 3,
+        "description": "시작 폴더의 서명된 항목이 공급사 업데이트로 바뀌었습니다.",
+        "mitre": [
+          "T1543"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.74",
+        "srcuser": "user02",
+        "event": "file_changed",
+        "path": "C:\\Users\\user01\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\doc-helper.lnk",
+        "signed": true,
+        "baseline": "listed",
+        "autostart": true,
+        "count": "1"
+      }
+    }
+  ]
+}

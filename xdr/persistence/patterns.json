@@ -1,0 +1,28 @@
+{
+  "schema": "xdr.persistence.patterns.v1",
+  "source": "MITRE ATT&CK T1543 시스템 프로세스 생성·변경 / T1053 예약 작업 (https://attack.mitre.org/techniques/T1543/ , https://attack.mitre.org/techniques/T1053/)",
+  "thresholdNote": "규칙 수준·반복 횟수 기준 숫자는 학습용 가정입니다. 이 파일은 근거 설명용이고 실제 판정 기준은 단일 파일 decide.mjs 안에 있습니다.",
+  "patterns": [
+    {
+      "id": "unsigned_new_service",
+      "name": "서명 없는 새 서비스 등록",
+      "mitre": { "id": "T1543", "name": "Create or Modify System Process" },
+      "condition": "서비스 생성 이벤트이고 서명이 없으며 평소 목록에 없고, 자동 시작으로 등록되며 규칙 수준이 10 이상",
+      "evidence": "T1543: 서명 없는 새 서비스를 자동 시작으로 심는 것은 재부팅 뒤에도 살아남으려는 시스템 프로세스 변경 신호입니다."
+    },
+    {
+      "id": "unsigned_scheduled_task",
+      "name": "서명 없는 낯선 예약 작업",
+      "mitre": { "id": "T1053", "name": "Scheduled Task/Job" },
+      "condition": "예약 작업 생성 이벤트이고 서명이 없으며 평소 목록에 없고, 로그온·부팅 때 실행되며 규칙 수준이 10 이상",
+      "evidence": "T1053: 낯선 예약 작업을 로그온이나 부팅에 맞춰 심는 것은 지속성 확보를 위한 예약 작업 악용 신호입니다."
+    },
+    {
+      "id": "startup_location_change",
+      "name": "시작 폴더에 서명 없는 항목 생성·변경",
+      "mitre": { "id": "T1543", "name": "Create or Modify System Process" },
+      "condition": "시작 폴더 경로의 파일 생성·변경 이벤트이고 서명이 없으며 평소 목록에 없고 규칙 수준이 10 이상",
+      "evidence": "T1543 계열: 시작 폴더에 서명 없는 항목을 넣거나 기존 항목을 바꾸는 것은 로그인 때 자동 실행되도록 심는 지속성 신호입니다."
+    }
+  ]
+}
