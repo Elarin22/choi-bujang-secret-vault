@@ -62,6 +62,8 @@ test('step 3 attack check sends no real credentials and expects rejection', asyn
     const five = await runAttackChecks({ ...cfg, step: 5, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
     assert.equal(five.length, 5);
     assert.ok(seenUrls.includes('https://abcdefghij.supabase.co/rest/v1/notes?select=id&limit=1'));
+    const six = await runAttackChecks({ ...cfg, step: 6, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
+    assert.ok(six.some((r) => r.attackId === 'device_registered_local' && /deny\(device_not_registered\)/u.test(r.observed)));
     await assert.rejects(runAttackChecks({ ...cfg, identityProvider: { issuer: 'https://REPLACE-X.supabase.co/auth/v1' } }));
   } finally {
     globalThis.fetch = originalFetch;

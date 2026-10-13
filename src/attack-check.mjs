@@ -16,7 +16,7 @@ async function probe(app, path, init = {}) {
 const rejected = (r) => r.status === 401 || r.status === 403;
 
 export async function runAttackChecks(config) {
-  if (![3, 4, 5].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (![3, 4, 5, 6].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -51,6 +51,15 @@ export async function runAttackChecks(config) {
       direct = { status: response.status, rows: Array.isArray(rows) ? rows.length : 0 };
     } catch { direct = { status: 0, rows: 0 }; }
   }
+  let local = null;
+  if (config.step >= 6) {
+    const { decide } = await import('./decider.mjs');
+    const { fixtureRequests } = await import('../scripts/fixture-7.mjs');
+    const { normal } = fixtureRequests();
+    const ok = await decide(normal);
+    const bad = await decide({ ...normal, requestId: normal.requestId, deviceRegistered: false });
+    local = `로컬 가상 요청: 등록 기기 ${ok.decision}(${ok.reasonCode}), 미등록 기기 ${bad.decision}(${bad.reasonCode}). 심판 판정이 아님`;
+  }
   const seen = (r) => Array.isArray(r.data) && r.data.length > 0;
   return [
     { attackId: 'static_data_json_read', expected: '/data.json에서 가상 메모가 보이지 않아야 함',
@@ -61,6 +70,8 @@ export async function runAttackChecks(config) {
       observed: rejected(fake) ? `가짜 토큰이 거부됨 (HTTP ${fake.status})` : `가짜 토큰이 거부되지 않음 (HTTP ${fake.status})` },
     { attackId: 'anonymous_api_write', expected: '로그인 없이 메모 추가는 거부',
       observed: rejected(write) ? `비로그인 추가 요청이 거부됨 (HTTP ${write.status})` : `비로그인 추가 요청이 거부되지 않음 (HTTP ${write.status})` },
+    ...(local ? [{ attackId: 'device_registered_local', expected: '등록 기기는 allow, 미등록 기기는 deny·device_not_registered',
+      observed: local }] : []),
     ...(direct ? [{ attackId: 'anon_data_api_read', expected: 'anon 키로 Supabase Data API에서 notes를 직접 읽을 수 없어야 함',
       observed: direct.status === 0 ? 'Data API 직접 확인 실패(주소·키 설정 확인 필요)'
         : direct.status >= 400 || direct.rows === 0

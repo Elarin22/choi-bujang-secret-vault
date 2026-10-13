@@ -1,6 +1,16 @@
 # BYTE BACK 방어전 자료실
 
-## 현재 상태: 5단계 저장점 (자료 요청을 서버 한곳으로)
+## 현재 상태: 6단계 저장점 (등록한 기기만 자료실에 들어옵니다)
+
+6단계 변경: `src/decider.mjs`에 `device_registered` 규칙 하나를 더했습니다(`RULE_IDS = ['device_registered']`). 엔진이 확인해 전달한 요청의 `deviceRegistered`가 `true`일 때만 `allow`(`approved`)하고, `false`이거나 값이 없으면 `deny`와 이유 코드 `device_not_registered`로 거부합니다. 판정기는 요청의 `deviceRegistered`만 보며, 인증서·CA·서명 키·기기 개인키는 만들지도 저장하지도 않았습니다. 기존 자료실 주소와 화면은 그대로입니다.
+
+6단계 확인 순서(설치할 접속 프로그램 없음)
+1. `npm run decider:test` 실행
+2. 「등록 기기의 정상 요청」이 `통과`로 보이는지 확인
+3. 「미등록 기기의 가상 요청」이 `통과`(= deny·`device_not_registered`로 거부됨)로 보이는지 확인
+4. 이 명령은 가상 요청 연습이며 심판 통과 증거가 아닙니다. 미등록 기기 공격은 심판이 직접 시험합니다.
+
+### 5단계까지의 기능
 
 - 화면(`public/index.html`)에서 Supabase Auth 이메일·비밀번호로 로그인·로그아웃하고 가상 메모를 추가·수정·삭제합니다.
 - 서버 함수가 `Authorization: Bearer` 토큰을 `src/verify-login.mjs`로 검사합니다. 토큰이 없거나 가짜면 401과 JSON 오류 문구로 거부합니다.
