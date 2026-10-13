@@ -10,12 +10,14 @@ const PATTERNS = Object.freeze({
   obfuscated_lookup: { name: '글자를 쪼갠 조회 구문(우회 표기)', evidence: 'CVE-2021-44228 우회 표기' },
   vuln_scanner_trace: { name: '알려진 취약점 점검 도구의 흔적', evidence: 'T1190 점검 도구 정찰 신호' },
   described_lookup_signal: { name: '경보 설명이 알려 주는 원격 조회 표기', evidence: 'CVE-2021-44228 형태 요청 경보 설명' },
+  elevated_unconfirmed: { name: '조회 구문은 확인되지 않았지만 수준이 오른 T1190 경보', evidence: 'T1190 수준 상승 경보, 사람 확인 필요' },
 });
 
 const BLOCK_AT = 0.85;
 const ALERT_AT = 0.5;
 const BLOCK_LEVEL = 10;   // 규칙 수준 이 값 이상이면 명확한 공격 후보
-const BLOCK_COUNT = 3;    // 요약 경보에서 같은 표기가 이 횟수 이상 반복
+const BLOCK_COUNT = 3;    // 같은 표기가 이 횟수 이상 반복되면 확신도를 더 올림
+const ELEVATED_LEVEL = 5; // 조회 구문이 없어도 이 수준 이상이면 사람이 확인(alert)
 
 // 조회 구문 모양 (퍼센트 인코딩은 한 번 풀어서 본다)
 const PLAIN_LOOKUP = /\$\{\s*jndi\s*:\s*(?:ldaps?|rmi|dns|iiop|nis|corba|https?)\s*:/iu;
@@ -41,6 +43,9 @@ function flatten(value, depth = 0) {
   return [];
 }
 
+const HEADER_KEYS = /^(?:headers?|useragent|user_agent|referer|referrer|x[-_].*)$/iu;
+const SKIP_KEYS = /^(?:srcip|src_ip|dstip|dst_ip|srcuser|dstuser|user|count|id)$/iu;
+
 function normalizeAlert(alert) {
   const a = alert && typeof alert === 'object' ? alert : {};
   const data = a.data && typeof a.data === 'object' ? a.data : {};
@@ -48,15 +53,20 @@ function normalizeAlert(alert) {
   const describedCount = description.match(/(\d+)\s*(?:건|번|회|times|requests)/iu)?.[1];
   const count = Number(data.count ?? a.count ?? describedCount ?? 0);
   const level = Number(a.rule?.level ?? a.level ?? 0);
-  const headerText = flatten(data.headers ?? a.headers).map(decoded).join('\n');
-  const argText = [decoded(data.url ?? a.url), ...flatten(data.args ?? a.args), ...flatten(data.full_log ?? a.full_log)].map(decoded).join('\n');
+  const headers = [];
+  const args = [];
+  for (const [key, value] of Object.entries(data)) {
+    if (SKIP_KEYS.test(key)) continue;
+    (HEADER_KEYS.test(key) ? headers : args).push(...flatten(value));
+  }
+  args.push(...flatten(a.url), ...flatten(a.headers), ...flatten(a.args));
   return {
     id: String(a.id ?? a.alertId ?? ''),
     description,
     level: Number.isFinite(level) ? level : 0,
     count: Number.isFinite(count) && count >= 0 ? count : 0,
-    headerText,
-    argText,
+    headerText: headers.map(decoded).join('\n'),
+    argText: args.map(decoded).join('\n'),
   };
 }
 
@@ -82,21 +92,19 @@ export function decide(alert) {
 
   const form = inHeader ? 'remote_lookup_in_header' : inArgs ? 'remote_lookup_in_args' : obfuscated ? 'obfuscated_lookup' : null;
 
-  // 1) 명확한 공격: 요청에 실제 조회 구문이 있고 규칙 수준이 높다 → block
+  // 1) 명확한 공격: 요청에 완전한 조회 구문이 있고 규칙 수준이 높다 → block (설명만으로는 차단하지 않는다)
   if (form && strongLevel) {
-    const confidence = scanner || item.count >= BLOCK_COUNT ? 0.95 : 0.9;
-    return done('block', confidence, form, `규칙 수준 ${item.level}, 조회 구문 확인${scanner ? ', 점검 도구 흔적 동반' : ''}`);
-  }
-  // 요청 원문이 없는 요약 경보: 설명의 조회 표기 + 반복 + 높은 규칙 수준
-  if (described && strongLevel && item.count >= BLOCK_COUNT) {
-    return done('block', 0.88, 'described_lookup_signal', `같은 표기 ${item.count}번 반복, 규칙 수준 ${item.level}`);
+    const both = inHeader && inArgs;
+    const confidence = scanner || both || item.count >= BLOCK_COUNT ? 0.95 : 0.9;
+    return done('block', confidence, form, `규칙 수준 ${item.level}, 조회 구문 확인${scanner ? ', 점검 도구 흔적 동반' : ''}${both ? ', 머리글·인자 모두' : ''}`);
   }
 
-  // 2) 애매함: 조회 구문이 한 번뿐이거나 규칙 수준이 낮음, 점검 도구 흔적만 있음 → alert
+  // 2) 애매함 → alert
   if (form) return done('alert', 0.7, form, `규칙 수준 ${item.level}, 반복·근거 부족`);
   if (scanner) return done('alert', 0.6, 'vuln_scanner_trace', '점검 도구 흔적만 있고 조회 구문은 없음');
-  if (described) return done('alert', 0.6, 'described_lookup_signal', `설명에 조회 표기, 반복 ${item.count}번·규칙 수준 ${item.level}로 근거 부족`);
+  if (described) return done('alert', 0.6, 'described_lookup_signal', `설명에만 조회 표기가 있고 요청에서 구문을 확인하지 못함 (규칙 수준 ${item.level})`);
   if (word) return done('alert', ALERT_AT, 'described_lookup_signal', '낱말만 닮음, 조회 구문 모양은 없음');
+  if (item.level >= ELEVATED_LEVEL) return done('alert', ALERT_AT, 'elevated_unconfirmed', `규칙 수준 ${item.level}, 완전한 조회 구문 없음`);
 
   // 3) 정상 이벤트
   return done('record', item.level <= 3 ? 0.05 : 0.1, null, '알려진 악용 형태 아님');

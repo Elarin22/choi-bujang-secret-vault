@@ -5,102 +5,120 @@
       "id": "known-cve-kc-01",
       "action": "deny",
       "effect": "deny",
-      "sourceIp": "203.0.113.50",
+      "sourceIp": "203.0.113.10",
       "match": {
-        "srcip": "203.0.113.50"
+        "srcip": "203.0.113.10"
       },
-      "createdAt": "2026-10-13T06:10:12.541Z",
-      "expiresAt": "2026-10-13T07:10:12.541Z",
+      "createdAt": "2026-10-13T06:15:11.867Z",
+      "expiresAt": "2026-10-13T07:15:11.867Z",
       "evidenceAlertId": "kc-01",
       "evidenceAlertIds": [
-        "kc-01"
-      ],
-      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 12, 조회 구문 확인 (CVE-2021-44228 머리글 악용 신호)",
-      "confidence": 0.95
-    },
-    {
-      "id": "known-cve-kc-02",
-      "action": "deny",
-      "effect": "deny",
-      "sourceIp": "198.51.100.40",
-      "match": {
-        "srcip": "198.51.100.40"
-      },
-      "createdAt": "2026-10-13T06:10:12.541Z",
-      "expiresAt": "2026-10-13T07:10:12.541Z",
-      "evidenceAlertId": "kc-02",
-      "evidenceAlertIds": [
+        "kc-01",
         "kc-02"
       ],
-      "reason": "remote_lookup_in_args: 요청 인자 안의 원격 조회 구문(jndi 형태) - 규칙 수준 13, 조회 구문 확인 (CVE-2021-44228 인자 악용 신호)",
-      "confidence": 0.95
+      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 13, 조회 구문 확인 (CVE-2021-44228 머리글 악용 신호)",
+      "confidence": 0.9
     },
     {
       "id": "known-cve-kc-03",
       "action": "deny",
       "effect": "deny",
-      "sourceIp": "192.0.2.60",
+      "sourceIp": "198.51.100.16",
       "match": {
-        "srcip": "192.0.2.60"
+        "srcip": "198.51.100.16"
       },
-      "createdAt": "2026-10-13T06:10:12.541Z",
-      "expiresAt": "2026-10-13T07:10:12.541Z",
+      "createdAt": "2026-10-13T06:15:11.867Z",
+      "expiresAt": "2026-10-13T07:15:11.867Z",
       "evidenceAlertId": "kc-03",
       "evidenceAlertIds": [
         "kc-03"
       ],
-      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 12, 조회 구문 확인, 점검 도구 흔적 동반 (CVE-2021-44228 머리글 악용 신호)",
+      "reason": "remote_lookup_in_args: 요청 인자 안의 원격 조회 구문(jndi 형태) - 규칙 수준 12, 조회 구문 확인 (CVE-2021-44228 인자 악용 신호)",
       "confidence": 0.95
     },
     {
       "id": "known-cve-kc-04",
       "action": "deny",
       "effect": "deny",
-      "sourceIp": "203.0.113.61",
+      "sourceIp": "192.0.2.16",
       "match": {
-        "srcip": "203.0.113.61"
+        "srcip": "192.0.2.16"
       },
-      "createdAt": "2026-10-13T06:10:12.541Z",
-      "expiresAt": "2026-10-13T07:10:12.541Z",
+      "createdAt": "2026-10-13T06:15:11.867Z",
+      "expiresAt": "2026-10-13T07:15:11.867Z",
       "evidenceAlertId": "kc-04",
       "evidenceAlertIds": [
         "kc-04"
       ],
-      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 11, 조회 구문 확인 (CVE-2021-44228 머리글 악용 신호)",
+      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 13, 조회 구문 확인 (CVE-2021-44228 머리글 악용 신호)",
       "confidence": 0.95
     },
     {
       "id": "known-cve-kc-05",
       "action": "deny",
       "effect": "deny",
-      "sourceIp": "198.51.100.41",
+      "sourceIp": "203.0.113.24",
       "match": {
-        "srcip": "198.51.100.41"
+        "srcip": "203.0.113.24"
       },
-      "createdAt": "2026-10-13T06:10:12.541Z",
-      "expiresAt": "2026-10-13T07:10:12.541Z",
+      "createdAt": "2026-10-13T06:15:11.867Z",
+      "expiresAt": "2026-10-13T07:15:11.867Z",
       "evidenceAlertId": "kc-05",
       "evidenceAlertIds": [
         "kc-05"
       ],
-      "reason": "remote_lookup_in_args: 요청 인자 안의 원격 조회 구문(jndi 형태) - 규칙 수준 14, 조회 구문 확인 (CVE-2021-44228 인자 악용 신호)",
-      "confidence": 0.95
+      "reason": "remote_lookup_in_args: 요청 인자 안의 원격 조회 구문(jndi 형태) - 규칙 수준 12, 조회 구문 확인 (CVE-2021-44228 인자 악용 신호)",
+      "confidence": 0.9
     },
     {
       "id": "known-cve-kc-06",
       "action": "deny",
       "effect": "deny",
-      "sourceIp": "203.0.113.77",
+      "sourceIp": "198.51.100.24",
       "match": {
-        "srcip": "203.0.113.77"
+        "srcip": "198.51.100.24"
       },
-      "createdAt": "2026-10-13T06:10:12.541Z",
-      "expiresAt": "2026-10-13T07:10:12.541Z",
+      "createdAt": "2026-10-13T06:15:11.867Z",
+      "expiresAt": "2026-10-13T07:15:11.867Z",
       "evidenceAlertId": "kc-06",
       "evidenceAlertIds": [
         "kc-06"
       ],
-      "reason": "remote_lookup_in_args: 요청 인자 안의 원격 조회 구문(jndi 형태) - 규칙 수준 12, 조회 구문 확인 (CVE-2021-44228 인자 악용 신호)",
+      "reason": "remote_lookup_in_args: 요청 인자 안의 원격 조회 구문(jndi 형태) - 규칙 수준 11, 조회 구문 확인 (CVE-2021-44228 인자 악용 신호)",
+      "confidence": 0.95
+    },
+    {
+      "id": "known-cve-kc-07",
+      "action": "deny",
+      "effect": "deny",
+      "sourceIp": "192.0.2.24",
+      "match": {
+        "srcip": "192.0.2.24"
+      },
+      "createdAt": "2026-10-13T06:15:11.867Z",
+      "expiresAt": "2026-10-13T07:15:11.867Z",
+      "evidenceAlertId": "kc-07",
+      "evidenceAlertIds": [
+        "kc-07"
+      ],
+      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 12, 조회 구문 확인 (CVE-2021-44228 머리글 악용 신호)",
+      "confidence": 0.9
+    },
+    {
+      "id": "known-cve-kc-08",
+      "action": "deny",
+      "effect": "deny",
+      "sourceIp": "203.0.113.31",
+      "match": {
+        "srcip": "203.0.113.31"
+      },
+      "createdAt": "2026-10-13T06:15:11.867Z",
+      "expiresAt": "2026-10-13T07:15:11.867Z",
+      "evidenceAlertId": "kc-08",
+      "evidenceAlertIds": [
+        "kc-08"
+      ],
+      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 10, 조회 구문 확인, 머리글·인자 모두 (CVE-2021-44228 머리글 악용 신호)",
       "confidence": 0.95
     }
   ]
