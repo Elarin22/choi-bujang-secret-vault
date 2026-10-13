@@ -16,7 +16,7 @@ async function probe(app, path, init = {}) {
 const rejected = (r) => r.status === 401 || r.status === 403;
 
 export async function runAttackChecks(config) {
-  if (![3, 4, 5, 6].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (![3, 4, 5, 6, 7].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -52,12 +52,20 @@ export async function runAttackChecks(config) {
     } catch { direct = { status: 0, rows: 0 }; }
   }
   let local = null;
+  let stepUpLocal = null;
   if (config.step >= 6) {
     const { decide } = await import('./decider.mjs');
     const { fixtureRequests } = await import('../scripts/fixture-7.mjs');
     const { normal } = fixtureRequests();
     const ok = await decide(normal);
     const bad = await decide({ ...normal, requestId: normal.requestId, deviceRegistered: false });
+    const { suspicious } = fixtureRequests();
+    const risky = await decide(suspicious);
+    const again = await decide({ ...suspicious, requestId: normal.requestId, stepUp: { verified: true, authAgeSeconds: 60 } });
+    const forged = await decide({ ...suspicious, signals: { ...suspicious.signals, source: 'client_header' } });
+    if (config.step >= 7) {
+      stepUpLocal = `로컬 가상 사건: 정상 ${ok.decision}, 복합 이상 ${risky.decision}(${risky.reasonCode}), 다시 확인 뒤 ${again.decision}, 출처 위조 신호 ${forged.decision}(신호로 쓰지 않음). 심판 판정이 아님`;
+    }
     local = `로컬 가상 요청: 등록 기기 ${ok.decision}(${ok.reasonCode}), 미등록 기기 ${bad.decision}(${bad.reasonCode}). 심판 판정이 아님`;
   }
   const seen = (r) => Array.isArray(r.data) && r.data.length > 0;
@@ -72,6 +80,10 @@ export async function runAttackChecks(config) {
       observed: rejected(write) ? `비로그인 추가 요청이 거부됨 (HTTP ${write.status})` : `비로그인 추가 요청이 거부되지 않음 (HTTP ${write.status})` },
     ...(local ? [{ attackId: 'device_registered_local', expected: '등록 기기는 allow, 미등록 기기는 deny·device_not_registered',
       observed: local }] : []),
+    ...(stepUpLocal ? [
+      { attackId: 'step_up_local', expected: '정상 사건은 allow, 복합 이상 사건은 step_up, 다시 확인 뒤 allow', observed: stepUpLocal },
+      { attackId: 'step_up_real_block', expected: '다시 로그인 전에는 실제 자료가 막히고 새 로그인 뒤 허용됨',
+        observed: '미실행: 이 저장소 자료 API는 판정기 결과를 받지 않아 실제 재로그인 차단은 시험하지 않음' }] : []),
     ...(direct ? [{ attackId: 'anon_data_api_read', expected: 'anon 키로 Supabase Data API에서 notes를 직접 읽을 수 없어야 함',
       observed: direct.status === 0 ? 'Data API 직접 확인 실패(주소·키 설정 확인 필요)'
         : direct.status >= 400 || direct.rows === 0

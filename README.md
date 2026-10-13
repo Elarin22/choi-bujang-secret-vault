@@ -1,6 +1,15 @@
 # BYTE BACK 방어전 자료실
 
-## 현재 상태: 6단계 저장점 (등록한 기기만 자료실에 들어옵니다)
+## 현재 상태: 7단계 저장점 (평소와 다른 접속은 다시 확인합니다)
+
+7단계 변경: `src/decider.mjs`에 `step_up_required` 규칙을 더했고 기존 `device_registered`는 그대로 둡니다(`RULE_IDS = ['device_registered', 'step_up_required']`).
+- 입력 검사: 엔진이 검증해 넘긴 접속 신호(`signals.source`가 `judge_fixture`)만 읽습니다. 현재 실제 경로의 `none`이나 알 수 없는 출처는 신호로 쓰지 않고, 없는 값을 정상값으로 채우지도 않습니다. 요청의 다른 이름(헤더·위치 등)은 읽지 않습니다.
+- 규칙: 평소와 다른 시각(7시 전·21시 후) + 처음 보는 네트워크(`unusual`) + 최근 10분 안 대량 읽기 사건(`risk_signal` 합계 10건 이상)이 모두 겹칠 때만 `step_up`(`step_up_required`)을 돌려줍니다. 지역(`region`)은 사유로만 남기고 단독으로 막거나 재확인을 요구하지 않습니다(`describeRisk`가 사유 목록을 돌려줌). 기준 숫자는 학습용 가정입니다.
+- 엔진이 확인한 재인증(`stepUp.verified`가 true이고 나이 0~900초)이 있으면 같은 요청을 `allow`합니다.
+- 확인: `npm run decider:test`(정상 허용·복합 이상 추가 확인·다시 확인 뒤 허용) 또는 `npm run fixture:7`. 둘 다 가상 요청 연습이며 심판 판정이 아닙니다.
+- 미실행: 이 저장소의 자료 API는 판정기 결과를 받지 않아, 다시 로그인 전 실제 자료 차단과 새 로그인 뒤 허용은 시험하지 않았습니다. 제공 엔진이 새 로그인 시각을 검증하는 환경에서만 실측합니다. 토큰 원문은 기록하지 않습니다.
+
+## 6단계 저장점 (등록한 기기만 자료실에 들어옵니다)
 
 6단계 변경: `src/decider.mjs`에 `device_registered` 규칙 하나를 더했습니다(`RULE_IDS = ['device_registered']`). 엔진이 확인해 전달한 요청의 `deviceRegistered`가 `true`일 때만 `allow`(`approved`)하고, `false`이거나 값이 없으면 `deny`와 이유 코드 `device_not_registered`로 거부합니다. 판정기는 요청의 `deviceRegistered`만 보며, 인증서·CA·서명 키·기기 개인키는 만들지도 저장하지도 않았습니다. 기존 자료실 주소와 화면은 그대로입니다.
 
