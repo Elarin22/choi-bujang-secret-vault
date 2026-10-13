@@ -92,14 +92,17 @@ test('installable app files: manifest, offline notice and a service worker that 
   assert.ok(manifest.icons.length >= 1);
   const sw = read('connect-sw.js');
   assert.match(sw, /startsWith\('\/api\/'\)/u);
-  assert.ok(!/authorization|token|private/iu.test(sw.replace(/토큰|기기 키/gu, '')));
+  assert.ok(!/authorization|token|private/iu.test(sw.replace(/토큰/gu, '')));
   for (const page of ['index.html', 'connect.html']) {
     const html = read(page);
     assert.match(html, /rel="manifest" href="\/connect\.webmanifest"/u);
     assert.ok(!/localStorage|sessionStorage|indexedDB/u.test(html));
+    assert.ok(!/기기 ?키|device ?key|privateKey/iu.test(html));
   }
   assert.match(read('connect.html'), /설치했다는 표시만으로 기기가 확인된 것은 아닙니다/u);
   assert.match(read('connect.html'), /오프라인/u);
+  assert.match(read('index.html'), /persistSession:\s*false/u);
+  assert.ok(!/기기 ?키|device ?key|privateKey/iu.test(sw + read('connect.webmanifest') + read('connect.js')));
   // the vault page asks the server for approval before it even fetches the login settings
   const index = read('index.html');
   assert.ok(index.indexOf('/api/device-status') > -1 && index.indexOf('/api/device-status') < index.indexOf("fetch('/api/config'"));

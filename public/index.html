@@ -153,7 +153,10 @@
         const response = await fetch('/api/config', { cache: 'no-store' });
         if (!response.ok) throw new Error('로그인 설정이 아직 완료되지 않았습니다.');
         const { supabaseUrl, publishableKey } = await response.json();
-        supabase = createClient(supabaseUrl, publishableKey);
+        // 로그인 세션을 브라우저 저장소에 남기지 않고 메모리에만 둡니다(새로고침하면 다시 로그인).
+        supabase = createClient(supabaseUrl, publishableKey, {
+          auth: { persistSession: false, autoRefreshToken: true, detectSessionInUrl: false },
+        });
         started = true;
         $('gate').hidden = true;
         supabase.auth.onAuthStateChange((_event, session) => { setTimeout(() => render(session), 0); });

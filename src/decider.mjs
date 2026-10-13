@@ -1,5 +1,5 @@
 // ALEPH SDP 엔진이 확인한 요청만 받는 학생 판정기입니다.
-// 요청 본문의 userId, role, 기기 키, 토큰을 별도로 믿거나 저장하지 마세요.
+// 요청 본문의 userId, role, 인증 정보, 토큰을 별도로 믿거나 저장하지 마세요.
 // 규칙을 하나씩 추가하며, RULE_IDS에는 실제로 구현한 규칙 이름만 둡니다.
 export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required', 'exact_route_only', 'own_notes_zone', 'notice_zone', 'write_not_allowed']);
 

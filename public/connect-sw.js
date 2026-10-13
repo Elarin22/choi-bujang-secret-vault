@@ -1,4 +1,4 @@
-// 오프라인에는 공개 화면(안내)만 보관합니다. 메모·API 응답·토큰·기기 키는 캐시하지 않습니다.
+// 오프라인에는 공개 화면(안내)만 보관합니다. 메모·API 응답·로그인 정보는 캐시하지 않습니다.
 const CACHE = 'byte-back-connect-public-v1';
 const PUBLIC_UI = ['/connect.html', '/connect.js', '/connection-model.js', '/connect.webmanifest', '/connect-icon.svg'];
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PUBLIC_UI))));
