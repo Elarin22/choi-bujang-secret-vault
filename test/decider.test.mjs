@@ -53,7 +53,7 @@ test('zone rules: own notes allowed, notice edit and unknown or look-alike paths
   const { normal } = fixtureRequests();
   const req = (method, path, route) => ({ ...normal, method, path, route });
   const uuid = '3f2b8c1e-5d4a-4b6e-9c7d-1a2b3c4d5e6f';
-  for (const [m, p, r] of [['GET', '/notes', 'GET /notes'], ['GET', `/notes/${uuid}`, 'GET /notes/:id'], ['GET', '/api/notes', 'GET /api/notes'],
+  for (const [m, p, r] of [['GET', '/my/notes', 'GET /my/notes'], ['GET', `/notes/${uuid}`, 'GET /notes/:id'], ['GET', '/api/my/notes', 'GET /api/my/notes'],
     ['GET', '/notices', 'GET /notices'], ['GET', `/notices/${uuid}`, 'GET /notices/:id']]) {
     const out = await d(req(m, p, r));
     assert.equal(out.decision, 'allow', `${m} ${p}`);
@@ -65,7 +65,7 @@ test('zone rules: own notes allowed, notice edit and unknown or look-alike paths
     assert.deepEqual([out.decision, out.reasonCode, out.ruleIds], ['deny', 'write_not_allowed', ['write_not_allowed']], `${m} ${p}`);
   }
   const denied = [
-    ['GET', '/notes/export', 'GET /notes/:id'], ['GET', '/notes/EXPORT', 'GET /notes/:id'], ['GET', '/admin', 'GET /admin'],
+    ['GET', '/notes', 'GET /notes'], ['GET', '/api/notes', 'GET /api/notes'], ['GET', '/notes/export', 'GET /notes/:id'], ['GET', '/notes/EXPORT', 'GET /notes/:id'], ['GET', '/admin', 'GET /admin'],
     
     ['GET', `/notes/${uuid}/export`, 'GET /notes/:id'], ['GET', '/notes/../notices', 'GET /notes/:id'], ['GET', `/notes/${uuid}?export=1`, 'GET /notes/:id'],
     ['GET', `/notes/${uuid}`, 'GET /notices/:id'], ['GET', '', ''],

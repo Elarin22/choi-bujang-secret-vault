@@ -5,8 +5,8 @@
 8단계 변경
 - 자원 ID(`lib/resources.mjs`): 자료실을 메모(`note`)와 강사 공지(`notice`) 구역으로 나눠, API 응답 헤더 `X-Resource-Id: note:<id>` / `notice:<id>`(목록은 `X-Resource-Kind`)로 서버가 구별합니다. 기존 자료 id·주소·응답 모양과 화면은 그대로입니다.
 - 판정기(`src/decider.mjs`) 구역 규칙: `exact_route_only`, `own_notes_zone`, `notice_zone`, `write_not_allowed`를 더했고 이전 규칙은 유지합니다. 엔진이 확인한 method·route·path를 정확히 대조합니다.
-  - 허용: `GET /notes`, `GET /notes/:id`, `GET /notices`, `GET /notices/:id` (쿼리 없는 요청만)
-  - 거부: 모든 쓰기(`POST·PUT·PATCH·DELETE`, `write_not_allowed`) — 요청 계약에 소유자·강사 정보가 없어 판정기가 허용할 근거가 없습니다. 자기 메모 추가·수정·삭제와 강사 공지 수정은 자료 API가 검증된 사용자와 저장된 소유자·강사 권한으로 다시 판단합니다. 그 밖에 쿼리가 붙은 요청, 알 수 없는 경로·메서드와 `:id` 자리의 `export` 같은 기능 이름(`route_not_allowed`)
+  - 허용: `GET /my/notes`(내 메모 목록), `GET /notes/:id`, `GET /notices`, `GET /notices/:id` (쿼리 없는 요청만)
+  - 거부: 모든 쓰기(`POST·PUT·PATCH·DELETE`, `write_not_allowed`) — 요청 계약에 소유자·강사 정보가 없어 판정기가 허용할 근거가 없습니다. 자기 메모 추가·수정·삭제와 강사 공지 수정은 자료 API가 검증된 사용자와 저장된 소유자·강사 권한으로 다시 판단합니다. 전체 메모 목록 `GET /notes`(`route_not_allowed`), 그 밖에 쿼리가 붙은 요청, 알 수 없는 경로·메서드와 `:id` 자리의 `export` 같은 기능 이름(`route_not_allowed`)
   - 쿼리는 보지 않고 자료 ID만 고릅니다. 요청 계약에 소유자와 강사 역할이 없어서, 남의 메모 차단과 강사 확인은 판정기가 아니라 자료 API가 저장된 값으로 다시 합니다.
 - 자료 API 재확인: 남의 메모는 `403 {reason:'not_owner'}`, 공지 수정은 저장된 `staff_roles` 표에 강사로 적힌 사용자만 가능하고 아니면 `403 {reason:'instructor_only'}`입니다. 화면 메뉴·요청 본문의 role·토큰 이름표는 믿지 않습니다.
 - 공지 API: `GET /api/notices`, `GET·PUT /api/notices/:id` (`allowedRoutes`에 추가). 표 생성은 `supabase/stage8.sql`(RLS 켬, 직접 권한 회수).
@@ -38,7 +38,7 @@
 - 서버 함수가 `Authorization: Bearer` 토큰을 `src/verify-login.mjs`로 검사합니다. 토큰이 없거나 가짜면 401과 JSON 오류 문구로 거부합니다.
 - 소유자 검사: 서버가 확인한 사용자 ID와 DB의 `owner_id`를 비교합니다. URL·본문의 owner_id는 믿지 않고, 추가할 때는 확인된 ID로 저장합니다. 남의 메모 읽기·수정·삭제는 403, 없는 메모는 404이며, 수정에서 소유자를 바꾸려는 요청은 403입니다. 수정·삭제 쿼리에도 `owner_id` 조건을 한 번 더 붙입니다.
 - 자료 API (`aleph.config.json`의 `allowedRoutes`와 같음)
-  - `GET /api/notes` 내 메모 배열
+  - `GET /api/my/notes` 내 메모 배열(화면이 쓰는 목록 경로, 읽기 전용). `GET /api/notes`는 판정기가 거부합니다
   - `POST /api/notes` `{id?, title, body}` → `{id}`
   - `GET·PUT·DELETE /api/notes/:id` → `{id,title,body}` (PUT 본문은 `{title,body}`)
 - 브라우저는 메모 자료를 Supabase에서 직접 부르지 않습니다. 읽기·추가·수정·삭제는 모두 `/api/notes` 서버 함수를 거치고, 브라우저의 Supabase 호출은 로그인(Auth)뿐입니다.

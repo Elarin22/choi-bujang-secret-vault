@@ -48,13 +48,15 @@ const reverified = (request) => request?.stepUp?.verified === true
   && Number.isFinite(request.stepUp.authAgeSeconds)
   && request.stepUp.authAgeSeconds >= 0 && request.stepUp.authAgeSeconds <= MAX_STEP_UP_AGE_SECONDS;
 
-// 8단계 구역 규칙: 엔진이 확인한 method·route·path만 정확히 대조합니다. 알 수 없는 경로는 거부합니다.
+// 8단계 구역 규칙: 전체 목록은 거부하고 /my/notes(내 메모)만 허용합니다.
+// 엔진이 확인한 method·route·path만 정확히 대조합니다. 알 수 없는 경로는 거부합니다.
 // 쿼리는 보지 않습니다(자료 ID만 고르고 기능은 경로로만 고름). :id 자리에 export 같은 기능 이름은 받지 않습니다.
 // 이 요청 계약에는 소유자와 강사 역할이 없어서, 남의 메모 차단과 강사 확인은 자료 API가 저장된 값으로 다시 합니다.
 const RESERVED_IDS = Object.freeze(['export', 'import', 'search', 'list', 'all', 'admin', 'new', 'bulk', 'download', 'upload']);
 const ID = '[A-Za-z0-9][A-Za-z0-9_-]{0,63}';
 const ROUTES = Object.freeze([
-  ['GET', '/notes', 'own_notes'], ['GET', '/notes/:id', 'own_notes'],
+  // 전체 메모 목록(GET /notes)은 열지 않습니다. 목록은 본인 전용 경로 /my/notes로만 받습니다.
+  ['GET', '/my/notes', 'own_notes'], ['GET', '/notes/:id', 'own_notes'],
   ['GET', '/notices', 'notice_read'], ['GET', '/notices/:id', 'notice_read'],
 ].map(([method, template, zone]) => Object.freeze({ method, template, zone,
   regex: new RegExp(`^${template.replace(':id', `(${ID})`)}$`, 'u') })));
