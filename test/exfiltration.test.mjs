@@ -33,15 +33,19 @@ test('exfiltration decide is standalone and independent of event IDs, addresses,
 });
 
 test('exfiltration separates clear attacks, ambiguous attempts and normal events', () => {
-  assert.deepEqual(ids('block'), range(1, 8));
-  assert.deepEqual(ids('alert'), range(9, 16));
-  assert.deepEqual(ids('record'), range(17, 24));
+  assert.deepEqual(ids('block'), range(1, 10));
+  assert.deepEqual(ids('alert'), range(11, 20));
+  assert.deepEqual(ids('record'), range(21, 30));
   // 수준만 높고 근거가 하나도 없으면 차단하지 않는다.
   const weak = fixture.alerts.find(alert => alert.id === 'ex-15');
   assert.equal(decide({ ...weak, rule: { ...weak.rule, level: 15 } }).action, 'alert');
-  // 근거가 여러 개여도 처음 보는 목적지가 아니면(알려진 백업 서버 등) 차단하지 않는다.
-  const known = fixture.alerts.find(alert => alert.id === 'ex-12');
-  assert.equal(decide({ ...known, rule: { ...known.rule, level: 15 } }).action, 'alert');
+  // 근거가 하나뿐이면(큰 전송 하나) 수준이 높아도 차단하지 않는다.
+  const single = fixture.alerts.find(alert => alert.id === 'ex-12');
+  assert.equal(decide({ ...single, rule: { ...single.rule, level: 15 }, data: { ...single.data, bytes: '90000000' } }).action, 'alert');
+  // 수준이 낮으면 근거가 여러 개여도 차단하지 않는다.
+  const strong = fixture.alerts.find(alert => alert.id === 'ex-01');
+  assert.equal(decide({ ...strong, rule: { ...strong.rule, level: 9 } }).action, 'alert');
+  assert.equal(decide({ ...strong, rule: { ...strong.rule, level: 3 } }).action, 'record');
   assert.equal(decide(null).action, 'alert');
   assert.equal(decide({ rule: {}, data: {} }).action, 'record');
 });
@@ -89,9 +93,9 @@ test('exfiltration reader projects one safe row per original event and leaves th
 test('exfiltration run writes a result with counts that match decide and blocks no normal event', async () => {
   const out = await runXdr({ root: fileURLToPath(root), moduleKey: 'exfiltration' });
   assert.equal(out.schema, 'aleph.xdr.result.v1');
-  assert.deepEqual(out.counts, { block: 8, alert: 8, record: 8 });
-  assert.deepEqual(out.decisions.filter(row => row.action === 'block').map(row => row.alertId), range(1, 8));
-  assert.equal(out.decisions.filter(row => row.alertId >= 'ex-17' && row.action === 'block').length, 0);
+  assert.deepEqual(out.counts, { block: 10, alert: 10, record: 10 });
+  assert.deepEqual(out.decisions.filter(row => row.action === 'block').map(row => row.alertId), range(1, 10));
+  assert.equal(out.decisions.filter(row => row.alertId >= 'ex-11' && row.action === 'block').length, 0);
 });
 
 test('exfiltration respond blocks only clear destinations, keeps other rules and does not duplicate the log', async () => {
@@ -102,17 +106,17 @@ test('exfiltration respond blocks only clear destinations, keeps other rules and
   await writeFile(join(dir, 'xdr', 'deny-rules.json'), JSON.stringify({ schema: 'aleph.xdr.deny.v1', rules: [other] }));
   const rules = await respond(dir, fixture, result);
   await respond(dir, fixture, result);
-  assert.deepEqual(rules.map(rule => rule.evidenceAlertId), range(1, 8));
+  assert.deepEqual(rules.map(rule => rule.evidenceAlertId), range(1, 10));
   const saved = JSON.parse(await readFile(join(dir, 'xdr', 'deny-rules.json'), 'utf8')).rules;
   assert.deepEqual(saved.filter(rule => rule.moduleKey === 'privilege'), [other]);
-  assert.equal(saved.filter(rule => rule.moduleKey === 'exfiltration').length, 8);
+  assert.equal(saved.filter(rule => rule.moduleKey === 'exfiltration').length, 10);
   for (const rule of rules) {
     assert.ok(Date.parse(rule.expiresAt) > Date.parse(rule.issuedAt));
     assert.equal(Date.parse(rule.expiresAt) - Date.parse(rule.issuedAt), 15 * 60 * 1000);
     assert.equal(rule.action, 'deny');
   }
   const lines = (await readFile(join(dir, 'xdr', 'alerts.log'), 'utf8')).split('\n').filter(Boolean);
-  assert.equal(lines.length, 16); // block 8 + alert 8, record 는 쌓지 않는다
+  assert.equal(lines.length, 20); // block 10 + alert 10, record 는 쌓지 않는다
   assert.doesNotMatch(lines.join('\n'), /203\.0\.113\.|198\.51\.100\.|user0\d|\.zip|\.7z/u);
   await assert.rejects(respond(dir, fixture, { ...result, decisions: result.decisions.slice(1) }));
 });
@@ -136,7 +140,7 @@ test('exfiltration connection denies attack destinations only and passes normal 
     assert.equal((await gated(request, { destinationIp: alert.data.dstip, destinationVerified: false })).decision, 'allow');
     assert.equal((await gated(request, {})).decision, 'allow');
   }
-  assert.deepEqual(counts, { attackDenied: 8, normalDenied: 0, ambiguousDenied: 0, expiredDenied: 0 });
+  assert.deepEqual(counts, { attackDenied: 10, normalDenied: 0, ambiguousDenied: 0, expiredDenied: 0 });
   const denied = await gated({ requestId: 'r', at: new Date(Date.parse(fixture.alerts[0].timestamp) + 1000).toISOString() },
     { destinationIp: fixture.alerts[0].data.dstip, destinationVerified: true });
   assert.deepEqual(Object.keys(denied).sort(), ['decision', 'reasonCode', 'requestId', 'ruleIds', 'schema']);
@@ -150,10 +154,10 @@ test('exfiltration never makes a rule for internal addresses or for a destinatio
   assert.equal(isBlockableDestination('203.0.113.51'), true);
   const clone = JSON.parse(JSON.stringify(fixture));
   clone.alerts[0].data.dstip = '10.1.2.3';
-  clone.alerts[1].data.dstip = clone.alerts[16].data.dstip; // 정상 이벤트(ex-17)가 쓰는 목적지
+  clone.alerts[1].data.dstip = clone.alerts[20].data.dstip; // 정상 이벤트(ex-21)가 쓰는 목적지
   const rules = await respond(await mkdtemp(join(tmpdir(), 'ex-guard-')), clone,
     { ...result, decisions: clone.alerts.map(alert => ({ alertId: alert.id, ...decide(alert) })) });
   const blocked = rules.map(rule => rule.evidenceAlertId);
   assert.ok(!blocked.includes('ex-01') && !blocked.includes('ex-02'));
-  assert.equal(rules.length, 6);
+  assert.equal(rules.length, 8);
 });

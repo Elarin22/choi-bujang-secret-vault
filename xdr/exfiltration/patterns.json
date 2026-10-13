@@ -1,7 +1,7 @@
 {
   "schema": "xdr.exfiltration.patterns.v1",
   "source": "MITRE ATT&CK T1041 명령 통로로 유출 (https://attack.mitre.org/techniques/T1041/) / T1048 다른 프로토콜로 유출 (https://attack.mitre.org/techniques/T1048/)",
-  "thresholdNote": "규칙 수준 10 이상·근거 2가지 이상·알림 수준 5 이상·대용량 50MB 기준은 학습용 가정입니다. 이 파일은 근거 설명용이고 실제 판정 기준은 단일 파일 decide.mjs 안에 있습니다.",
+  "thresholdNote": "규칙 수준 10 이상·근거 2가지 이상·알림 수준 5 이상·대용량 50MB·자료 50건·반복 3번 기준은 학습용 가정입니다. 이 파일은 근거 설명용이고 실제 판정 기준은 단일 파일 decide.mjs 안에 있습니다.",
   "patterns": [
     {
       "name": "ex_new_destination_bulk",

@@ -57,10 +57,10 @@ xdr/ztna-overlay.mjs의 withXdr(baseDecide, rules)는 유효한 거부 후보가
 
 ## XDR-06 exfiltration
 
-- 자료: xdr/fixtures/exfiltration.json (24건). 공식 aleph-defense-starter 의 exfiltration.json 을 받지 못해 같은 형식(Wazuh 모양: rule.level·description·mitre, data.srcip·dstip·bytes·protocol·file)으로 **직접 만든 학습용 가상 경보**입니다. 주소는 문서용 대역, 계정은 가상입니다. 공식 자료를 받으면 이 파일만 바꿔 끼우고 `npm run xdr:run -- exfiltration`으로 결과를 다시 확인하세요(시험의 건수·경보 번호 기대값은 이 자작 자료 기준입니다).
+- 자료: 공식 aleph-defense-starter(https://github.com/ChoiTimo/aleph-defense-starter) 의 xdr/fixtures/exfiltration.json (30건)을 원본 그대로 사용합니다. 이전에 쓰던 자작 학습용 자료는 공식 자료와 형식이 달라(bytes가 문자열, protocol·file 필드 없음, 반복 횟수·목적지 표현이 다름) 공식 경보에서 차단이 모자랐기 때문에 교체했습니다.
 - 실행: `npm run xdr:run -- exfiltration`, 시험: `npm run xdr:test`
 - 읽기: xdr/exfiltration/read-alerts.mjs 가 경보 수만큼 시각·출발 주소·계정·수준·설명 다섯 필드를 돌려줍니다. 원본은 고치지 않고 비밀값처럼 보이는 값은 지웁니다. decide.mjs 는 이 파일을 불러오지 않습니다.
-- 판단: MITRE T1041(명령 통로로 유출)·T1048(다른 프로토콜로 유출) 근거. 외부 전송 신호가 있고 규칙 수준 10 이상이며 **처음 보는 목적지**에 근거(평소보다 큰 전송 50MB 이상·업무 시간 밖·압축 파일·다른 프로토콜·기존 명령 통로·반복)가 하나 이상 더 겹치면 block, 신호만 있고 수준 5 이상이면 alert, 신호가 없거나 수준 5 미만이면 record. 목적지를 막는 판단이므로 알려진 백업 서버처럼 처음 보는 목적지가 아닌 전송은 근거가 몇 개 겹쳐도 block 하지 않습니다. 수준 하나나 설명 문장 하나로도 차단하지 않습니다. 경보 ID·주소·순서·시각에 의존하지 않습니다.
-- 관찰: block 8, alert 8, record 8. 정상 이벤트 block 0건.
-- 연결: decide.mjs 는 import 없이 판단만 돌려줍니다. xdr/exfiltration/respond.mjs 가 block 만 **목적지 주소(destinationIp)** 기준 15분 만료 거부 후보(xdr/deny-rules.json, 근거 경보 번호 evidenceAlertId 포함)로, block·alert 를 xdr/alerts.log 에 패턴 이름만 남깁니다. 회사 안쪽·특수 주소, 출발지와 같은 주소, 같은 묶음의 정상 이벤트가 향한 목적지는 규칙으로 만들지 않습니다. connectDecider(baseDecide, rules)는 운영 엔진이 확인해 넘긴 destinationIp 가 유효한 규칙과 일치할 때만 `xdr_blocked` 로 거부하고 나머지는 기존 판정기에 그대로 넘깁니다. 판정기 규칙은 고치지 않았고 다른 모듈의 규칙은 보존합니다.
-- 한계: docs/DECIDER_REQUEST.md 의 요청 18개 필드에는 확인된 목적지 주소가 없습니다. 운영 엔진이 목적지 주소 공급 계약과 xdr_blocked 이유 코드를 등록하기 전에는 실제 ZTNA 경로에 연결됐다고 말하지 않습니다. 모의 시험에서는 공격 8건의 목적지만 거부되고 애매한 8건·정상 8건은 통과하며 만료 뒤에는 거부가 없습니다.
+- 판단: MITRE T1041(명령 통로로 유출)·T1048(다른 프로토콜로 유출) 근거. 외부 전송 신호가 있고 규칙 수준 10 이상이며 **서로 다른 근거 2가지 이상**(처음 보는 목적지·평소보다 큰 전송 50MB 이상·한 번에 많은 자료 50건 이상·업무 시간 밖·압축 파일·다른 프로토콜/포트·기존 명령 통로·반복 3번 이상)이 겹치면 block, 신호만 있고 수준 5 이상이면 alert, 신호가 없거나 수준 5 미만이면 record. 수준 하나나 설명 문장 하나, 근거 하나로는 차단하지 않습니다. 근거는 설명 문장과 숫자 필드(bytes·files·count, 문자열도 숫자로 읽음)를 함께 봅니다. 경보 ID·주소·순서·시각에 의존하지 않습니다.
+- 관찰: block 10(ex-01~10), alert 10(ex-11~20), record 10(ex-21~30). 정상 이벤트 block 0건.
+- 연결: decide.mjs 는 import 없이 판단만 돌려줍니다(alert 는 알림 후보로만 돌려주고 차단하지 않습니다). xdr/exfiltration/respond.mjs 가 block 만 **목적지 주소(destinationIp)** 기준 15분 만료 거부 후보(xdr/deny-rules.json, 근거 경보 번호 evidenceAlertId 포함)로, block·alert 를 xdr/alerts.log 에 패턴 이름만 남깁니다(애매한 건은 기록만, 차단 아님). 회사 안쪽·특수 주소, 출발지와 같은 주소, 같은 묶음의 정상 이벤트가 향한 목적지는 규칙으로 만들지 않습니다. connectDecider(baseDecide, rules)는 운영 엔진이 확인해 넘긴 destinationIp 가 유효한 규칙과 일치할 때만 `xdr_blocked` 로 거부하고 나머지는 기존 판정기에 그대로 넘깁니다. 판정기 규칙은 고치지 않았고 다른 모듈의 규칙은 보존합니다.
+- 한계: docs/DECIDER_REQUEST.md 의 요청 18개 필드에는 확인된 목적지 주소가 없습니다. 운영 엔진이 목적지 주소 공급 계약과 xdr_blocked 이유 코드를 등록하기 전에는 실제 ZTNA 경로에 연결됐다고 말하지 않습니다. 모의 시험에서는 공격 10건의 목적지만 거부되고 애매한 10건·정상 10건은 통과하며 만료 뒤에는 거부가 없습니다.

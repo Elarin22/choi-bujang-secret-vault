@@ -5,8 +5,8 @@
     {
       "alertId": "ex-01",
       "action": "block",
-      "confidence": 0.88,
-      "reason": "ex_new_destination_bulk: 근거 2가지가 겹침, 규칙 수준 12 (T1041/T1048)"
+      "confidence": 0.91,
+      "reason": "ex_new_destination_bulk: 근거 3가지가 겹침, 규칙 수준 12 (T1041/T1048)"
     },
     {
       "alertId": "ex-02",
@@ -17,110 +17,110 @@
     {
       "alertId": "ex-03",
       "action": "block",
-      "confidence": 0.92,
-      "reason": "ex_new_destination_bulk: 근거 3가지가 겹침, 규칙 수준 13 (T1041/T1048)"
+      "confidence": 0.87,
+      "reason": "ex_new_destination_bulk: 근거 2가지가 겹침, 규칙 수준 11 (T1041/T1048)"
     },
     {
       "alertId": "ex-04",
       "action": "block",
-      "confidence": 0.91,
-      "reason": "ex_alt_channel: 근거 3가지가 겹침, 규칙 수준 12 (T1041/T1048)"
+      "confidence": 0.94,
+      "reason": "ex_alt_channel: 근거 4가지가 겹침, 규칙 수준 12 (T1041/T1048)"
     },
     {
       "alertId": "ex-05",
       "action": "block",
-      "confidence": 0.93,
-      "reason": "ex_offhours_archive: 근거 4가지가 겹침, 규칙 수준 11 (T1041/T1048)"
+      "confidence": 0.89,
+      "reason": "ex_new_destination_bulk: 근거 3가지가 겹침, 규칙 수준 10 (T1041/T1048)"
     },
     {
       "alertId": "ex-06",
-      "action": "block",
-      "confidence": 0.9,
-      "reason": "ex_alt_channel: 근거 3가지가 겹침, 규칙 수준 11 (T1041/T1048)"
-    },
-    {
-      "alertId": "ex-07",
       "action": "block",
       "confidence": 0.91,
       "reason": "ex_new_destination_bulk: 근거 3가지가 겹침, 규칙 수준 12 (T1041/T1048)"
     },
     {
+      "alertId": "ex-07",
+      "action": "block",
+      "confidence": 0.93,
+      "reason": "ex_new_destination_bulk: 근거 4가지가 겹침, 규칙 수준 11 (T1041/T1048)"
+    },
+    {
       "alertId": "ex-08",
       "action": "block",
-      "confidence": 0.95,
-      "reason": "ex_offhours_archive: 근거 4가지가 겹침, 규칙 수준 13 (T1041/T1048)"
+      "confidence": 0.88,
+      "reason": "ex_new_destination_bulk: 근거 2가지가 겹침, 규칙 수준 12 (T1041/T1048)"
     },
     {
       "alertId": "ex-09",
-      "action": "alert",
-      "confidence": 0.56,
-      "reason": "ex_new_destination_bulk: 외부 전송 신호는 있으나 근거 1가지, 알림만 남김"
+      "action": "block",
+      "confidence": 0.92,
+      "reason": "ex_new_destination_bulk: 근거 4가지가 겹침, 규칙 수준 10 (T1041/T1048)"
     },
     {
       "alertId": "ex-10",
-      "action": "alert",
-      "confidence": 0.58,
-      "reason": "ex_new_destination_bulk: 외부 전송 신호는 있으나 근거 1가지, 알림만 남김"
+      "action": "block",
+      "confidence": 0.91,
+      "reason": "ex_new_destination_bulk: 근거 3가지가 겹침, 규칙 수준 12 (T1041/T1048)"
     },
     {
       "alertId": "ex-11",
       "action": "alert",
-      "confidence": 0.64,
-      "reason": "ex_offhours_archive: 외부 전송 신호는 있으나 근거 2가지, 알림만 남김"
+      "confidence": 0.51,
+      "reason": "ex_unconfirmed: 외부 전송 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ex-12",
       "action": "alert",
-      "confidence": 0.7,
-      "reason": "ex_offhours_archive: 외부 전송 신호는 있으나 근거 3가지, 알림만 남김"
+      "confidence": 0.52,
+      "reason": "ex_unconfirmed: 외부 전송 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ex-13",
       "action": "alert",
-      "confidence": 0.59,
+      "confidence": 0.55,
       "reason": "ex_new_destination_bulk: 외부 전송 신호는 있으나 근거 1가지, 알림만 남김"
     },
     {
       "alertId": "ex-14",
       "action": "alert",
-      "confidence": 0.62,
-      "reason": "ex_new_destination_bulk: 외부 전송 신호는 있으나 근거 2가지, 알림만 남김"
+      "confidence": 0.56,
+      "reason": "ex_new_destination_bulk: 외부 전송 신호는 있으나 근거 1가지, 알림만 남김"
     },
     {
       "alertId": "ex-15",
       "action": "alert",
-      "confidence": 0.55,
+      "confidence": 0.53,
       "reason": "ex_unconfirmed: 외부 전송 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ex-16",
       "action": "alert",
-      "confidence": 0.55,
-      "reason": "ex_alt_channel: 외부 전송 신호는 있으나 근거 1가지, 알림만 남김"
+      "confidence": 0.51,
+      "reason": "ex_unconfirmed: 외부 전송 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ex-17",
-      "action": "record",
-      "confidence": 0.05,
-      "reason": "ex_normal: 외부 전송 신호가 없는 일반 이벤트"
+      "action": "alert",
+      "confidence": 0.52,
+      "reason": "ex_unconfirmed: 외부 전송 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ex-18",
-      "action": "record",
-      "confidence": 0.05,
-      "reason": "ex_normal: 외부 전송 신호가 없는 일반 이벤트"
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ex_unconfirmed: 외부 전송 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ex-19",
-      "action": "record",
-      "confidence": 0.05,
-      "reason": "ex_normal: 수준이 낮은 일반 이벤트"
+      "action": "alert",
+      "confidence": 0.66,
+      "reason": "ex_new_destination_bulk: 외부 전송 신호는 있으나 근거 3가지, 알림만 남김"
     },
     {
       "alertId": "ex-20",
-      "action": "record",
-      "confidence": 0.05,
-      "reason": "ex_normal: 수준이 낮은 일반 이벤트"
+      "action": "alert",
+      "confidence": 0.57,
+      "reason": "ex_new_destination_bulk: 외부 전송 신호는 있으나 근거 1가지, 알림만 남김"
     },
     {
       "alertId": "ex-21",
@@ -138,18 +138,54 @@
       "alertId": "ex-23",
       "action": "record",
       "confidence": 0.05,
-      "reason": "ex_normal: 외부 전송 신호가 없는 일반 이벤트"
+      "reason": "ex_normal: 수준이 낮은 일반 이벤트"
     },
     {
       "alertId": "ex-24",
       "action": "record",
       "confidence": 0.05,
       "reason": "ex_normal: 외부 전송 신호가 없는 일반 이벤트"
+    },
+    {
+      "alertId": "ex-25",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ex_normal: 외부 전송 신호가 없는 일반 이벤트"
+    },
+    {
+      "alertId": "ex-26",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ex_normal: 수준이 낮은 일반 이벤트"
+    },
+    {
+      "alertId": "ex-27",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ex_normal: 외부 전송 신호가 없는 일반 이벤트"
+    },
+    {
+      "alertId": "ex-28",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ex_normal: 수준이 낮은 일반 이벤트"
+    },
+    {
+      "alertId": "ex-29",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ex_normal: 외부 전송 신호가 없는 일반 이벤트"
+    },
+    {
+      "alertId": "ex-30",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ex_normal: 외부 전송 신호가 없는 일반 이벤트"
     }
   ],
   "counts": {
-    "block": 8,
-    "alert": 8,
-    "record": 8
+    "block": 10,
+    "alert": 10,
+    "record": 10
   }
 }

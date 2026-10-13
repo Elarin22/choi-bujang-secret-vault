@@ -26,8 +26,8 @@
 
 6단계 기기 등록 판정 규칙을 구현했습니다. 로컬 판정기 연습 2건, 기존 자료실·XDR 포함 시험 17개 및 빌드는 통과했습니다. 2026-10-13 운영 심판에서 커밋 21ec6b2ffe30798295d124aa739059d2f6333cb7의 6단계 100/100점, 조건 4개와 완결성 가점 3개 통과를 확인했습니다. 반별 엔진 안내 미제공으로 실제 mTLS 연결은 별도 미검증입니다.
 
-배포: https://choi-bujang-secret-vault-sigma.vercel.app
-저장소: https://github.com/myeongjundev/choi-bujang-secret-vault
+배포: https://choi-bujang-secret-vault-two.vercel.app
+저장소: https://github.com/Elarin22/choi-bujang-secret-vault
 
 7단계는 출처가 명확한 가상 복합 이상 신호에 step_up을 반환합니다. 지역 하나만으로 영구 차단하지 않습니다. 엔진 계약의 verified 재인증이 신선하면 요청을 다시 허용합니다. 클라이언트 출처·누락·중첩 추가 필드는 거부하고 none 신호에는 위치를 채우지 않습니다. 로컬 판정 연습 4건, fixture:7, 기존 기능 포함 시험 20개와 빌드가 통과했습니다. 운영 재로그인·자료 차단 연결은 반별 엔진 미제공으로 미검증입니다. 2026-10-13 실제 7단계 심판은 45c7c4da1ccb 커밋의 100/100점·조건 7개·가점 3개 통과를 확인했습니다.
 
@@ -55,7 +55,7 @@ npm run bundle의 직접 점검은 자기 점검이며 심판 판정이 아닙�
 
 sql/stage4.sql은 당시 직접 로그인 접근을 위한 설계 자료이며 실행하지 않았습니다. 5단계에서는 권한 추가 방향을 중단하고 sql/stage5.sql로 user_notes의 PUBLIC/anon/authenticated 직접 권한을 모두 회수합니다. RLS와 service_role의 서버 CRUD 권한은 유지합니다. 다른 테이블과 기존 자료는 보존합니다. 적용 전후 role_table_grants 및 has_table_privilege를 비교합니다.
 
-브라우저의 Supabase 직접 메모 호출은 없음입니다. src/browser.mjs는 로그인(Auth)만 직접 호출하고 메모는 /api/notes 및 /api/notes/:id로 요청합니다. 원본 API는 https://cenxyqdoulktaqtkskeh.supabase.co/rest/v1/user_notes 이며 쿼리 없이 originalApiUrl에 기록합니다. 5단계 공개 배포 메타데이터에는 시드 표식을 내보내지 않습니다.
+브라우저의 Supabase 직접 메모 호출은 없음입니다. src/browser.mjs는 로그인(Auth)만 직접 호출하고 메모는 /api/notes 및 /api/notes/:id로 요청합니다. 원본 API는 https://inflqaldhpubeydqxxbm.supabase.co/rest/v1/user_notes 이며 쿼리 없이 originalApiUrl에 기록합니다. 5단계 공개 배포 메타데이터에는 시드 표식을 내보내지 않습니다.
 
 전용 프로젝트에 5단계 권한 회수 SQL을 적용했습니다. PUBLIC/anon/authenticated 직접 grant 0개, anon/authenticated의 7종 권한 모두 false를 확인했습니다. RLS는 유지되며 기존 가상 메모 네 건을 보존했습니다. 실제 사용자 로그인 수동 시험은 별도로 미실행입니다. 로컬 A/B 정상 CRUD·교차 거부 시험 7개는 통과했습니다.
 
