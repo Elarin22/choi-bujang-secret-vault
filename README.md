@@ -1,5 +1,18 @@
 # BYTE BACK 자료실 · 12단계 저장점
 
+## 12단계 저장점 · 2026-10-13 (제출 묶음 격리 실행 수정)
+
+원인: 12단계 심판이 `npm run bundle`을 격리 환경(`node:fs`·`node:path`·`node:url`·`node:child_process`(git 읽기)·`node:crypto`만 허용, npm 패키지 불가)에서 실행했는데, 이전 12단계 커밋 `dcf3ac3`의 `src/attack-check.mjs`와 `scripts/ops-matrix.mjs`가 `node:buffer`를 불러와 묶음을 끝까지 만들지 못했습니다.
+
+고친 것:
+- `src/attack-check.mjs`를 운영 측 공개 시작 틀 방식으로 다시 만들었습니다. 아무것도 import하지 않고 전역 `fetch`만 씁니다. 점검 하나에 읽기(GET) 요청 하나만 보내고(요청 18건, 한도 24건), 결과는 `{ attackId, stage, expected, observed, result }` 다섯 값(`blocked`·`breached`·`not_run`)입니다. `scripts/bundle.mjs`도 시작 틀의 같은 계약으로 맞췄고 `checkedAt`을 기록합니다.
+- 규칙 점검 6~10단계는 서버의 `GET /api/checks?case=...`(`api/checks.mjs`, `src/rule-check.mjs`)가 고정된 가상 입력으로 학생 판정기·탐지 규칙을 실행한 응답을 읽습니다. `ready`는 가상 조건을 충족했다는 뜻이며 실제 기기의 승인 상태가 아닙니다.
+- `GET /api/device/status`, `POST /api/device/approval` 경로를 추가했습니다(기존 `/api/device-status`·`/api/device-approval`과 같은 처리).
+- 10단계 안전 정책 사본(`backups/safe-policy.json`)의 저장소 주소를 바꾼 뒤 `src/policy-recovery.mjs`의 고정 해시(`SAFE_POLICY_HASH`)를 갱신하지 않아 사본 검증이 실패하던 문제를 바로잡았습니다(`/api/recovery-plan`이 409였을 수 있음). 해시는 현재 사본의 SHA-256입니다.
+- 시험을 새 점검 방식에 맞게 바꿨습니다(`npm test` 73개 통과). 제출 묶음 경로가 허용되지 않은 모듈을 불러오지 않는지도 시험합니다.
+
+확인하지 못한 것: 이 저장소를 작업한 환경은 배포 주소에 접속할 수 없어, 실제 배포에 대한 `npm run bundle` 결과(아래 실측표)는 아직 없습니다. 실제 심판의 41종 공격 결과도 확인하지 못했습니다. 저장소 안에서는 배포 대역(가짜 서버)으로 18건 요청이 모두 기대대로 나오는 것만 확인했으며 이것은 실제 배포 결과가 아닙니다.
+
 ## 보너스 xdr-06 저장점 · 2026-10-13
 
 「자료 빼돌리기」모듈을 xdr/exfiltration에 추가했습니다. 처음 보는 바깥 목적지로 가는 전송에 평소보다 큰 크기·업무 시간 밖·압축 파일·다른 프로토콜·반복 같은 근거가 겹치는 명확한 경우만 block하고, 근거가 부족하면 alert, 외부 전송 신호가 없거나 수준이 낮으면 record입니다. 근거는 MITRE T1041·T1048입니다. 단독 decide.mjs는 import·파일·네트워크 없이 계산하고, respond.mjs가 block의 목적지만 근거 경보 번호·15분 만료가 붙은 거부 후보로 저장하며 알림은 xdr/alerts.log에 패턴 이름만 남깁니다. 기존 판정기 규칙과 다른 모듈의 규칙은 건드리지 않습니다.
@@ -14,9 +27,7 @@
 
 ## 최신 상태 · 2026-10-13
 
-1~11단계는 실제 심판에서 각각 100점을 확인했습니다. 12단계는 코드 커밋 `6d83f22d5a508d94e1eb5f7bb4035e2fdfb42847`까지 총 여섯 접수 모두 `UNV_RUN_ENVIRONMENT`로 확인 불가·표시 0/100점입니다. 심판의 실행 명령과 첫 오류 로그는 아직 받지 못했습니다. 아래 이전 검토 이력의 재판정 대기는 이 결과로 갱신합니다.
-
-위 코드에서 `npm test` 44개, `npm run check` 자기점검 20건, URL 입력 방식의 실측 20건·미실행 0, 실제 배포 커밋 일치를 확인했습니다. 자기점검은 심판 통과가 아닙니다. 운영 엔진 승인·회수 연결과 공식 41종 운영 재현은 별도 미검증입니다.
+1~11단계는 실제 심판에서 각각 100점을 확인했습니다. 12단계는 이전 접수가 모두 `UNV_RUN_ENVIRONMENT`(확인 불가·0점)였고, 이번 저장점이 그 원인으로 확인한 `node:buffer` 사용을 없앤 수정입니다. 새 접수의 실제 결과는 아직 받지 못했습니다. 자기점검은 심판 통과가 아니며, 운영 엔진 승인·회수 연결과 공식 41종 운영 재현은 별도 미검증입니다.
 
 학원 PC에서는 이 저장소를 `git pull --ff-only`로 갱신하고 `npm ci` → `npm test`를 실행합니다. 기존 Vercel·Supabase 프로젝트와 서버 환경변수는 그대로 사용하며 SQL을 다시 초기화하지 않습니다. 작업 기록 저장소도 별도로 갱신한 뒤 [학원 재개 안내](https://github.com/myeongjundev/skt-aleph-defense-lab/blob/main/docs/HANDOFF-2026-10-13-BYTE-BACK.md)를 먼저 읽습니다. 해당 기록 저장소는 본인 GitHub 로그인으로 접근합니다.
 
@@ -126,13 +137,19 @@ backups/safe-policy.json은 커밋으로 고정한 공개 가능한 경로 정�
 
 실제 승인 사용자 조회·타인 메모 거부·회수 후 재조회는 공식 연결/시험 세션이 없어 미실행이며 요청 ID·시각은 null입니다. data/attack-matrix.json에는 도감의 41종 시험 이름과 기대 조건을 적었지만 실행 기록을 만들지 않았습니다. 이 계획 파일의 passed 값을 입력해도 API는 성공 근거로 받지 않습니다. 게임 심판의 기존 승인 기록을 현재 운영 엔진의 41종 재현 완료로 확대하지 않습니다. 회수 수치는 미연결/null이고, 탐지 제안은 local_fixture로 표시합니다. 복구 버전은 실제 사본 검증 API에서 읽으며 운영 정책 쓰기는 없습니다.
 
-첫 두 심판 접수는 UNV_RUN_ENVIRONMENT로 확인불가였습니다. [운영 측 공개 점검 표본](https://github.com/ChoiTimo/byteback-sample-pass/blob/main/src/attack-check.mjs)과 대조해 자기 점검/작전실 HTTP 요청의 관측 메타데이터를 alephEvidence의 caseId/requestKey로 맞췄습니다. 사례 ID는 반환한 실제 점검 ID에 연결하고 요청 키는 새 UUID로 생성합니다. 이 메타데이터를 HTTP 헤더·URL에 보내거나 신원/승인 근거로 사용하지 않습니다. 제출 묶음의 기존 attackId/expected/observed 3필드 계약은 유지합니다. 환경 오류의 원인을 이 차이라고 확정하지 않았습니다. 보완 뒤 회귀40개 통과, 실제 재제출 결과는 별도 확인합니다.
+### 12단계 점검 방식과 실측표
 
-세 번째도 같은 확인불가였습니다. 재검토에서 작전실 endpoint 하나의 네트워크 실패가 자기 점검 전체를 예외로 중단하는 상황을 재현했습니다. src/bundle-checks.mjs는 독립 HTTP 점검을 함께 실행하며 요청과 본문 읽기 전체에5초 제한을 둡니다. AbortSignal을 무시하는 환경도 명시적 시간 제한으로 끝납니다. 실행 못한 항목은 observed의 not_run으로 남기고 다른 항목은 계속 관측합니다. HTTP응답이 있으면 그 상태를 남기며 응답/JSON을 읽지 못한 것을 공격 차단으로 기록하지 않습니다. 공개 로그인 설정을 읽지 못했을 때 원본 API는 실행 못함으로 남깁니다. 원본 API 주소가 다른 출처라면 설정 오류로 중단합니다. 정책·보호 API·미연결 승인 검증은 유지합니다. 이 재현을 실제 심판 환경 오류의 원인으로 확정하지 않고 재제출로 확인합니다.
+`src/attack-check.mjs`는 `runAttackChecks(배포 주소 또는 설정)`으로 배포에 실제 GET 요청을 보내 응답 상태로 `observed`를 만들고 `{ attackId, stage, expected, observed, result }`만 돌려줍니다(20개, 요청 18건). 금지 요청은 거부 응답(401·403·404·405)을 받고 메모 필드가 없을 때만 `blocked`이고, 서버 오류(5xx)나 요청 실패는 `not_run`이며 거부되지 않으면 `breached`입니다. 쓰기 요청이 필요한 2건(`s10-restore-unauth`, `s11-unsigned-write`)은 제출 묶음이 읽기 요청만 보낼 수 있어 보내지 않고 `not_run`으로 남깁니다. 요청마다 `alephEvidence`에 사례(caseId)와 요청 이름(requestKey)을 연결하며 헤더·URL에는 넣지 않습니다. 요청 ID는 응답의 `x-vercel-id` 끝 토큰입니다.
 
-ace0819 접수도 환경 오류였습니다. 공개 표본에 있는 npm test와 npm run check를 우리 저장소에서 실행하면 Missing script로 즉시 종료하는 차이를 재현했습니다. package.json에 표준 test/check 명령을 연결했습니다. npm ci 후 npm test는 비밀 설정이 필요 없는 로컬 빌드를 먼저 수행하고 기존 전체 회귀시험을 실행합니다. npm run check는 기존 bundle 명령과 같으며 커밋된 깨끗한 저장소와 ignored bundle-notes.json이 필요합니다. 제출 계약이나 시험 결과를 변경하지 않습니다. 심판이 이 명령을 호출했는지는 확인되지 않았으므로 환경 오류의 원인으로 단정하지 않습니다.
+41종 공격 전체는 심판이 보내며 이 저장소에서는 실행하지 않았습니다. 아래 표와 `data/attack-matrix.json`에 없는 공격을 통과로 적지 않습니다.
 
-3c44d80 접수도 확인불가였습니다. 최신 공개 표본은 runAttackChecks(baseUrl)로 호출하지만 R5 진입점은 config객체만 받아, URL입력 때 점검을 시작하기 전에 구현되지 않은 단계라는 오류로 종료하는 차이를 재현했습니다. 이제 설정 객체와 URL 문자열을 모두 받습니다. URL 방식은 공개 aleph.config.json만 읽고 입력 URL의HTTPS·출처·경로 검증과 원본API 출처 검사도 유지합니다. .env/비밀키를 읽거나 운영 승인으로 사용하지 않습니다. 두 방식이 동일한20건을 실행하는 회귀시험을 추가했습니다. 심판의 실제 호출방식은 공개되지 않았으므로 원인 확정은 재판정이 필요합니다.
+실측표는 실제 배포에서 `npm run bundle` 다음 `npm run checks:table -- --write`를 실행하면 아래에 채워집니다. 지금은 비어 있으며, 이는 **미실행**입니다.
+
+<!-- checks-table:start -->
+
+미실행: 이 표는 배포 주소에서 `npm run bundle`을 실행한 뒤 `npm run checks:table -- --write`로 채웁니다.
+
+<!-- checks-table:end -->
 
 ### 검사한 커밋에서 재현하기
 
@@ -140,6 +157,6 @@ ace0819 접수도 환경 오류였습니다. 공개 표본에 있는 npm test와
 
 1. 설치: 이 공개 저장소를 clone하고 확인할 심판 커밋으로 git checkout한 뒤 npm ci를 실행합니다(Node.js22 이상). 기존 프로젝트의 서버 비밀 설정은 공식 Vercel 설정 화면에 유지하며 Git에 넣지 않습니다. 새 DB라면 해당 단계의 sql 안내를 읽고 학습 전용 프로젝트에만 적용합니다. 현재 DB는 다시 초기화할 필요가 없습니다.
 2. 실행: node --test test/*.test.mjs, npm run decider:test, npm run detect:test, node scripts/build-public.mjs --local. Vercel에 같은 커밋을 배포하고 /aleph.json의 저장소·커밋을 대조합니다. /에서 승인 상태, /operations.html에서 관측표를 엽니다. 승인 전 보호 요청은 거부되고, 검증 어댑터 미연결일 때 인증된 요청도503입니다. 정상 승인 CRUD는 공식 연결 후 별도 재시험합니다.
-3. 점검: 변경을 커밋하고 ignored bundle-notes.json에 실제 구현과 막힌 점을 적은 뒤 npm run bundle. artifacts/submission.json은 실제 HEAD/원격과 새 자기 점검으로 생성하며 커밋하지 않습니다. 로컬 시험을 심판 또는 운영 승인으로 보고하지 않습니다.
+3. 점검: 변경을 커밋하고 ignored bundle-notes.json에 실제 구현과 막힌 점을 적은 뒤 npm run bundle(격리 환경에서도 실행되도록 src/attack-check.mjs는 import 없이 전역 fetch만 씁니다). artifacts/submission.json은 실제 HEAD/원격과 새 자기 점검으로 생성하며 커밋하지 않습니다. 로컬 시험을 심판 또는 운영 승인으로 보고하지 않습니다.
 4. 중지: Vercel의 기존 배포를 내리거나 프로젝트를 일시 중지하고, 제공 엔진이 연결돼 있다면 해당 자료실 허용 경로를 끕니다. DB·백업·감사 자료는 지우지 않습니다.
 5. 복구: git status와 diff로 이번 변경을 확인하고 필요한 내용을 보존한 뒤 검사한 커밋을 별도 checkout해 재배포합니다. reset --hard를 사용하지 않습니다. 정책 사본 버전/해시/범위를 확인하고 필요할 때 복원할 메모 ID 하나만 지정합니다. 다른 행과 서비스 규칙·감사 기록은 보존합니다. 복구 뒤 위 정상·금지 시험과 bundle, 작전실 새 관측을 다시 실행합니다.

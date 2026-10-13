@@ -16,7 +16,7 @@
 
 저장점 요청을 받으면 README.md에 현재 작동하는 기능과 다시 실행하는 방법을 짧게 갱신하세요. `aleph.config.json`의 단계, 실제 배포 주소, 로그인 발급자 정보, 허용 경로, 5단계부터의 원본 API 주소를 구현과 대조하세요. `src/decider.mjs`의 `RULE_IDS`에는 실제로 구현한 규칙 이름만 남기세요.
 
-`src/attack-check.mjs`는 `npm run bundle`이 실행하는 학생의 자기 점검입니다. 실제로 보낸 요청의 결과만 기록하고, 심판의 판정이라고 쓰지 마세요. 처음 단계의 공개 가상 메모와 이후 단계의 정상·거부 요청을 현재 자료실에 맞춰 갱신하세요. 실행하지 않은 점검은 미실행으로 남기세요.
+`src/attack-check.mjs`는 `npm run bundle`이 실행하는 학생의 자기 점검입니다. 실제로 보낸 요청의 결과만 기록하고, 심판의 판정이라고 쓰지 마세요. 처음 단계의 공개 가상 메모와 이후 단계의 정상·거부 요청을 현재 자료실에 맞춰 갱신하세요. 실행하지 않은 점검은 미실행으로 남기세요. 이 파일은 격리 실행에서도 돌아가도록 아무것도 import하지 말고(전역 fetch만 사용), `node:buffer`·npm 패키지를 쓰지 마세요. 묶음 경로(`scripts/bundle.mjs`, `src/decider.mjs`, `src/detect.mjs`)에서는 `node:fs`·`node:path`·`node:url`·`node:child_process`·`node:crypto`만 허용됩니다.
 
 `aleph.config.json`의 `judgeIssuer`는 운영 측이 ZIP을 만들 때 채운 심판 접수 서버 주소입니다. 학생 요청으로 바꾸거나 다른 발급자 주소로 대체하지 마세요.
 

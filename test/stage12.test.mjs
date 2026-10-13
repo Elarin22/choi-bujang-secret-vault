@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { collectOperationsStatus } from '../src/operations-status.mjs';
 import { readFile } from 'node:fs/promises';
-import { runAttackChecks } from '../src/attack-check.mjs';
+import { runAttackChecks, observeAll, observeScreens, CASES } from '../src/attack-check.mjs';
+import { runRuleCheck } from '../src/rule-check.mjs';
+import { verifyPolicyBackup } from '../src/policy-recovery.mjs';
 const config = { publicAppUrl: 'https://fixture.local' };
 const matrix = { cases: Array.from({ length: 41 }, (_, i) => ({ id: `case_${i}`, stage: 12, name: 'Practice matrix entry', expected: 'reject', status: 'passed' })) };
 
@@ -55,83 +57,108 @@ test('dashboard renders server observations and clears prior successes if a new 
   assert.ok(elements.get('status').textContent.includes('통과로 표시하지 않습니다'));
 });
 
-test('bundle HTTP observations correlate with their real case IDs without transmitting evidence in headers or URLs', async () => {
-  const originalFetch = globalThis.fetch, calls = [];
-  const configuration = { step: 12, publicAppUrl: 'https://fixture.local', sampleMarker: 'absent-fixture-marker',
-    originalApiUrl: 'https://fixture.supabase.co/rest/v1/user_notes' };
-  globalThis.fetch = async (url, options) => {
+const UUID = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/u;
+const target = { step: 12, publicAppUrl: 'https://fixture.local' };
+const jsonResponse = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'x-vercel-id': 'icn1::abc12-1700000000000-0123456789ab' } });
+// 배포 대역: 보호 경로는 401, 없는 경로는 404, 규칙 점검은 ready:true.
+const healthy = async url => {
+  if (url.pathname === '/api/checks') return jsonResponse({ ready: true });
+  if (url.pathname === '/api/device/status') return jsonResponse({ connected: false, approval: 'unavailable' });
+  if (url.pathname === '/api/recovery-plan') return jsonResponse({ backupVerified: true, scope: 'notes' });
+  if (url.pathname === '/data.json' || url.pathname === '/notes.json' || url.pathname.startsWith('/rest/')) return jsonResponse({ error: 'NOT_FOUND' }, 404);
+  if (url.pathname.startsWith('/api/')) return jsonResponse({ error: 'LOGIN_REQUIRED' }, 401);
+  return new Response('<html></html>', { status: 200 });
+};
+
+test('attack check sends one read-only request per case, links evidence by case ID, and stays within 24 requests', async () => {
+  const calls = [];
+  const rows = await observeAll(target, { fetch: async (url, options) => {
     calls.push({ url, options });
+    assert.equal(options.method, 'GET');
     assert.deepEqual(Object.keys(options.alephEvidence).sort(), ['caseId', 'requestKey']);
-    assert.match(options.alephEvidence.requestKey, /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/u);
+    assert.match(options.alephEvidence.requestKey, UUID);
     assert.ok(!JSON.stringify(options.headers).includes(options.alephEvidence.requestKey));
     assert.ok(!url.href.includes(options.alephEvidence.requestKey));
-    if (url.pathname === '/api/auth-config') return Response.json({ url: 'https://fixture.supabase.co', publishableKey: 'public-fixture' });
-    if (url.pathname === '/api/recovery-plan') return Response.json({ backupVerified: true, scope: 'notes' });
-    if (url.pathname === '/api/device-status') return Response.json({ connected: false, approval: 'unavailable' });
-    if (url.pathname === '/api/operations-status') return Response.json({ schema: 'vault.operations.v1', counts: { passed: 11, failed: 0, notRun: 3, officialEngineNotRun: 41 } });
-    const status = url.pathname === '/data.json' ? 404 : url.pathname.startsWith('/api/') || url.pathname.startsWith('/rest/') ? 401 : 200;
-    return new Response('{}', { status });
-  };
-  try {
-    const attempts = await runAttackChecks(configuration);
-    assert.equal(attempts.length, 20);
-    assert.ok(attempts.every(row => Object.keys(row).sort().join(',') === 'attackId,expected,observed'));
-    for (const row of attempts.filter(row => !row.attackId.startsWith('local_'))) {
-      assert.equal(calls.filter(call => call.options.alephEvidence.caseId === row.attackId).length, 1);
-    }
-    assert.equal(new Set(calls.map(call => call.options.alephEvidence.requestKey)).size, calls.length);
-  } finally { globalThis.fetch = originalFetch; }
-});
-
-const bundleFixture = { step: 12, publicAppUrl: 'https://fixture.local', sampleMarker: 'absent-fixture-marker',
-  originalApiUrl: 'https://fixture.supabase.co/rest/v1/user_notes' };
-function fixtureResponse(url) {
-  if (url.pathname === '/api/auth-config') return Response.json({ url: 'https://fixture.supabase.co', publishableKey: 'public-fixture' });
-  if (url.pathname === '/api/recovery-plan') return Response.json({ backupVerified: true, scope: 'notes' });
-  if (url.pathname === '/api/device-status') return Response.json({ connected: false, approval: 'unavailable' });
-  if (url.pathname === '/api/operations-status') return Response.json({ schema: 'vault.operations.v1', counts: { passed: 11, failed: 0, notRun: 3, officialEngineNotRun: 41 } });
-  return new Response('{}', { status: url.pathname === '/data.json' ? 404 : url.pathname.startsWith('/api/') || url.pathname.startsWith('/rest/') ? 401 : 200 });
-}
-
-test('one unavailable dashboard does not abort other bundle observations or become a blocked attack', async () => {
-  const attempts = await runAttackChecks(bundleFixture, { fetchImpl: async url => {
-    if (url.pathname === '/api/operations-status') throw new Error('private error must not be retained');
-    return fixtureResponse(url);
+    return healthy(url, options);
   } });
-  assert.equal(attempts.length, 20);
-  assert.equal(attempts.find(row => row.attackId === 'anonymous_read').observed, 'HTTP 401');
-  assert.match(attempts.find(row => row.attackId === 'operations_observation').observed, /^not_run;/u);
-  assert.equal(attempts.filter(row => row.observed.startsWith('not_run;')).length, 1);
-  assert.ok(!JSON.stringify(attempts).includes('private error'));
-});
-
-test('whole-response deadlines end even if transport ignores AbortSignal or the response body stalls', async () => {
-  for (const fetchImpl of [async () => new Promise(() => {}), async () => ({ status: 200, text: () => new Promise(() => {}), json: () => new Promise(() => {}) })]) {
-    const before = Date.now();
-    const attempts = await runAttackChecks(bundleFixture, { fetchImpl, timeoutMs: 30 });
-    assert.ok(Date.now() - before < 1000);
-    assert.equal(attempts.length, 20);
-    assert.equal(attempts.filter(row => row.observed.startsWith('not_run;')).length, 16);
-    assert.ok(attempts.filter(row => row.attackId.startsWith('local_')).every(row => row.observed.startsWith('local fixture')));
+  assert.equal(rows.length, CASES.length);
+  assert.ok(calls.length <= 24);
+  assert.equal(new Set(calls.map(call => call.options.alephEvidence.requestKey)).size, calls.length);
+  for (const row of rows.filter(row => row.requests.length)) {
+    assert.equal(calls.filter(call => call.options.alephEvidence.caseId === row.attackId).length, 1);
+    assert.equal(row.requests[0].requestId, 'abc12-1700000000000-0123456789ab');
+    assert.ok(row.requests[0].checkedAt);
   }
+  assert.ok(rows.filter(row => row.result === 'not_run').every(row => row.requests.length === 0));
 });
 
-test('malformed observation JSON is unavailable evidence, while unsafe original API configuration stops', async () => {
-  const attempts = await runAttackChecks(bundleFixture, { fetchImpl: async url => url.pathname === '/api/operations-status'
-    ? new Response('not JSON', { status: 200 }) : fixtureResponse(url) });
-  assert.equal(attempts.find(row => row.attackId === 'operations_observation').observed, 'not_run; HTTP 200; response_unreadable');
-  assert.ok(!JSON.stringify(attempts).includes('not JSON'));
-  await assert.rejects(runAttackChecks({ ...bundleFixture, originalApiUrl: 'https://other.supabase.co/rest/v1/user_notes' },
-    { fetchImpl: async url => fixtureResponse(url) }), /invalid_original_api_origin/u);
+test('bundle rows have exactly five values, at most 20 rows, and only blocked, breached or not_run results', async () => {
+  const rows = await runAttackChecks(target.publicAppUrl, { fetch: healthy });
+  assert.ok(rows.length >= 1 && rows.length <= 20);
+  for (const row of rows) {
+    assert.equal(Object.keys(row).sort().join(','), 'attackId,expected,observed,result,stage');
+    assert.ok(['blocked', 'breached', 'not_run'].includes(row.result));
+    assert.ok(Number.isInteger(row.stage) && row.stage >= 1 && row.stage <= 12);
+    assert.ok(row.observed.length <= 300 && row.expected.length <= 300);
+  }
+  assert.equal(new Set(rows.map(row => row.attackId)).size, rows.length);
 });
 
-test('R5 config input and public-example URL input execute identical observations', async () => {
-  const repositoryConfig = JSON.parse(await readFile(new URL('../aleph.config.json', import.meta.url), 'utf8'));
-  const options = { fetchImpl: async url => url.pathname === '/api/auth-config'
-    ? Response.json({ url: new URL(repositoryConfig.originalApiUrl).origin, publishableKey: 'public-fixture' })
-    : fixtureResponse(url) };
-  const fromConfig = await runAttackChecks(repositoryConfig, options);
-  const fromUrl = await runAttackChecks(repositoryConfig.publicAppUrl, options);
-  assert.deepEqual(fromUrl, fromConfig); assert.equal(fromUrl.length, 20);
-  await assert.rejects(runAttackChecks('http://fixture.local', options), /invalid_observation_origin/u);
+test('an unreachable deployment is not_run, a server error is not_run, and an open protected API is breached', async () => {
+  const down = await observeAll(target, { fetch: async () => { throw new Error('private details'); } });
+  assert.ok(down.every(row => row.result === 'not_run'));
+  assert.ok(!JSON.stringify(down).includes('private details'));
+  const broken = await observeAll(target, { fetch: async () => new Response('x', { status: 503 }) });
+  assert.ok(broken.every(row => row.result === 'not_run'));
+  const open = await observeAll(target, { fetch: async url => (url.pathname === '/api/my/notes'
+    ? jsonResponse({ notes: [{ title: 'visible', content: 'visible' }] }) : healthy(url)) });
+  assert.equal(open.find(row => row.attackId === 's03-unauth-list').result, 'breached');
+  assert.equal(open.find(row => row.attackId === 's03-fake-token').result, 'breached');
+  assert.equal(open.find(row => row.attackId === 's06-unregistered').result, 'blocked');
+  const unready = await observeAll(target, { fetch: async url => (url.pathname === '/api/checks' ? jsonResponse({ ready: false }) : healthy(url)) });
+  assert.equal(unready.find(row => row.attackId === 's07-compound').result, 'breached');
+});
+
+test('attack check accepts a URL or a config, rejects unsafe addresses, and screen checks never count as attacks', async () => {
+  assert.deepEqual(await runAttackChecks(target, { fetch: healthy }), await runAttackChecks(target.publicAppUrl, { fetch: healthy }));
+  await assert.rejects(runAttackChecks('http://fixture.local', { fetch: healthy }), /https/u);
+  await assert.rejects(runAttackChecks('https://fixture.local/path', { fetch: healthy }), /https/u);
+  await assert.rejects(runAttackChecks('not a url', { fetch: healthy }), /배포 주소/u);
+  const screens = await observeScreens(target, { fetch: async url => (url.pathname === '/operations.html'
+    ? new Response('<html>안전한 화면</html>', { status: 200 }) : healthy(url)) });
+  assert.ok(screens.every(row => ['as_expected', 'unexpected', 'not_run'].includes(row.result)));
+  const bad = await observeScreens(target, { fetch: async url => (url.pathname === '/operations.html'
+    ? new Response('<html>방어 성공</html>', { status: 200 }) : healthy(url)) });
+  assert.equal(bad.find(row => row.attackId === 's12-operations-screen').result, 'unexpected');
+});
+
+test('rule checks run the student decider and detector on fixed fictional input only', async () => {
+  for (const id of ['s06-unregistered', 's07-compound', 's08-unknown-route', 's08-all-notes', 's08-write-notice', 's09-burst-read', 's10-policy-verified']) {
+    const result = await runRuleCheck(id);
+    assert.equal(result.ready, true, id);
+    assert.equal(result.engineEnforced, 'not_run');
+    assert.equal(result.engine, 'ALEPH SDP engine');
+  }
+  assert.equal(await runRuleCheck('../../etc/passwd'), null);
+  assert.equal(await runRuleCheck(undefined), null);
+  assert.equal(await runRuleCheck('constructor'), null);
+});
+
+test('the pinned safe-policy hash matches the committed backup and repository address', async () => {
+  const config = JSON.parse(await readFile(new URL('../aleph.config.json', import.meta.url), 'utf8'));
+  const backup = JSON.parse(await readFile(new URL('../backups/safe-policy.json', import.meta.url), 'utf8'));
+  assert.equal(verifyPolicyBackup(backup, config.repoUrl).policyRevision, 1);
+});
+
+test('npm run bundle path imports only modules the isolated runner allows', async () => {
+  const allowed = new Set(['node:fs', 'node:path', 'node:url', 'node:child_process', 'node:crypto']);
+  for (const file of ['scripts/bundle.mjs', 'src/attack-check.mjs', 'src/decider.mjs', 'src/detect.mjs']) {
+    const code = await readFile(new URL(`../${file}`, import.meta.url), 'utf8');
+    const specifiers = [...code.matchAll(/(?:from\s+|import\s*\(\s*|import\s+)['"]([^'"]+)['"]/gu)].map(match => match[1]);
+    for (const specifier of specifiers) assert.ok(allowed.has(specifier) || specifier.startsWith('.'), `${file} imports ${specifier}`);
+    assert.doesNotMatch(code, /node:buffer|\bBuffer\.|from 'buffer'/u, file);
+  }
+  const attack = await readFile(new URL('../src/attack-check.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(attack, /^\s*import\s/mu);
+  assert.doesNotMatch(attack, /method:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/u);
 });

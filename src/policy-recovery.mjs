@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-export const SAFE_POLICY_HASH = '9ac9ccc72d15995a13c1f5c27c8b5a9137e8fbde5aa3f10e64311481983fa569';
+export const SAFE_POLICY_HASH = '83b2809b4380d07ac808cb7600da746da7b1a73495f13d2b287367830187c752';
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function verifyPolicyBackup(backup, projectId) {
   if (!backup || backup.schema !== 'vault.policy.backup.v1' || backup.projectId !== projectId
