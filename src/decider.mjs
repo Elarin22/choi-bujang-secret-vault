@@ -50,7 +50,6 @@ const reverified = (request) => request?.stepUp?.verified === true
 
 // 8단계 구역 규칙: 엔진이 확인한 method·route·path만 정확히 대조합니다. 알 수 없는 경로는 거부합니다.
 // 쿼리는 보지 않습니다(자료 ID만 고르고 기능은 경로로만 고름). :id 자리에 export 같은 기능 이름은 받지 않습니다.
-// 이 요청 계약에는 소유자와 강사 역할이 없어서, 남의 메모 차단과 강사 확인은 자료 API가 저장된 값으로 다시 합니다.
 const RESERVED_IDS = Object.freeze(['export', 'import', 'search', 'list', 'all', 'admin', 'new', 'bulk', 'download', 'upload']);
 const ID = '[A-Za-z0-9][A-Za-z0-9_-]{0,63}';
 const ROUTES = Object.freeze([
@@ -72,9 +71,30 @@ export function matchRoute(request) {
     const match = entry.regex.exec(cleanPath);
     if (!match) continue;
     if (match[1] && RESERVED_IDS.includes(match[1].toLowerCase())) return null;
-    return entry;
+    return { ...entry, id: match[1] ?? null };
   }
   return null;
+}
+
+// 8단계 구역 규칙 보강: 엔진이 확인한 사용자(subjectId)·기기(deviceId)·메서드·정확한 경로로 남의 메모를 거부합니다.
+// 메모 id마다 처음 요청한 subjectId를 묶고, 다른 subjectId가 같은 id를 요청하면 거부합니다(이 판정기 실행 동안 기억).
+// 묶음 표가 가득 차면 새 id는 거부합니다. 저장된 소유자 대조는 여전히 자료 API가 최종으로 합니다.
+const MAX_BOUND_NOTES = 5000;
+const noteOwners = new Map();
+const validSubject = (value) => typeof value === 'string' && /^[A-Za-z0-9_.:-]{1,128}$/u.test(value);
+const validDevice = (value) => typeof value === 'string' && /^[0-9a-f]{16}$/u.test(value);
+
+export function noteZoneAllowed(request, hit) {
+  if (hit.zone !== 'own_notes' || !hit.id) return true;
+  if (!validSubject(request?.subjectId) || !validDevice(request?.deviceId)) return false;
+  const key = hit.id.toLowerCase();
+  const owner = noteOwners.get(key);
+  if (owner === undefined) {
+    if (noteOwners.size >= MAX_BOUND_NOTES) return false;
+    noteOwners.set(key, request.subjectId);
+    return true;
+  }
+  return owner === request.subjectId;
 }
 
 // 6단계 device_registered: deviceRegistered가 true일 때만 허용합니다.
@@ -87,6 +107,7 @@ export async function decide(request) {
   const hit = matchRoute(request);
   if (!hit) return { ...base, decision: 'deny', reasonCode: 'route_not_allowed', ruleIds: ['exact_route_only'] };
   if (hit.zone === 'notice_edit') return { ...base, decision: 'deny', reasonCode: 'zone_not_allowed', ruleIds: ['notice_zone'] };
+  if (!noteZoneAllowed(request, hit)) return { ...base, decision: 'deny', reasonCode: 'zone_not_allowed', ruleIds: ['own_notes_zone'] };
   const zoneRule = hit.zone === 'own_notes' ? 'own_notes_zone' : 'notice_zone';
   if (describeRisk(request).risky) {
     return reverified(request)
