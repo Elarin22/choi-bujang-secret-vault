@@ -41,7 +41,8 @@ xdr/ztna-overlay.mjs의 withXdr(baseDecide, rules)는 유효한 거부 후보가
 
 ## XDR-04 persistence
 
+- 자료: 공식 aleph-defense-starter 의 xdr/fixtures/persistence.json (24건, 구조화 필드 없이 설명·수준·MITRE·경로만 있음).
 - 실행: `npm run xdr:run -- persistence`, 시험: `npm run xdr:test`
-- 판단: MITRE T1543·T1053 근거. 서명 없음 + 평소 목록 밖 + 자동 시작 + 규칙 수준 10 이상이면 block, 기준 미만이나 확인 자료 부족은 alert, 목록에 있는 항목과 일반 저장은 record입니다. 설명 문장만으로는 차단하지 않습니다.
-- 관찰: block 6, alert 5, record 5. 정상 항목 block 0건. 거부 후보는 xdr/deny-rules.json에 15분 만료로 기록되며 기존 known-cve 규칙을 보존합니다.
-- 경로·서명 값·출발 주소는 reason에 쓰지 않습니다. 운영 ZTNA 연결 계약은 XDR-03과 같은 제약이 있습니다.
+- 판단: MITRE T1543·T1053 근거. 지속성 신호가 있고 규칙 수준 10 이상이며 서로 다른 근거(서명 없음·평소 목록 밖·임시 폴더·시작 폴더·재부팅 뒤 유지·실행 파일 변경·임의 이름·반복) 2가지 이상이 겹치면 block, 지속성 신호만 있고 수준 5 이상이면 alert, 신호가 없거나 서명됨·평소 목록대로·수준 낮음이면 record. 수준 하나나 설명 문장 하나로는 차단하지 않는다. 경보 ID·주소·순서에 의존하지 않는다.
+- 관찰: block 8, alert 8, record 8. 정상 이벤트 block 0건.
+- 연결: decide.mjs 는 판단만 돌려준다. xdr/persistence/respond.mjs 가 block 만 15분 만료 거부 후보(xdr/deny-rules.json)로, block·alert 를 xdr/alerts.log 에 패턴 이름만 남긴다. 기존 known-cve 규칙과 판정기 규칙은 건드리지 않는다. 운영 ZTNA 연결 계약은 XDR-03과 같은 제약이 있다.

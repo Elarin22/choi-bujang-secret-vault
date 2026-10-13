@@ -1,42 +1,52 @@
 {
   "schema": "xdr.persistence.patterns.v1",
   "source": "MITRE ATT&CK T1543 시스템 프로세스 생성·변경 (https://attack.mitre.org/techniques/T1543/) / T1053 예약 작업 (https://attack.mitre.org/techniques/T1053/)",
-  "thresholdNote": "규칙 수준·반복 횟수 기준 숫자는 학습용 가정입니다. 이 파일은 근거 설명용이고 실제 판정 기준은 단일 파일 decide.mjs 안에 있습니다.",
+  "thresholdNote": "규칙 수준 10 이상·근거 2가지 이상·알림 수준 5 이상은 학습용 가정입니다. 이 파일은 근거 설명용이고 실제 판정 기준은 단일 파일 decide.mjs 안에 있습니다.",
   "patterns": [
     {
       "name": "ps_unsigned_new_service",
-      "confidence": 0.92,
-      "condition": "서비스 생성 이벤트이고 서명이 없으며 평소 목록에 없고 자동 시작으로 등록되며 규칙 수준이 10 이상",
+      "confidence": 0.86,
+      "condition": "서비스 등록·변경 경보이고 규칙 수준이 10 이상이며, 서명 없음·평소 목록 밖·임시 폴더·재부팅 뒤 유지·실행 파일 변경·반복 가운데 서로 다른 근거가 2가지 이상 겹침",
       "evidence": "T1543: 서명 없는 새 서비스를 자동 시작으로 심는 것은 재부팅 뒤에도 살아남으려는 시스템 프로세스 생성 신호입니다.",
-      "sources": ["MITRE ATT&CK T1543"]
+      "sources": [
+        "MITRE ATT&CK T1543"
+      ]
     },
     {
       "name": "ps_unsigned_scheduled_task",
-      "confidence": 0.92,
-      "condition": "예약 작업 생성 이벤트이고 서명이 없으며 평소 목록에 없고 로그온이나 부팅 때 실행되며 규칙 수준이 10 이상",
+      "confidence": 0.86,
+      "condition": "예약 작업 경보이고 규칙 수준이 10 이상이며, 서명 없음·평소 목록 밖·임시 폴더·임의 이름·반복 가운데 서로 다른 근거가 2가지 이상 겹침",
       "evidence": "T1053: 낯선 예약 작업을 로그온이나 부팅에 맞춰 심는 것은 지속성 확보를 위한 예약 작업 악용 신호입니다.",
-      "sources": ["MITRE ATT&CK T1053"]
+      "sources": [
+        "MITRE ATT&CK T1053"
+      ]
     },
     {
       "name": "ps_startup_location_change",
-      "confidence": 0.92,
-      "condition": "시작 폴더 경로의 파일 생성·변경 이벤트이고 서명이 없으며 평소 목록에 없고 자동 실행되며 규칙 수준이 10 이상",
+      "confidence": 0.86,
+      "condition": "시작 폴더·시작 프로그램 경보이고 규칙 수준이 10 이상이며, 평소 목록 밖·임시 폴더·서명 없음 가운데 서로 다른 근거가 2가지 이상 겹침",
       "evidence": "T1543 계열: 시작 폴더에 서명 없는 항목을 넣거나 기존 항목을 바꾸는 것은 로그인 때 자동 실행되도록 심는 지속성 신호입니다.",
-      "sources": ["MITRE ATT&CK T1543"]
+      "sources": [
+        "MITRE ATT&CK T1543"
+      ]
     },
     {
       "name": "ps_unconfirmed",
-      "confidence": 0.6,
-      "condition": "평소 목록 밖의 지속성 이벤트이거나 설명 문장만 있고 서명·자동 시작·수준 근거가 부족함",
+      "confidence": 0.5,
+      "condition": "지속성 신호(T1543/T1053 또는 서비스·예약 작업·시작 폴더 언급)는 있고 규칙 수준이 5 이상이지만 겹친 근거가 부족하거나 수준이 10 미만",
       "evidence": "근거가 부족한 지속성 후보는 차단하지 않고 사람이 확인하도록 알림만 남깁니다.",
-      "sources": ["학습용 정책"]
+      "sources": [
+        "학습용 정책"
+      ]
     },
     {
       "name": "ps_normal",
       "confidence": 0.05,
-      "condition": "평소 목록에 있는 항목이거나 지속성 위치·이벤트가 아님",
+      "condition": "지속성 신호가 없거나, 서명됨·평소 목록대로·읽기만 같은 정상 표시가 있거나, 규칙 수준이 5 미만",
       "evidence": "운영 기준에 맞는 정상 등록과 일반 파일 저장은 기록만 합니다.",
-      "sources": ["학습용 정책"]
+      "sources": [
+        "학습용 정책"
+      ]
     }
   ]
 }
