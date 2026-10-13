@@ -77,6 +77,15 @@ export async function runAttackChecks(config) {
     }
     local = `로컬 가상 요청: 등록 기기 ${ok.decision}(${ok.reasonCode}), 미등록 기기 ${bad.decision}(${bad.reasonCode}). 심판 판정이 아님`;
   }
+  let detectLocal = null;
+  if (config.step >= 9) {
+    const { detect } = await import('./detect.mjs');
+    const start = Date.UTC(2026, 9, 1);
+    const reads = (count, sub) => Array.from({ length: count }, (_, i) => ({ at: new Date(start + i * 2000).toISOString(), method: 'GET', identity: { sub } }));
+    const normalOut = detect(reads(30, 'learner_fixture'));
+    const burstOut = detect(reads(121, 'learner_fixture'));
+    detectLocal = `로컬 가상 사건: 정상 30건 ${normalOut.action}, 10분 안 121건 ${burstOut.action}(${burstOut.reasonCode ?? '-'}). 실제 회수·시간은 심판이 확인하며 이 점검은 심판 판정이 아님`;
+  }
   let notice = null;
   if (config.step >= 8) {
     const id = '00000000-0000-4000-8000-000000000000';
@@ -107,6 +116,7 @@ export async function runAttackChecks(config) {
       { attackId: 'anonymous_notice_edit', expected: '로그인 없이 공지 수정은 거부',
         observed: rejected(notice.edit) ? `비로그인 공지 수정이 거부됨 (HTTP ${notice.edit.status})` : `비로그인 공지 수정이 거부되지 않음 (HTTP ${notice.edit.status})` },
       { attackId: 'zone_rules_local', expected: '자기 메모 읽기 allow, 공지·메모 쓰기(소유자·강사 확인 불가)·알 수 없는 경로·export 자리 deny', observed: zoneLocal }] : []),
+    ...(detectLocal ? [{ attackId: 'burst_detect_local', expected: '정상 조회는 observe, 10분 안 120건 초과만 propose_revocation(burst_read)', observed: detectLocal }] : []),
     ...(direct ? [{ attackId: 'anon_data_api_read', expected: 'anon 키로 Supabase Data API에서 notes를 직접 읽을 수 없어야 함',
       observed: direct.status === 0 ? 'Data API 직접 확인 실패(주소·키 설정 확인 필요)'
         : direct.status >= 400 || direct.rows === 0
