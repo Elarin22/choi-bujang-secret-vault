@@ -83,3 +83,19 @@
 {"moduleKey":"web-injection","alertId":"wi-15","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
 {"moduleKey":"web-injection","alertId":"wi-16","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
 {"moduleKey":"web-injection","alertId":"wi-17","action":"alert","confidence":0.5,"reason":"web_unconfirmed: Jev unavailable; alert fallback"}
+{"moduleKey":"exfiltration","alertId":"ex-01","action":"block","confidence":0.88,"reason":"ex_new_destination_bulk"}
+{"moduleKey":"exfiltration","alertId":"ex-02","action":"block","confidence":0.94,"reason":"ex_offhours_archive"}
+{"moduleKey":"exfiltration","alertId":"ex-03","action":"block","confidence":0.92,"reason":"ex_new_destination_bulk"}
+{"moduleKey":"exfiltration","alertId":"ex-04","action":"block","confidence":0.91,"reason":"ex_alt_channel"}
+{"moduleKey":"exfiltration","alertId":"ex-05","action":"block","confidence":0.93,"reason":"ex_offhours_archive"}
+{"moduleKey":"exfiltration","alertId":"ex-06","action":"block","confidence":0.9,"reason":"ex_alt_channel"}
+{"moduleKey":"exfiltration","alertId":"ex-07","action":"block","confidence":0.91,"reason":"ex_new_destination_bulk"}
+{"moduleKey":"exfiltration","alertId":"ex-08","action":"block","confidence":0.95,"reason":"ex_offhours_archive"}
+{"moduleKey":"exfiltration","alertId":"ex-09","action":"alert","confidence":0.56,"reason":"ex_new_destination_bulk"}
+{"moduleKey":"exfiltration","alertId":"ex-10","action":"alert","confidence":0.58,"reason":"ex_new_destination_bulk"}
+{"moduleKey":"exfiltration","alertId":"ex-11","action":"alert","confidence":0.64,"reason":"ex_offhours_archive"}
+{"moduleKey":"exfiltration","alertId":"ex-12","action":"alert","confidence":0.7,"reason":"ex_offhours_archive"}
+{"moduleKey":"exfiltration","alertId":"ex-13","action":"alert","confidence":0.59,"reason":"ex_new_destination_bulk"}
+{"moduleKey":"exfiltration","alertId":"ex-14","action":"alert","confidence":0.62,"reason":"ex_new_destination_bulk"}
+{"moduleKey":"exfiltration","alertId":"ex-15","action":"alert","confidence":0.55,"reason":"ex_unconfirmed"}
+{"moduleKey":"exfiltration","alertId":"ex-16","action":"alert","confidence":0.55,"reason":"ex_alt_channel"}

@@ -15,7 +15,7 @@
     "xdr:build": "node scripts/build-xdr.mjs",
     "xdr:run": "node scripts/xdr-run.mjs",
     "xdr:replay": "node scripts/xdr-replay.mjs",
-    "xdr:test": "node --test test/xdr.test.mjs test/known-cve.test.mjs test/persistence.test.mjs test/privilege.test.mjs"
+    "xdr:test": "node --test test/xdr.test.mjs test/known-cve.test.mjs test/persistence.test.mjs test/privilege.test.mjs test/exfiltration.test.mjs"
   },
   "engines": {
     "node": ">=22"

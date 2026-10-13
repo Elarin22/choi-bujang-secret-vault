@@ -1,0 +1,502 @@
+{
+  "schema": "aleph.xdr.fixture.v1",
+  "moduleKey": "exfiltration",
+  "origin": "학습용 가상 시험 경보(직접 만든 자료). 공식 aleph-defense-starter 의 exfiltration.json 이 없어서 같은 형식으로 새로 만들었습니다. 주소는 문서용 대역, 계정은 가상입니다.",
+  "alerts": [
+    {
+      "id": "ex-01",
+      "timestamp": "2026-09-27T09:20:11+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 12,
+        "description": "user01 의 PC 에서 처음 보는 바깥 주소로 평소보다 큰 파일 전송이 시작됐습니다.",
+        "mitre": [
+          "T1041"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.21",
+        "srcuser": "user01",
+        "dstip": "203.0.113.51",
+        "bytes": 734003200,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-02",
+      "timestamp": "2026-09-27T09:41:37+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 12,
+        "description": "수업 시간 밖에 user02 가 압축 파일을 처음 보는 바깥 주소로 내보냈습니다.",
+        "mitre": [
+          "T1048"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.22",
+        "srcuser": "user02",
+        "dstip": "203.0.113.52",
+        "bytes": 218103808,
+        "protocol": "https",
+        "file": "docs-backup.zip"
+      }
+    },
+    {
+      "id": "ex-03",
+      "timestamp": "2026-09-27T10:02:05+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 13,
+        "description": "기존 명령 통로와 같은 연결로 처음 보는 목적지에 대용량 자료가 나갔습니다.",
+        "mitre": [
+          "T1041"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.23",
+        "srcuser": "user01",
+        "dstip": "203.0.113.53",
+        "bytes": 1610612736,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-04",
+      "timestamp": "2026-09-27T10:25:48+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 12,
+        "description": "다른 프로토콜로 처음 보는 바깥 주소에 평소보다 큰 파일이 올라갔습니다.",
+        "mitre": [
+          "T1048"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.24",
+        "srcuser": "user01",
+        "dstip": "203.0.113.54",
+        "bytes": 325058560,
+        "protocol": "ftp"
+      }
+    },
+    {
+      "id": "ex-05",
+      "timestamp": "2026-09-27T10:51:20+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 11,
+        "description": "수업 시간 밖에 user03 가 처음 보는 목적지로 압축 파일을 반출했습니다.",
+        "mitre": [
+          "T1048"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.25",
+        "srcuser": "user03",
+        "dstip": "203.0.113.55",
+        "bytes": 100663296,
+        "protocol": "https",
+        "file": "project-notes.7z"
+      }
+    },
+    {
+      "id": "ex-06",
+      "timestamp": "2026-09-27T11:13:09+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 11,
+        "description": "DNS 요청 안에 큰 자료가 실려 처음 보는 바깥 주소로 나가고 있습니다.",
+        "mitre": [
+          "T1048"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.26",
+        "srcuser": "user01",
+        "dstip": "203.0.113.56",
+        "bytes": 67108864,
+        "protocol": "dns"
+      }
+    },
+    {
+      "id": "ex-07",
+      "timestamp": "2026-09-27T11:36:52+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 12,
+        "description": "같은 처음 보는 바깥 주소로 대용량 전송이 반복되고 있습니다.",
+        "mitre": [
+          "T1041"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.27",
+        "srcuser": "user01",
+        "dstip": "203.0.113.57",
+        "bytes": 922746880,
+        "protocol": "https",
+        "count": 4
+      }
+    },
+    {
+      "id": "ex-08",
+      "timestamp": "2026-09-27T11:58:30+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 13,
+        "description": "업무 시간 밖에 처음 보는 바깥 주소로 평소보다 큰 압축 파일이 전송됐습니다.",
+        "mitre": [
+          "T1041",
+          "T1048"
+        ]
+      },
+      "data": {
+        "srcip": "203.0.113.28",
+        "srcuser": "user01",
+        "dstip": "203.0.113.58",
+        "bytes": 471859200,
+        "protocol": "https",
+        "file": "all-documents.zip"
+      }
+    },
+    {
+      "id": "ex-09",
+      "timestamp": "2026-09-27T12:14:03+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 6,
+        "description": "처음 보는 바깥 주소로 작은 파일이 전송됐습니다.",
+        "mitre": [
+          "T1041"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.31",
+        "srcuser": "user04",
+        "dstip": "198.51.100.61",
+        "bytes": 4096,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-10",
+      "timestamp": "2026-09-27T12:30:44+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 8,
+        "description": "평소보다 큰 파일이 알려진 회사 백업 서버로 전송됐습니다.",
+        "mitre": [
+          "T1048"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.32",
+        "srcuser": "user04",
+        "dstip": "198.51.100.62",
+        "bytes": 125829120,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-11",
+      "timestamp": "2026-09-27T12:47:19+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 9,
+        "description": "수업 시간 밖에 user04 가 압축 파일을 알려진 학교 저장소로 올렸습니다.",
+        "mitre": [
+          "T1048"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.33",
+        "srcuser": "user04",
+        "dstip": "198.51.100.63",
+        "bytes": 31457280,
+        "protocol": "https",
+        "file": "homework.zip"
+      }
+    },
+    {
+      "id": "ex-12",
+      "timestamp": "2026-09-27T13:05:26+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 12,
+        "description": "수업 시간 밖에 압축 파일이 알려진 백업 서버로 나갔습니다.",
+        "mitre": [
+          "T1041"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.34",
+        "srcuser": "user05",
+        "dstip": "198.51.100.64",
+        "bytes": 78643200,
+        "protocol": "https",
+        "file": "nightly.tar.gz"
+      }
+    },
+    {
+      "id": "ex-13",
+      "timestamp": "2026-09-27T13:22:58+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 9,
+        "description": "처음 보는 바깥 주소로 파일 전송이 있었습니다.",
+        "mitre": [
+          "T1041"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.35",
+        "srcuser": "user05",
+        "dstip": "198.51.100.65",
+        "bytes": 2097152,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-14",
+      "timestamp": "2026-09-27T13:40:15+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 7,
+        "description": "새 목적지로 평소보다 큰 파일이 전송됐지만 위험 수준이 낮습니다.",
+        "mitre": [
+          "T1048"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.36",
+        "srcuser": "user06",
+        "dstip": "198.51.100.66",
+        "bytes": 146800640,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-15",
+      "timestamp": "2026-09-27T14:01:33+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 15,
+        "description": "외부 전송 경보가 올라왔지만 자세한 정보가 부족합니다.",
+        "mitre": [
+          "T1041"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.37",
+        "srcuser": "user06",
+        "dstip": "198.51.100.67",
+        "bytes": 1048576,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-16",
+      "timestamp": "2026-09-27T14:18:47+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 5,
+        "description": "파일이 외부로 전송됐습니다.",
+        "mitre": [
+          "T1048"
+        ]
+      },
+      "data": {
+        "srcip": "198.51.100.38",
+        "srcuser": "user06",
+        "dstip": "198.51.100.68",
+        "bytes": 8388608,
+        "protocol": "ftp"
+      }
+    },
+    {
+      "id": "ex-17",
+      "timestamp": "2026-09-27T14:35:02+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 3,
+        "description": "자료실 화면이 열렸습니다.",
+        "mitre": []
+      },
+      "data": {
+        "srcip": "198.51.100.41",
+        "srcuser": "user01",
+        "dstip": "198.51.100.71",
+        "bytes": 2048,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-18",
+      "timestamp": "2026-09-27T14:52:21+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 3,
+        "description": "user01 이 로그인했습니다.",
+        "mitre": []
+      },
+      "data": {
+        "srcip": "198.51.100.42",
+        "srcuser": "user01",
+        "dstip": "198.51.100.72",
+        "bytes": 1024,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-19",
+      "timestamp": "2026-09-27T15:08:40+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 4,
+        "description": "처음 보는 바깥 주소로 작은 문서 한 건이 전송됐습니다.",
+        "mitre": []
+      },
+      "data": {
+        "srcip": "198.51.100.43",
+        "srcuser": "user02",
+        "dstip": "198.51.100.73",
+        "bytes": 12288,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-20",
+      "timestamp": "2026-09-27T15:25:16+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 4,
+        "description": "알려진 백업 서버로 정기 백업이 평소처럼 전송됐습니다.",
+        "mitre": []
+      },
+      "data": {
+        "srcip": "198.51.100.44",
+        "srcuser": "user02",
+        "dstip": "198.51.100.74",
+        "bytes": 20971520,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-21",
+      "timestamp": "2026-09-27T15:41:54+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 3,
+        "description": "자료실 메모를 내려받았습니다.",
+        "mitre": []
+      },
+      "data": {
+        "srcip": "198.51.100.45",
+        "srcuser": "user03",
+        "dstip": "198.51.100.75",
+        "bytes": 4096,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-22",
+      "timestamp": "2026-09-27T15:58:09+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 2,
+        "description": "업데이트 파일을 알려진 배포 서버에서 내려받았습니다.",
+        "mitre": []
+      },
+      "data": {
+        "srcip": "198.51.100.46",
+        "srcuser": "user03",
+        "dstip": "198.51.100.76",
+        "bytes": 94371840,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-23",
+      "timestamp": "2026-09-27T16:14:37+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 4,
+        "description": "user04 가 허용 목록 주소에서 큰 PDF 를 내려받았습니다.",
+        "mitre": []
+      },
+      "data": {
+        "srcip": "198.51.100.47",
+        "srcuser": "user04",
+        "dstip": "198.51.100.77",
+        "bytes": 94371840,
+        "protocol": "https"
+      }
+    },
+    {
+      "id": "ex-24",
+      "timestamp": "2026-09-27T16:31:25+09:00",
+      "agent": {
+        "name": "choi-bujang-pc"
+      },
+      "rule": {
+        "level": 3,
+        "description": "user04 가 로그아웃했습니다.",
+        "mitre": []
+      },
+      "data": {
+        "srcip": "198.51.100.48",
+        "srcuser": "user04",
+        "dstip": "198.51.100.78",
+        "bytes": 512,
+        "protocol": "https"
+      }
+    }
+  ]
+}

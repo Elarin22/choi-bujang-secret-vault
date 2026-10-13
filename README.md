@@ -1,5 +1,11 @@
 # BYTE BACK 자료실 · 12단계 저장점
 
+## 보너스 xdr-06 저장점 · 2026-10-13
+
+「자료 빼돌리기」모듈을 xdr/exfiltration에 추가했습니다. 처음 보는 바깥 목적지로 가는 전송에 평소보다 큰 크기·업무 시간 밖·압축 파일·다른 프로토콜·반복 같은 근거가 겹치는 명확한 경우만 block하고, 근거가 부족하면 alert, 외부 전송 신호가 없거나 수준이 낮으면 record입니다. 근거는 MITRE T1041·T1048입니다. 단독 decide.mjs는 import·파일·네트워크 없이 계산하고, respond.mjs가 block의 목적지만 근거 경보 번호·15분 만료가 붙은 거부 후보로 저장하며 알림은 xdr/alerts.log에 패턴 이름만 남깁니다. 기존 판정기 규칙과 다른 모듈의 규칙은 건드리지 않습니다.
+
+재현: npm run xdr:run -- exfiltration → block 8, alert 8, record 8, 정상 이벤트 block 0. npm run xdr:test → XDR 시험 통과. 시험 경보 exfiltration.json은 공식 자료를 받지 못해 직접 만든 가상 자료입니다. 목적지 주소를 운영 엔진이 확인해 주는 계약은 아직 없으므로 실제 ZTNA 경로 연결은 미검증입니다.
+
 ## 보너스 xdr-03 저장점 · 2026-10-13
 
 「알려진 취약점」모듈을 xdr/known-cve에 추가했습니다. 공식 가상 경보 원본 24건은 그대로 보관하며 요청 머리글·주소·인자의 완전한 원격 JNDI 조회 구조만 block합니다. 취약점 이름·불완전한 흔적은 alert, 정상 이벤트는 record입니다. 단독 decide.mjs는 import·파일·네트워크 없이 계산합니다. 패턴 근거는 Apache CVE-2021-44228·MITRE T1190과 공식 가상 경보입니다.

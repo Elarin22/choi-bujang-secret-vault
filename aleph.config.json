@@ -5,7 +5,7 @@
   "sampleMarker": "SAMPLE_NOTE_1",
   "judgeIssuer": "https://aleph-judge-production.up.railway.app/defense/judge",
   "identityProvider": {
-    "issuer": "https://inflqaldhpubeydqxxbm.supabase.co/rest/v1/",
+    "issuer": "https://inflqaldhpubeydqxxbm.supabase.co/auth/v1",
     "audience": "authenticated",
     "jwksUrl": "https://inflqaldhpubeydqxxbm.supabase.co/auth/v1/.well-known/jwks.json"
   },

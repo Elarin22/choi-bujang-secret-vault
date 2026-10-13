@@ -1,0 +1,28 @@
+{
+  "schema": "xdr.exfiltration.patterns.v1",
+  "source": "MITRE ATT&CK T1041 명령 통로로 유출 (https://attack.mitre.org/techniques/T1041/) / T1048 다른 프로토콜로 유출 (https://attack.mitre.org/techniques/T1048/)",
+  "thresholdNote": "규칙 수준 10 이상·근거 2가지 이상·알림 수준 5 이상·대용량 50MB 기준은 학습용 가정입니다. 이 파일은 근거 설명용이고 실제 판정 기준은 단일 파일 decide.mjs 안에 있습니다.",
+  "patterns": [
+    {
+      "name": "ex_new_destination_bulk",
+      "confidence": 0.86,
+      "condition": "처음 보는 바깥 목적지로 평소보다 큰 전송이 나가고, 반복되는 전송·압축 파일·업무 시간 밖 가운데 서로 다른 근거가 하나 이상 더 겹치며 규칙 수준이 10 이상",
+      "evidence": "T1041: 감염된 PC 가 이미 열어 둔 명령 통로로 처음 보는 곳에 많은 자료를 보내는 것은 대표적인 유출 신호입니다.",
+      "sources": ["MITRE ATT&CK T1041"]
+    },
+    {
+      "name": "ex_offhours_archive",
+      "confidence": 0.86,
+      "condition": "수업·업무 시간 밖에 압축 파일이 처음 보는 바깥 목적지로 반출되고 규칙 수준이 10 이상이며 서로 다른 근거가 2가지 이상 겹침",
+      "evidence": "T1048: 자료를 압축해 묶은 뒤 눈에 띄지 않는 시간에 밖으로 보내는 것은 유출 직전의 전형적인 모습입니다.",
+      "sources": ["MITRE ATT&CK T1048"]
+    },
+    {
+      "name": "ex_alt_channel",
+      "confidence": 0.86,
+      "condition": "FTP·DNS 같은 평소 자료 전송에 쓰지 않는 다른 프로토콜로 처음 보는 바깥 목적지에 자료가 나가고 규칙 수준이 10 이상이며 서로 다른 근거가 2가지 이상 겹침",
+      "evidence": "T1048: 일반 업무 통로가 아닌 다른 프로토콜을 쓰는 것은 감시를 피해 자료를 빼내는 신호입니다.",
+      "sources": ["MITRE ATT&CK T1048"]
+    }
+  ]
+}

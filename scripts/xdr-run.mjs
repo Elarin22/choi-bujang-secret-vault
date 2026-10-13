@@ -5,6 +5,7 @@ import { publishDecisions } from '../xdr/ztna-overlay.mjs';
 import { respond as respondKnownCve } from '../xdr/known-cve/respond.mjs';
 import { respond as respondPersistence } from '../xdr/persistence/respond.mjs';
 import { respond as respondPrivilege } from '../xdr/privilege/respond.mjs';
+import { respond as respondExfiltration } from '../xdr/exfiltration/respond.mjs';
 
 const MODULE_KEYS = ['brute-force', 'web-injection', 'known-cve', 'persistence', 'privilege', 'exfiltration'];
 const ACTIONS = new Set(['block', 'alert', 'record']);
@@ -72,6 +73,7 @@ if (isMain) {
     if (moduleKey === 'known-cve') await respondKnownCve(root, fixture, result);
     else if (moduleKey === 'persistence') await respondPersistence(root, fixture, result);
     else if (moduleKey === 'privilege') await respondPrivilege(root, fixture, result);
+    else if (moduleKey === 'exfiltration') await respondExfiltration(root, fixture, result);
     else await publishDecisions(root, fixture, result);
     console.log(`${moduleKey}: block ${result.counts.block}, alert ${result.counts.alert}, record ${result.counts.record}`);
   } catch (error) {
