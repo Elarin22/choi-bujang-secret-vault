@@ -1,19 +1,19 @@
 {
   "step": 12,
-  "repoUrl": "https://github.com/myeongjundev/choi-bujang-secret-vault",
-  "publicAppUrl": "https://choi-bujang-secret-vault-sigma.vercel.app",
+  "repoUrl": "https://github.com/Elarin22/choi-bujang-secret-vault",
+  "publicAppUrl": "https://choi-bujang-secret-vault-two.vercel.app/",
   "sampleMarker": "SAMPLE_NOTE_1",
   "judgeIssuer": "https://aleph-judge-production.up.railway.app/defense/judge",
   "identityProvider": {
-    "issuer": "https://cenxyqdoulktaqtkskeh.supabase.co/auth/v1",
+    "issuer": "https://inflqaldhpubeydqxxbm.supabase.co/rest/v1/",
     "audience": "authenticated",
-    "jwksUrl": "https://cenxyqdoulktaqtkskeh.supabase.co/auth/v1/.well-known/jwks.json"
+    "jwksUrl": "https://inflqaldhpubeydqxxbm.supabase.co/auth/v1/.well-known/jwks.json"
   },
   "allowedRoutes": [
     { "service": "notes", "method": "GET", "pathPattern": "/api/my/notes" },
     { "service": "notes", "method": "GET", "pathPattern": "/api/notes/:id" },
     { "service": "notes", "method": "GET", "pathPattern": "/notes/:id" }
   ],
-  "originalApiUrl": "https://cenxyqdoulktaqtkskeh.supabase.co/rest/v1/user_notes",
+  "originalApiUrl": "https://inflqaldhpubeydqxxbm.supabase.co/rest/v1/user_notes",
   "restoreRoute": "/api/restore/:noteId"
 }
