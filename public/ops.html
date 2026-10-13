@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a28">
+  <title>BYTE BACK | 탈환 작전실</title>
+  <link rel="icon" href="/connect-icon.svg" type="image/svg+xml">
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; min-height: 100vh; background: #101a28; color: #ecf4ff; }
+    main { max-width: 980px; margin: 0 auto; padding: 44px 22px 64px; }
+    .eyebrow { color: #8ad8df; font-size: 14px; font-weight: 700; letter-spacing: .08em; }
+    h1 { margin: 16px 0; font-size: clamp(30px, 7vw, 48px); line-height: 1.2; }
+    p, small { font-size: 16px; line-height: 1.7; color: #bfd0e5; }
+    .card { border: 1px solid #51667c; border-radius: 14px; padding: 18px; background: #1a2a3d; margin: 16px 0; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 15px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #2f4258; vertical-align: top; }
+    th { color: #8ad8df; }
+    tr[data-status="confirmed_now"] td:last-child { color: #7ee2a8; }
+    tr[data-status="declared_code"] td:last-child { color: #f1d27a; }
+    tr[data-status="not_connected"] td:last-child, tr[data-status="not_run"] td:last-child, tr[data-status="unknown"] td:last-child { color: #ffb4c0; }
+    #cross[data-match="true"] { color: #7ee2a8; } #cross[data-match="false"] { color: #ffb4c0; }
+    button { font: inherit; font-weight: 700; padding: 9px 16px; border-radius: 10px; border: 0; background: #2a3d55; color: #ecf4ff; cursor: pointer; }
+    a { color: #8ad8df; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">BYTE BACK · 12단계</div>
+    <h1>탈환 작전실</h1>
+    <p>판정기 규칙, 탐지 사건, 회수 상태, 복구 버전을 서버 응답 그대로 보여 줍니다. 이 화면의 문구는 통과 근거가 아닙니다. 가상 메모 본문은 표시하지 않습니다.</p>
+    <section class="card">
+      <p id="state" role="status">서버 요약을 불러오는 중입니다.</p>
+      <small id="generated">서버 기록 시각 없음</small>
+      <p id="cross" data-match="null">비교할 응답이 없어 일치 여부를 알 수 없습니다.</p>
+      <p><button id="refresh">다시 불러오기</button></p>
+    </section>
+    <section class="card" aria-label="작전실 요약">
+      <table>
+        <thead><tr><th>구역</th><th>항목</th><th>값</th><th>확인 상태</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+    <p><small>확인 상태 뜻: 「서버가 방금 확인함」은 이 요청 중 서버가 실제 파일·엔진 응답으로 읽은 값입니다. 「코드에 적힘」은 코드 속 값을 읽었을 뿐 시험한 것이 아닙니다. 「미연결」「미실행」은 확인하지 못한 값입니다.</small></p>
+    <p><a href="/">자료실</a> · <a href="/connect.html">내 기기 승인 상태</a></p>
+  </main>
+  <script type="module" src="/ops.js"></script>
+</body>
+</html>
