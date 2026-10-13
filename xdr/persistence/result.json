@@ -5,103 +5,151 @@
     {
       "alertId": "ps-01",
       "action": "block",
-      "confidence": 0.92,
-      "reason": "ps_unsigned_new_service: 서명 없는 새 서비스 등록, 자동 시작, 규칙 수준 12, 반복 1번 (T1543/T1053)"
+      "confidence": 0.88,
+      "reason": "ps_unsigned_new_service: 근거 2가지가 겹침, 규칙 수준 12 (T1543/T1053)"
     },
     {
       "alertId": "ps-02",
       "action": "block",
-      "confidence": 0.95,
-      "reason": "ps_unsigned_scheduled_task: 서명 없는 예약 작업, 자동 시작, 규칙 수준 12, 반복 2번 (T1543/T1053)"
+      "confidence": 0.88,
+      "reason": "ps_unsigned_scheduled_task: 근거 2가지가 겹침, 규칙 수준 12 (T1543/T1053)"
     },
     {
       "alertId": "ps-03",
       "action": "block",
-      "confidence": 0.92,
-      "reason": "ps_startup_location_change: 시작 위치의 서명 없는 항목, 자동 시작, 규칙 수준 13, 반복 1번 (T1543/T1053)"
+      "confidence": 0.87,
+      "reason": "ps_startup_location_change: 근거 2가지가 겹침, 규칙 수준 11 (T1543/T1053)"
     },
     {
       "alertId": "ps-04",
       "action": "block",
-      "confidence": 0.95,
-      "reason": "ps_unsigned_new_service: 서명 없는 새 서비스 등록, 자동 시작, 규칙 수준 11, 반복 3번 (T1543/T1053)"
+      "confidence": 0.88,
+      "reason": "ps_unsigned_new_service: 근거 2가지가 겹침, 규칙 수준 12 (T1543/T1053)"
     },
     {
       "alertId": "ps-05",
       "action": "block",
-      "confidence": 0.92,
-      "reason": "ps_unsigned_scheduled_task: 서명 없는 예약 작업, 자동 시작, 규칙 수준 13, 반복 1번 (T1543/T1053)"
+      "confidence": 0.86,
+      "reason": "ps_unsigned_scheduled_task: 근거 2가지가 겹침, 규칙 수준 10 (T1543/T1053)"
     },
     {
       "alertId": "ps-06",
       "action": "block",
-      "confidence": 0.92,
-      "reason": "ps_startup_location_change: 시작 위치의 서명 없는 항목, 자동 시작, 규칙 수준 12, 반복 1번 (T1543/T1053)"
+      "confidence": 0.91,
+      "reason": "ps_unsigned_new_service: 근거 3가지가 겹침, 규칙 수준 12 (T1543/T1053)"
     },
     {
       "alertId": "ps-07",
-      "action": "alert",
-      "confidence": 0.6,
-      "reason": "ps_unsigned_scheduled_task: 서명 없는 예약 작업, 기준 미만 또는 확인 자료 부족, 알림만 남김"
+      "action": "block",
+      "confidence": 0.87,
+      "reason": "ps_startup_location_change: 근거 2가지가 겹침, 규칙 수준 11 (T1543/T1053)"
     },
     {
       "alertId": "ps-08",
-      "action": "alert",
-      "confidence": 0.6,
-      "reason": "ps_unsigned_new_service: 서명 없는 새 서비스 등록, 기준 미만 또는 확인 자료 부족, 알림만 남김"
+      "action": "block",
+      "confidence": 0.91,
+      "reason": "ps_unsigned_new_service: 근거 3가지가 겹침, 규칙 수준 12 (T1543/T1053)"
     },
     {
       "alertId": "ps-09",
       "action": "alert",
-      "confidence": 0.6,
-      "reason": "ps_startup_location_change: 시작 위치의 서명 없는 항목, 기준 미만 또는 확인 자료 부족, 알림만 남김"
+      "confidence": 0.51,
+      "reason": "ps_unconfirmed: 지속성 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ps-10",
       "action": "alert",
-      "confidence": 0.6,
-      "reason": "ps_unsigned_new_service: 서명 없는 새 서비스 등록, 기준 미만 또는 확인 자료 부족, 알림만 남김"
+      "confidence": 0.57,
+      "reason": "ps_unconfirmed: 지속성 신호는 있으나 근거 1가지, 알림만 남김"
     },
     {
       "alertId": "ps-11",
       "action": "alert",
       "confidence": 0.5,
-      "reason": "ps_unconfirmed: 설명 문장만 있고 이벤트 자료 없음, 알림만 남김"
+      "reason": "ps_unconfirmed: 지속성 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ps-12",
-      "action": "record",
-      "confidence": 0.05,
-      "reason": "ps_normal: 평소 목록에 있는 항목"
+      "action": "alert",
+      "confidence": 0.51,
+      "reason": "ps_unconfirmed: 지속성 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ps-13",
-      "action": "record",
-      "confidence": 0.05,
-      "reason": "ps_normal: 평소 목록에 있는 항목"
+      "action": "alert",
+      "confidence": 0.58,
+      "reason": "ps_unconfirmed: 지속성 신호는 있으나 근거 1가지, 알림만 남김"
     },
     {
       "alertId": "ps-14",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "ps_normal: 지속성 위치나 이벤트가 아님"
+      "action": "alert",
+      "confidence": 0.56,
+      "reason": "ps_unconfirmed: 지속성 신호는 있으나 근거 1가지, 알림만 남김"
     },
     {
       "alertId": "ps-15",
-      "action": "record",
-      "confidence": 0.05,
-      "reason": "ps_normal: 평소 목록에 있는 항목"
+      "action": "alert",
+      "confidence": 0.52,
+      "reason": "ps_unconfirmed: 지속성 신호는 있으나 근거 0가지, 알림만 남김"
     },
     {
       "alertId": "ps-16",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "ps_unconfirmed: 지속성 신호는 있으나 근거 0가지, 알림만 남김"
+    },
+    {
+      "alertId": "ps-17",
       "action": "record",
       "confidence": 0.05,
-      "reason": "ps_normal: 평소 목록에 있는 항목"
+      "reason": "ps_normal: 지속성 등록·변경 신호가 없음"
+    },
+    {
+      "alertId": "ps-18",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ps_normal: 평소 목록·서명 확인된 정상 등록이거나 수준이 낮음"
+    },
+    {
+      "alertId": "ps-19",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ps_normal: 평소 목록·서명 확인된 정상 등록이거나 수준이 낮음"
+    },
+    {
+      "alertId": "ps-20",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ps_normal: 평소 목록·서명 확인된 정상 등록이거나 수준이 낮음"
+    },
+    {
+      "alertId": "ps-21",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ps_normal: 지속성 등록·변경 신호가 없음"
+    },
+    {
+      "alertId": "ps-22",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ps_normal: 지속성 등록·변경 신호가 없음"
+    },
+    {
+      "alertId": "ps-23",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ps_normal: 평소 목록·서명 확인된 정상 등록이거나 수준이 낮음"
+    },
+    {
+      "alertId": "ps-24",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "ps_normal: 지속성 등록·변경 신호가 없음"
     }
   ],
   "counts": {
-    "block": 6,
-    "alert": 5,
-    "record": 5
+    "block": 8,
+    "alert": 8,
+    "record": 8
   }
 }

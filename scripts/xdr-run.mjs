@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { publishDecisions } from '../xdr/ztna-overlay.mjs';
 import { respond as respondKnownCve } from '../xdr/known-cve/respond.mjs';
+import { respond as respondPersistence } from '../xdr/persistence/respond.mjs';
 
 const MODULE_KEYS = ['brute-force', 'web-injection', 'known-cve', 'persistence', 'privilege', 'exfiltration'];
 const ACTIONS = new Set(['block', 'alert', 'record']);
@@ -68,6 +69,7 @@ if (isMain) {
     const result = await runXdr({ root, moduleKey });
     const fixture = JSON.parse(await readFile(join(root, 'xdr', 'fixtures', `${moduleKey}.json`), 'utf8'));
     if (moduleKey === 'known-cve') await respondKnownCve(root, fixture, result);
+    else if (moduleKey === 'persistence') await respondPersistence(root, fixture, result);
     else await publishDecisions(root, fixture, result);
     console.log(`${moduleKey}: block ${result.counts.block}, alert ${result.counts.alert}, record ${result.counts.record}`);
   } catch (error) {
