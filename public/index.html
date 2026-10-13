@@ -98,7 +98,7 @@
     }
 
     async function refresh() {
-      const notes = await api('/api/notes');
+      const notes = await api('/api/my/notes');
       show();
       $('notes').replaceChildren(...notes.map(card));
     }

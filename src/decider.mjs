@@ -48,18 +48,21 @@ const reverified = (request) => request?.stepUp?.verified === true
   && Number.isFinite(request.stepUp.authAgeSeconds)
   && request.stepUp.authAgeSeconds >= 0 && request.stepUp.authAgeSeconds <= MAX_STEP_UP_AGE_SECONDS;
 
-// 8단계 구역 규칙: 엔진이 확인한 method·route·path만 정확히 대조합니다. 알 수 없는 경로는 거부합니다.
+// 8단계 구역 규칙: 엔진이 확인한 service·method·route·path만 정확히 대조합니다. 알 수 없는 경로는 거부합니다.
 // 쿼리는 보지 않습니다(자료 ID만 고르고 기능은 경로로만 고름). :id 자리에 export 같은 기능 이름은 받지 않습니다.
-// 이 요청 계약에는 메모 소유자와 강사 역할이 없고 subjectId는 Supabase 사용자 번호와 비교할 수 없습니다.
-// 그래서 판정기는 요청 기억(처음 요청한 사람을 주인으로 보는 방식 등)으로 소유권을 추측하지 않습니다.
-// 남의 메모 차단과 강사 확인은 자료 API(lib/notes.mjs, lib/notices.mjs)가 저장된 owner_id·staff_roles로 합니다.
+// 이 요청 계약에는 메모 소유자·강사 역할 증거가 없고 subjectId는 Supabase 사용자 번호와 비교할 수 없습니다.
+// 그래서 증거 없이는 허용하지 않습니다: 누구의 목록인지 모호한 GET /notes와 소유·강사 증거 없는 쓰기는 거부하고,
+// 자기 목록은 서버가 로그인 사용자로 거르는 GET /my/notes로만 허용합니다. 개별 자료의 소유·강사 확인은 자료 API가 합니다.
 const RESERVED_IDS = Object.freeze(['export', 'import', 'search', 'list', 'all', 'admin', 'new', 'bulk', 'download', 'upload']);
 const ID = '[A-Za-z0-9][A-Za-z0-9_-]{0,63}';
 const ROUTES = Object.freeze([
-  ['GET', '/notes', 'own_notes'], ['POST', '/notes', 'own_notes'],
-  ['GET', '/notes/:id', 'own_notes'], ['PUT', '/notes/:id', 'own_notes'], ['DELETE', '/notes/:id', 'own_notes'],
-  ['GET', '/notices', 'notice_read'], ['GET', '/notices/:id', 'notice_read'], ['PUT', '/notices/:id', 'notice_edit'],
-].map(([method, template, zone]) => Object.freeze({ method, template, zone,
+  ['GET', '/my/notes', 'own_notes', true],
+  ['GET', '/notes/:id', 'own_notes', true],
+  ['GET', '/notices', 'notice_read', true], ['GET', '/notices/:id', 'notice_read', true],
+  ['GET', '/notes', 'own_notes', false], ['POST', '/notes', 'own_notes', false],
+  ['PUT', '/notes/:id', 'own_notes', false], ['DELETE', '/notes/:id', 'own_notes', false],
+  ['PUT', '/notices/:id', 'notice_edit', false],
+].map(([method, template, zone, allowed]) => Object.freeze({ method, template, zone, allowed,
   regex: new RegExp(`^${template.replace(':id', `(${ID})`)}$`, 'u') })));
 
 export function matchRoute(request) {
@@ -88,8 +91,8 @@ export async function decide(request) {
   }
   const hit = matchRoute(request);
   if (!hit) return { ...base, decision: 'deny', reasonCode: 'route_not_allowed', ruleIds: ['exact_route_only'] };
-  if (hit.zone === 'notice_edit') return { ...base, decision: 'deny', reasonCode: 'zone_not_allowed', ruleIds: ['notice_zone'] };
   const zoneRule = hit.zone === 'own_notes' ? 'own_notes_zone' : 'notice_zone';
+  if (!hit.allowed) return { ...base, decision: 'deny', reasonCode: 'zone_not_allowed', ruleIds: [zoneRule] };
   if (describeRisk(request).risky) {
     return reverified(request)
       ? { ...base, decision: 'allow', reasonCode: 'approved', ruleIds: ['device_registered', 'step_up_required', zoneRule] }
