@@ -3,16 +3,19 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "pretest": "node scripts/build-public.mjs --local",
+    "test": "node --test test/*.test.mjs",
+    "check": "node scripts/bundle.mjs",
     "build": "node scripts/build-public.mjs",
-    "test:r5": "node --test test/*.test.mjs",
+    "test:r5": "node --test test/r5.test.mjs",
     "bundle": "node scripts/bundle.mjs",
-    "ops:matrix": "node scripts/ops-matrix.mjs",
-    "policy:diff": "node scripts/policy-restore.mjs",
-    "policy:restore": "node scripts/policy-restore.mjs",
-    "xdr:run": "node scripts/xdr-run.mjs",
     "decider:test": "node scripts/decider-test.mjs",
     "detect:test": "node scripts/detect-test.mjs",
-    "fixture:7": "node scripts/fixture-7.mjs"
+    "fixture:7": "node scripts/fixture-7.mjs",
+    "xdr:build": "node scripts/build-xdr.mjs",
+    "xdr:run": "node scripts/xdr-run.mjs",
+    "xdr:replay": "node scripts/xdr-replay.mjs",
+    "xdr:test": "node --test test/xdr.test.mjs test/known-cve.test.mjs test/persistence.test.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -20,5 +23,8 @@
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",
     "jose": "6.2.12"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

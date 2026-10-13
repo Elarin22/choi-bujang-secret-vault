@@ -1,175 +1,139 @@
-# BYTE BACK 방어전 자료실
+# BYTE BACK 자료실 · 12단계 저장점
 
-## 현재 상태: 12단계 저장점 (탈환 작전실을 완성합니다)
+## 보너스 xdr-03 저장점 · 2026-10-13
 
-이 안내는 `git log -1`로 보이는 12단계 저장점 커밋을 기준으로 씁니다. 실제로 실행하지 않은 것은 「미실행」으로 적었습니다.
+「알려진 취약점」모듈을 xdr/known-cve에 추가했습니다. 공식 가상 경보 원본 24건은 그대로 보관하며 요청 머리글·주소·인자의 완전한 원격 JNDI 조회 구조만 block합니다. 취약점 이름·불완전한 흔적은 alert, 정상 이벤트는 record입니다. 단독 decide.mjs는 import·파일·네트워크 없이 계산합니다. 패턴 근거는 Apache CVE-2021-44228·MITRE T1190과 공식 가상 경보입니다.
 
-### 누가 만들었나 (출처 구분)
+재현: npm run xdr:run -- known-cve → block 8, alert 8, record 8. npm test → 기존 44개와 새 6개, 합계 50개 통과. 정상 차단 0, 읽기 24줄, 모의 overlay에서 공격 8건 거부·애매한/정상 거부 0. respond.mjs는 근거 경보 번호·15분 만료가 있는 block 후보만 기존 overlay에 넣고 패턴 이름만 로그에 남깁니다. 미확인 IP·만료·기존 정책 보존을 시험했습니다. 운영 릴레이 IP 계약은 여전히 미제공이며 실제 연결은 미검증입니다. 실제 심판 결과는 별도로 확인합니다.
 
-| 구분 | 무엇 | 파일 |
-| --- | --- | --- |
-| **ALEPH SDP 엔진 사용(제공)** | 심판 접수 서버 주소(`judgeIssuer`), 판정 요청·응답 계약 문서, 공식 실행기, 제출 묶음 도구, 가상 경보 자료. 이 저장소에 코드가 복사된 것이며 학생이 만든 것이 아닙니다. | `aleph.config.json`의 `judgeIssuer`, `docs/DECIDER_REQUEST.md`, `docs/DETECT_EVENTS.md`, `scripts/xdr-run.mjs`, `scripts/bundle.mjs`, `xdr/fixtures/` |
-| **ALEPH SDP 엔진 사용(미연결)** | 기기 등록·승인 확인을 하는 공식 접속 도구(어댑터). 연결 안내를 받지 못해 `lib/device.mjs`의 `officialAdapter`가 `null`입니다. | (없음) |
-| **학생이 만든 판정기** | `decide(request)`와 규칙 6개 | `src/decider.mjs` |
-| **학생이 만든 탐지 규칙** | `burst_read` 하나(10분 안 같은 사용자의 GET 120건 초과 → 회수 제안만), 무차별 로그인·웹 주입 가상 경보 판정 | `src/detect.mjs`, `xdr/brute-force/`, `xdr/web-injection/` |
-| **학생이 만든 접속 앱** | 승인 상태 화면, 설치형 웹앱, 서비스 워커, 서버 승인 전달 | `public/connect*.{html,js,webmanifest,svg}`, `public/connection-model.js`, `public/approved-access.js`, `lib/device.mjs`, `api/device-*.js` |
-| **학생이 만든 자료실** | 로그인 화면, 메모·공지·복원 API, 정책 사본·복구 | `public/index.html`, `api/`, `lib/`, `src/verify-login.mjs`, `src/policy-recovery.mjs`, `backups/`, `supabase/` |
-| **학생이 만든 작전실(12단계)** | 서버 요약 API, 작전실 화면, 정상·금지 요청 표 | `api/ops-summary.js`, `lib/ops-summary.mjs`, `lib/ops-matrix.mjs`, `public/ops*.{html,js}`, `scripts/ops-matrix.mjs`, `ops/matrix.json` |
+## 최신 상태 · 2026-10-13
 
-### 12단계 변경
+1~11단계는 실제 심판에서 각각 100점을 확인했습니다. 12단계는 코드 커밋 `6d83f22d5a508d94e1eb5f7bb4035e2fdfb42847`까지 총 여섯 접수 모두 `UNV_RUN_ENVIRONMENT`로 확인 불가·표시 0/100점입니다. 심판의 실행 명령과 첫 오류 로그는 아직 받지 못했습니다. 아래 이전 검토 이력의 재판정 대기는 이 결과로 갱신합니다.
 
-- 탈환 작전실(`/ops.html`): `GET /api/ops-summary` 응답만 그려 판정기 규칙, 탐지 사건, 회수 상태, 복구 버전을 보여 줍니다. 화면은 성공 문구를 만들지 않고 서버가 준 상태 이름(서버가 방금 확인함 / 코드에 적힘 · 시험하지 않음 / 기록된 실측 / 미연결 / 미실행)을 그대로 라벨로 바꿉니다. 가상 메모 본문·토큰·확인 코드·키는 응답에 없습니다.
-- 교차 확인: 화면이 `/api/device-status`를 따로 불러 요약 속 승인 값과 맞대어 보고, 다르면 「이 화면의 수치를 믿지 마세요」라고 표시합니다.
-- 정상·금지 요청 표(제작 2): `lib/ops-matrix.mjs`가 1~12단계 요청 17행(정상·금지, 기대 결과)을 정의합니다. `npm run ops:matrix`가 배포 주소로 실제 요청을 보내 상태 번호·요청 ID·확인 시각만 `ops/matrix.json`에 남기고, 서버는 저장된 「통과」 글자를 믿지 않고 관측값으로 다시 계산해 보여 줍니다. 실행하지 않은 행(토큰이 필요한 행 등)은 미실행입니다.
-- 점검기: `src/attack-check.mjs`가 12단계를 받고(`ops_room_live`), `Buffer`를 `node:buffer`에서 가져옵니다.
-- **미실행:** 41종 공격 시험은 이 저장소에서 실행하지 않았고 표에도 넣지 않았습니다. 표의 「기대와 같음」은 그 표에 있는 요청의 결과일 뿐 41종 방어 증거가 아닙니다. 배포 화면에서의 확인, 토큰이 필요한 정상 요청(내 메모 목록)·남의 메모·일반 학생 공지 수정 행도 해당 환경변수를 넣고 실행하기 전까지 미실행입니다.
+위 코드에서 `npm test` 44개, `npm run check` 자기점검 20건, URL 입력 방식의 실측 20건·미실행 0, 실제 배포 커밋 일치를 확인했습니다. 자기점검은 심판 통과가 아닙니다. 운영 엔진 승인·회수 연결과 공식 41종 운영 재현은 별도 미검증입니다.
 
-### 설치·실행·중지·복구 (재현 순서)
+학원 PC에서는 이 저장소를 `git pull --ff-only`로 갱신하고 `npm ci` → `npm test`를 실행합니다. 기존 Vercel·Supabase 프로젝트와 서버 환경변수는 그대로 사용하며 SQL을 다시 초기화하지 않습니다. 작업 기록 저장소도 별도로 갱신한 뒤 [학원 재개 안내](https://github.com/myeongjundev/skt-aleph-defense-lab/blob/main/docs/HANDOFF-2026-10-13-BYTE-BACK.md)를 먼저 읽습니다. 해당 기록 저장소는 본인 GitHub 로그인으로 접근합니다.
 
-1. 설치: Node 22 이상에서 `npm ci`. 비밀값은 코드·Git에 넣지 않고 Vercel 비밀 입력란(아래 환경변수 표)에만 입력합니다.
-2. 로컬 시험: `npm run test:r5` → 모든 시험 통과. 이어서 `npm run decider:test`, `npm run detect:test`(가상 요청 연습이며 심판 판정이 아님).
-3. 배포: 저장소를 Vercel에 연결해 배포합니다(`npm run build`가 `public/aleph.json`을 만듭니다). `aleph.config.json`의 `publicAppUrl`이 실제 배포 주소와 같아야 합니다.
-4. 실행 확인: 배포 주소에서 `/connect.html`(접속 앱), `/`(자료실), `/ops.html`(작전실)을 엽니다. 승인 상태는 공식 어댑터가 없어 「미연결」로 보이는 것이 정상입니다.
-5. 실측 표 만들기: `npm run ops:matrix` → 행마다 `통과/실패/미실행`, 기대·실제 결과, 요청 ID, 확인 시각이 출력되고 `ops/matrix.json`이 갱신됩니다. 커밋하고 다시 배포하면 `/ops.html` 표에 같은 수치가 보입니다. 토큰이 필요한 행은 터미널에서만 `OPS_TOKEN_A`, `OPS_TOKEN_B`, `OPS_NOTE_ID_A`, `OPS_NOTICE_ID`를 넣습니다(값을 파일·README·답변에 쓰지 않습니다).
-6. 중지: 자료 API를 서버에서 닫으려면 Vercel 환경변수 `REQUIRE_DEVICE_APPROVAL=1`을 켜고 다시 배포합니다. 어댑터가 없는 지금은 메모·공지·복원 API가 403/503으로 닫힙니다. 접속 앱과 자료실 화면은 서버 승인이 확인되기 전에는 열리지 않습니다.
-7. 복구: `npm run policy:diff`로 정책 차이를 보고, 나온 확인 코드로 `npm run policy:restore -- --apply <확인코드>`를 실행합니다. 메모 한 건은 `POST /api/restore/:noteId`(본인 로그인, `supabase/stage10.sql` 적용 필요). 복구 뒤 `npm run test:r5`와 `npm run ops:matrix`를 다시 실행합니다.
-8. 제출: 커밋한 뒤 `npm run bundle`. `bundle-notes.json`과 `artifacts/`는 커밋하지 않습니다.
+## 단계별 구현 이력
 
-## 11단계 기록 (나만의 접속 앱을 완성합니다)
+1~5단계 운영 심판 각 100/100점, 총 500/500점을 확인했습니다. 5단계는 메모 요청을 기존 서버 함수로만 처리하며 원본 Data API 직접 권한을 닫습니다.
 
-11단계 변경
-- 설치형 웹앱(제작 1): `public/connect.webmanifest`(앱 이름·아이콘·standalone), `public/connect-icon.svg`, `public/connect-sw.js`(서비스 워커). 서비스 워커는 공개 안내 화면(`connect.html`·`connect.js`·`connection-model.js`·manifest·아이콘)만 보관하고 `/api/` 요청은 절대 가로채거나 저장하지 않습니다. 오프라인에서 자료실을 열면 `connect.html`의 오프라인 안내로 보냅니다. 메모·API 응답·로그인 정보는 캐시하지 않고, 이 앱은 따로 설치하는 접속 프로그램이 아닙니다.
-- 승인 상태 화면: `/connect.html`이 `GET /api/device-status`를 불러 서버 상태를 보여 줍니다. **앱 설치 표시나 「기기 승인 요청」 버튼만으로는 기기 확인이 끝나지 않습니다.** 판정은 `public/connection-model.js`의 `connectionView`가 하며, 서버가 엔진(`authority: 'ALEPH SDP engine'`)의 확인 결과를 30초 안에 `approved`로 돌려줄 때만 열립니다. 대기·거부·오래됨·오프라인·출처가 다른 응답은 모두 닫힙니다.
-- 승인 요청과 결과(제작 2): `POST /api/device-approval`은 요청을 엔진에 전달만 하고 권한을 바꾸지 않습니다. 결과는 서버가 돌려준 상태만 따릅니다.
-- 승인 전 차단: 자료실 화면(`/`)은 로그인 설정을 받기 전에 먼저 `/api/device-status`를 확인하고, 승인이 확인되기 전에는 로그인 화면·메모 목록을 보이지 않고 자료 요청도 보내지 않습니다. 자료 요청 전후에 승인을 다시 확인해 승인이 철회되거나 오프라인이 되면 이미 받은 응답도 그리지 않습니다(`public/approved-access.js`). 승인된 기기에서는 기존 로그인·메모 화면이 그대로 열립니다.
-- 서버 쪽 재확인: 환경변수 `REQUIRE_DEVICE_APPROVAL=1`을 주면 메모·공지·복원 API가 요청마다 승인된 기기인지 다시 확인하고, 아니면 403(`device_approval_required`), 확인 수단이 없으면 503으로 막습니다. 기본은 꺼짐이라 기존 보호 요청의 정상·거부 결과는 그대로입니다. 화면의 잠금은 편의일 뿐 방어선이 아니고, 방어선은 로그인 검증·소유자 확인·판정기입니다.
-- 이 화면의 코드는 어떤 키나 토큰도 브라우저 저장소(localStorage·sessionStorage·IndexedDB)에 넣지 않습니다. 로그인 세션도 `persistSession: false`로 메모리에만 두므로 새로고침하면 다시 로그인해야 합니다.
-- **한계(미검증):** 기기 등록·승인 확인은 운영 반 엔진의 공식 어댑터가 하는 일인데, 이 프로젝트에는 그 연결 안내(계약)가 없어 `lib/device.mjs`의 `officialAdapter`가 `null`입니다. 그래서 지금은 승인 상태가 항상 「공식 접속 도구 미연결」로 닫혀 있고, 배포된 화면에서 「승인된 기기로 열림」은 확인하지 못했습니다. 승인 쪽 동작은 가짜 어댑터를 넣은 로컬 시험(`test/device.test.mjs`)으로만 확인했습니다. 어댑터 연결 안내를 받으면 그 한 곳만 채우면 됩니다.
-- 확인: `npm run test:r5`(승인 상태 판정·서버 승인 전달·승인 철회 시 응답 폐기·manifest·서비스 워커 시험). 가상 요청 연습이며 심판 판정이 아닙니다.
-- 미실행: 배포 화면 설치(홈 화면 추가) 시험, 실제 승인 기기·승인 전 기기 비교 시험, 1~10단계 재시험.
+6단계 기기 등록 판정 규칙을 구현했습니다. 로컬 판정기 연습 2건, 기존 자료실·XDR 포함 시험 17개 및 빌드는 통과했습니다. 2026-10-13 운영 심판에서 커밋 21ec6b2ffe30798295d124aa739059d2f6333cb7의 6단계 100/100점, 조건 4개와 완결성 가점 3개 통과를 확인했습니다. 반별 엔진 안내 미제공으로 실제 mTLS 연결은 별도 미검증입니다.
 
-## 10단계 기록 (백업에서 자료실을 되살립니다)
+배포: https://choi-bujang-secret-vault-sigma.vercel.app
+저장소: https://github.com/myeongjundev/choi-bujang-secret-vault
 
-10단계 변경
-- 안전 정책 사본(`backups/safe-policy.json`): 침해 전에 검증한 메모(notes) 서비스 정책(허용 경로 5개, 정책 버전 1)입니다. `src/policy-recovery.mjs`의 `SAFE_POLICY_HASH`(SHA-256)와 프로젝트 주소·서비스·버전을 모두 대조하고, 하나라도 다르거나 사본이 없으면 복원을 중단합니다.
-- 차이 보기(제작 1): `npm run policy:diff` — 복원할 사본 버전, 추가·제거될 경로, 보존될 다른 서비스 규칙·감사 기록 수, 확인 코드를 보여 줍니다. 아무것도 쓰지 않습니다. 실제 운영 정책은 건드리지 않고 이 저장소의 시험 정책(`aleph.config.json`의 `allowedRoutes`)만 대상으로 합니다.
-- 정책 되돌리기(제작 2): `npm run policy:restore -- --apply <확인코드>` — 미리보기에 나온 확인 코드를 그대로 줘야만 메모 서비스 경로를 사본 버전으로 되돌립니다. 공지 등 다른 서비스 규칙은 그대로 두고, 감사 기록(`backups/policy-audit.jsonl`)은 지우지 않고 한 줄만 더합니다.
-- 메모 한 건 복원(제작 3): **서비스 `notes`, 경로 `POST /api/restore/:noteId`**(`aleph.config.json`의 `restoreRoute`, 서버 함수 `api/restore/[noteId].js`, 로직 `lib/restore.mjs`). 본문은 비어 있어야 하고, 소유자는 로그인 검증 결과로만 정합니다. 복원 직전에 정책 사본을 다시 읽어 검증하고, 현재 메모 정책이 사본과 다르면 `503 policy_restore_required`로 저장소를 건드리지 않습니다. DB의 `restore_note` 함수가 검증된 소유자의 사본 한 건만 ID·소유자·내용 해시를 다시 계산해 대조한 뒤 되돌리고(다른 메모는 그대로), 복원 기록 표(`restore_audit`)에 한 줄을 더합니다. 남의 사본·없는 사본은 404, 거부는 409입니다. 판정기는 모든 쓰기를 거부하므로 이 경로는 판정기 허용 목록(`allowedRoutes`)에 넣지 않았습니다.
-- DB 준비: `supabase/stage10.sql`을 Supabase SQL Editor에서 한 번 실행합니다(사본 표·복원 함수, RLS 켬, 직접 권한 회수, service_role만 사용). `supabase/stage10-check.sql`은 가상 ID로 변조·삭제 복원과 남의 사본 거부를 확인하고 모두 rollback합니다.
-- 복구 뒤 재시험 순서(미실행 — 아래 항목은 직접 실행하고 결과를 적기 전까지 미실행입니다):
-  1. `npm run policy:diff` — 정책 차이가 없는지(또는 되돌린 뒤 없음) 확인. 미실행
-  2. `npm run test:r5` — 1~9단계 자동 시험 전체. 미실행
-  3. `npm run detect:test`, `npm run decider:test` — 9·6~8단계 가상 요청 연습. 미실행
-  4. 1단계: `/data.json` 404, 공개 가상 메모 확인. 미실행
-  5. 3~5단계: 시크릿 창에서 `/api/notes` 401, 가짜 토큰 거부, 공개 키로 원본 경로 직접 읽기 거부. 미실행
-  6. 8단계: B 계정으로 A의 메모 요청 → 403, 일반 학생의 공지 수정 → 403, A 본인 메모는 정상. 미실행
-  7. 복구: B 계정으로 자기 메모 한 건 `POST /api/restore/:noteId` → 200, 같은 요청을 A 계정으로 → 404. 미실행
-  8. `npm run bundle` 직접 점검 결과 확인. 미실행
-- 확인한 것: `npm run test:r5`(정책 사본 검증·미리보기·확인 코드·복원 경로 시험). 가상 요청 연습이며 심판 판정이나 실제 복구 증거가 아닙니다.
-- 미실행: Supabase에 `stage10.sql` 적용, 실제 계정으로 배포 환경 복원, 위 재시험 순서.
+7단계는 출처가 명확한 가상 복합 이상 신호에 step_up을 반환합니다. 지역 하나만으로 영구 차단하지 않습니다. 엔진 계약의 verified 재인증이 신선하면 요청을 다시 허용합니다. 클라이언트 출처·누락·중첩 추가 필드는 거부하고 none 신호에는 위치를 채우지 않습니다. 로컬 판정 연습 4건, fixture:7, 기존 기능 포함 시험 20개와 빌드가 통과했습니다. 운영 재로그인·자료 차단 연결은 반별 엔진 미제공으로 미검증입니다. 2026-10-13 실제 7단계 심판은 45c7c4da1ccb 커밋의 100/100점·조건 7개·가점 3개 통과를 확인했습니다.
 
-## 9단계 기록 (도플갱어를 찾고 권한을 거둡니다)
+Supabase Auth 공식 SDK의 signInWithPassword/signOut을 사용합니다. 비밀번호·토큰은 출력하거나 Git에 저장하지 않습니다. 브라우저 세션은 메모리에만 보관하며 새로고침하면 다시 로그인합니다. 서버는 원본 src/verify-login.mjs로 신원·서명·만료·발급자·대상을 검사합니다. judgeIssuer는 시작 틀의 운영 발급자를 보존했습니다.
 
-9단계 변경
-- 탐지 함수(`src/detect.mjs`): `detect(events)`는 가상 사건에서 가명 주체(`identity.sub`)·요청 종류(`method`)·시각(`at`) 세 값만 읽습니다. 메모 내용·토큰·실명 같은 다른 값은 읽거나 저장하거나 출력하지 않고, 형식이 맞지 않는 사건은 세지 않습니다.
-- 탐지 규칙 하나(`burst_read`): 같은 `sub`의 `GET`이 어느 10분 구간(시작 이상·10분 미만)에서든 120건을 넘을 때만 의심입니다. 정확히 120건, 다른 사용자 사건 합산, 10분 밖으로 흩어진 조회, `GET`이 아닌 요청은 의심이 아닙니다.
-- 별도 탐지 결과: 의심이면 `{ action: 'propose_revocation', reasonCode: 'burst_read', subject }`(대상은 사건에서 확인된 가상 주체 한 명)이고, 아니면 `{ action: 'observe' }`입니다. 기존 접속 허용/거부 응답 형식(`decide`)은 바꾸지 않았습니다.
-- 회수 API를 만들거나 기기 권한을 바꾸지 않았습니다. 이 함수는 제안만 만들며 실제 회수와 경과 시간은 심판이 가상 사건을 보내 확인합니다.
-- 확인: `npm run detect:test`(연습 6건), `npm run test:r5`. 가상 사건 연습이며 실제 접속 회수나 심판 통과 증거가 아닙니다.
-- 미실행: 운영 반 엔진이 검증한 사건을 이 함수에 전달하고 회수 제안을 집행하는 경로는 연결·시험하지 않았습니다.
+## 설정과 실행
 
-## 8단계 기록 (자료마다 갈 수 있는 구역을 나눕니다)
+Vercel Production 서버 환경변수: SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_PUBLISHABLE_KEY. 사용자가 공식 UI에 직접 입력합니다. /api/auth-config는 공개 프로젝트 URL과 publishable key만 반환하며 서버 키는 반환하지 않습니다.
+Supabase SQL Editor에서 sql/stage3.sql을 실행합니다. UUID user_notes 테이블에 RLS를 켜고 anon/authenticated 직접 접근을 회수합니다. 기존 notes의 가상 메모 네 건은 변경하거나 삭제하지 않습니다.
+시험 계정은 Supabase Authentication → Users → Add user에서 사용자가 준비합니다. 비밀번호는 채팅에 보내지 않습니다.
+npm ci; npm run build -- --local; node --test test/*.test.mjs
+Vercel main push 후 자동 배포합니다. 공개 키를 추가한 뒤에는 Redeploy가 필요합니다.
 
-8단계 변경
-- 자원 ID(`lib/resources.mjs`): 자료실을 메모(`note`)와 강사 공지(`notice`) 구역으로 나눠, API 응답 헤더 `X-Resource-Id: note:<id>` / `notice:<id>`(목록은 `X-Resource-Kind`)로 서버가 구별합니다. 기존 자료 id·주소·응답 모양과 화면은 그대로입니다.
-- 판정기(`src/decider.mjs`) 구역 규칙: `exact_route_only`, `own_notes_zone`, `notice_zone`, `write_not_allowed`를 더했고 이전 규칙은 유지합니다. 엔진이 확인한 method·route·path를 정확히 대조합니다.
-  - 허용: `GET /my/notes`(내 메모 목록), `GET /notes/:id`, `GET /notices`, `GET /notices/:id` (쿼리 없는 요청만)
-  - 거부: 모든 쓰기(`POST·PUT·PATCH·DELETE`, `write_not_allowed`) — 요청 계약에 소유자·강사 정보가 없어 판정기가 허용할 근거가 없습니다. 자기 메모 추가·수정·삭제와 강사 공지 수정은 자료 API가 검증된 사용자와 저장된 소유자·강사 권한으로 다시 판단합니다. 전체 메모 목록 `GET /notes`(`route_not_allowed`), 그 밖에 쿼리가 붙은 요청, 알 수 없는 경로·메서드와 `:id` 자리의 `export` 같은 기능 이름(`route_not_allowed`)
-  - 쿼리는 보지 않고 자료 ID만 고릅니다. 요청 계약에 소유자와 강사 역할이 없어서, 남의 메모 차단과 강사 확인은 판정기가 아니라 자료 API가 저장된 값으로 다시 합니다.
-- 자료 API 재확인: 남의 메모는 `403 {reason:'not_owner'}`, 공지 수정은 저장된 `staff_roles` 표에 강사로 적힌 사용자만 가능하고 아니면 `403 {reason:'instructor_only'}`입니다. 화면 메뉴·요청 본문의 role·토큰 이름표는 믿지 않습니다.
-- 공지 API: `GET /api/notices`, `GET·PUT /api/notices/:id` (`allowedRoutes`에 추가). 표 생성은 `supabase/stage8.sql`(RLS 켬, 직접 권한 회수).
-- 확인: `npm run decider:test`, `npm run test:r5`(메모·공지 API와 구역 규칙 시험). 가상 요청 연습이며 심판 판정이 아닙니다.
-- 미실행: 실제 강사 계정으로 공지를 수정하는 배포 환경 시험은 하지 않았습니다.
+## API 계약과 남은 약점
 
-## 7단계 저장점 (평소와 다른 접속은 다시 확인합니다)
+GET /api/notes는 로그인과 서버 기기/요청 승인이 모두 검증됐을 때 해당 사용자의 메모 배열을 반환합니다. 승인 어댑터 미연결은503입니다. POST는 {id?,title,body}, id는 UUID이며 생략 시 서버가 생성합니다. 생성 응답은 id를 포함합니다.
+GET/PUT/DELETE /api/notes/:id, 단일 GET은 {id,title,body}, 삭제 후 GET은 404입니다. owner_id는 토큰을 검증해 얻은 ID만 저장하며 요청의 userId·role·owner_id는 신뢰하지 않습니다.
+무토큰·위조·만료·다른 서비스 토큰은 자료 없이 401입니다. 목록과 단일 GET/PUT/DELETE 모두 검증한 userId와 owner_id를 SQL 조건으로 비교합니다. 다른 소유자 또는 없는 메모는 모두 404이며 수정·삭제로 상대 행을 바꾸지 않습니다. PUT은 title/body만 받으며 owner_id 등 추가 필드의 소유자 변경 시도는 400입니다. POST owner_id는 서버가 검증한 ID로 고정합니다. 실제 자료를 넣지 않습니다.
 
-7단계 변경: `src/decider.mjs`에 `step_up_required` 규칙을 더했고 기존 `device_registered`는 그대로 둡니다(`RULE_IDS = ['device_registered', 'step_up_required']`).
-- 입력 검사: 엔진이 검증해 넘긴 접속 신호(`signals.source`가 `judge_fixture`)만 읽습니다. 현재 실제 경로의 `none`이나 알 수 없는 출처는 신호로 쓰지 않고, 없는 값을 정상값으로 채우지도 않습니다. 요청의 다른 이름(헤더·위치 등)은 읽지 않습니다.
-- 규칙: 평소와 다른 시각(7시 전·21시 후) + 처음 보는 네트워크(`unusual`) + 최근 10분 안 대량 읽기 사건(`risk_signal` 합계 10건 이상)이 모두 겹칠 때만 `step_up`(`step_up_required`)을 돌려줍니다. 지역(`region`)은 사유로만 남기고 단독으로 막거나 재확인을 요구하지 않습니다(`describeRisk`가 사유 목록을 돌려줌). 기준 숫자는 학습용 가정입니다.
-- 엔진이 확인한 재인증(`stepUp.verified`가 true이고 나이 0~900초)이 있으면 같은 요청을 `allow`합니다.
-- 확인: `npm run decider:test`(정상 허용·복합 이상 추가 확인·다시 확인 뒤 허용) 또는 `npm run fixture:7`. 둘 다 가상 요청 연습이며 심판 판정이 아닙니다.
-- 미실행: 이 저장소의 자료 API는 판정기 결과를 받지 않아, 다시 로그인 전 실제 자료 차단과 새 로그인 뒤 허용은 시험하지 않았습니다. 제공 엔진이 새 로그인 시각을 검증하는 환경에서만 실측합니다. 토큰 원문은 기록하지 않습니다.
+최신 정적 파일에는 메모 본문과 서버 키가 없습니다. 과거 공개 커밋·배포는 남아 있으므로 현재 파일 제거가 과거 노출 회수를 의미하지 않습니다. 캐시 방지·nosniff·CSP를 유지합니다. 공개 publishable key를 이용한 익명 Data API 직접 조회는 401 거부를 확인했습니다. 실제 authenticated 역할로 직접 Data API 요청하는 시험은 미실행이며 심판 점수에서도 제외됩니다.
 
-## 6단계 저장점 (등록한 기기만 자료실에 들어옵니다)
+npm run bundle의 직접 점검은 자기 점검이며 심판 판정이 아닙니다. bundle-notes.json과 artifacts/submission.json은 커밋하지 않습니다. 이후 단계 판정기·탐지기는 운영 엔진에 연결하지 않았습니다.
 
-6단계 변경: `src/decider.mjs`에 `device_registered` 규칙 하나를 더했습니다(`RULE_IDS = ['device_registered']`). 엔진이 확인해 전달한 요청의 `deviceRegistered`가 `true`일 때만 `allow`(`approved`)하고, `false`이거나 값이 없으면 `deny`와 이유 코드 `device_not_registered`로 거부합니다. 판정기는 요청의 `deviceRegistered`만 보며, 인증서·CA·서명 키·기기 개인키는 만들지도 저장하지도 않았습니다. 기존 자료실 주소와 화면은 그대로입니다.
+## 4단계 DB 권한 검토
 
-6단계 확인 순서(설치할 접속 프로그램 없음)
-1. `npm run decider:test` 실행
-2. 「등록 기기의 정상 요청」이 `통과`로 보이는지 확인
-3. 「미등록 기기의 가상 요청」이 `통과`(= deny·`device_not_registered`로 거부됨)로 보이는지 확인
-4. 이 명령은 가상 요청 연습이며 심판 통과 증거가 아닙니다. 미등록 기기 공격은 심판이 직접 시험합니다.
+sql/stage4.sql은 당시 직접 로그인 접근을 위한 설계 자료이며 실행하지 않았습니다. 5단계에서는 권한 추가 방향을 중단하고 sql/stage5.sql로 user_notes의 PUBLIC/anon/authenticated 직접 권한을 모두 회수합니다. RLS와 service_role의 서버 CRUD 권한은 유지합니다. 다른 테이블과 기존 자료는 보존합니다. 적용 전후 role_table_grants 및 has_table_privilege를 비교합니다.
 
-### 5단계까지의 기능
+브라우저의 Supabase 직접 메모 호출은 없음입니다. src/browser.mjs는 로그인(Auth)만 직접 호출하고 메모는 /api/notes 및 /api/notes/:id로 요청합니다. 원본 API는 https://cenxyqdoulktaqtkskeh.supabase.co/rest/v1/user_notes 이며 쿼리 없이 originalApiUrl에 기록합니다. 5단계 공개 배포 메타데이터에는 시드 표식을 내보내지 않습니다.
 
-- 화면(`public/index.html`)에서 Supabase Auth 이메일·비밀번호로 로그인·로그아웃하고 가상 메모를 추가·수정·삭제합니다.
-- 서버 함수가 `Authorization: Bearer` 토큰을 `src/verify-login.mjs`로 검사합니다. 토큰이 없거나 가짜면 401과 JSON 오류 문구로 거부합니다.
-- 소유자 검사: 서버가 확인한 사용자 ID와 DB의 `owner_id`를 비교합니다. URL·본문의 owner_id는 믿지 않고, 추가할 때는 확인된 ID로 저장합니다. 남의 메모 읽기·수정·삭제는 403, 없는 메모는 404이며, 수정에서 소유자를 바꾸려는 요청은 403입니다. 수정·삭제 쿼리에도 `owner_id` 조건을 한 번 더 붙입니다.
-- 자료 API (`aleph.config.json`의 `allowedRoutes`와 같음)
-  - `GET /api/my/notes` 내 메모 배열(화면이 쓰는 목록 경로, 읽기 전용). `GET /api/notes`는 판정기가 거부합니다
-  - `POST /api/notes` `{id?, title, body}` → `{id}`
-  - `GET·PUT·DELETE /api/notes/:id` → `{id,title,body}` (PUT 본문은 `{title,body}`)
-- 브라우저는 메모 자료를 Supabase에서 직접 부르지 않습니다. 읽기·추가·수정·삭제는 모두 `/api/notes` 서버 함수를 거치고, 브라우저의 Supabase 호출은 로그인(Auth)뿐입니다.
-- DB: `notes` 테이블의 PUBLIC·anon·authenticated 직접 권한을 모두 회수했습니다(`supabase/stage5-revoke.sql`). RLS는 켜 둔 채이고, 서버 함수만 서버 전용 키로 접근합니다. 원본 자료 경로는 `aleph.config.json`의 `originalApiUrl`에 적었습니다.
-- 서버 전용 키(`SUPABASE_SECRET_KEY`)는 서버에만 있고 브라우저 파일·응답·로그에 나오지 않습니다.
-- 빌드는 허용 경로(`allowedRoutes`)가 들어간 `public/aleph.json`을 만들고, `vercel.json`은 보안 헤더(`X-Content-Type-Options: nosniff`)를 붙입니다.
+전용 프로젝트에 5단계 권한 회수 SQL을 적용했습니다. PUBLIC/anon/authenticated 직접 grant 0개, anon/authenticated의 7종 권한 모두 false를 확인했습니다. RLS는 유지되며 기존 가상 메모 네 건을 보존했습니다. 실제 사용자 로그인 수동 시험은 별도로 미실행입니다. 로컬 A/B 정상 CRUD·교차 거부 시험 7개는 통과했습니다.
 
-## 보너스 xdr-01: 무차별 로그인 공격 탐지
+A/B 초기 자료 소유자 연결은 실제 계정 준비 뒤 별도로 검토할 작업입니다. 기존 notes 네 건의 소유자나 본문을 임의로 바꾸지 않았습니다. 로컬 A/B 회귀시험은 양쪽 정상 CRUD, 교차 조회·수정·삭제 거부와 상대 행 보존, 소유자 변경 거부를 확인합니다.
 
-가상 Wazuh 경보(`xdr/fixtures/brute-force.json`, 형식 `aleph.xdr.fixture.v1`)에서 로그인 실패를 가려 명확한 공격만 차단 후보로 두고, 애매한 건 알리고, 정상은 기록만 합니다. 판정기(`src/decider.mjs`)는 고치지 않았습니다.
+## XDR 보너스 학습 모듈
 
-- `xdr/brute-force/decide.mjs`: **다른 파일을 불러오지 않는 단일 파일**입니다. `decide(alert)` → `{action, confidence, reason}`. 한국어·영어 경보 설명 모두에서 로그인 실패를 알아봅니다. 규칙 수준 10 이상이면서 실패 10건 이상이거나, 여러 계정에 같은 비밀번호 대입이면 block, 기준에 못 미치는 실패는 Jev에게 확신도를 묻고(0.85 이상 block, 0.5 이상 alert, 그 아래 record) 응답이 없으면 alert, 정상은 record입니다. Jev 주소는 `JEV_URL` 환경변수로 줍니다. 횟수 요약이 없는 원본 경보가 한 줄씩 들어오면 같은 주소의 앞선 경보를 기억해 셉니다.
-- `xdr/brute-force/apply-actions.mjs`: `npm run xdr:run -- brute-force` 때 실행기가 불러, block 결정의 출발 주소를 **만료 시각(실행 시각 + 1시간)과 근거 경보 번호가 붙은 거부 규칙**(`ztna-deny-rules.json`, 같은 내용의 `deny-rules.json`)으로 만듭니다. 내부망·허용 목록(`allowlist.json`) 주소는 차단하지 않고 알림만 남깁니다. block·alert 알림은 `xdr/alerts.log`에 쌓입니다.
-- `read-alerts.mjs`: 경보에서 필요한 값만 뽑고 비밀값처럼 보이는 값을 가립니다. `gate.mjs`: 판정기에 꽂을 수 있는 거부 규칙 확인 부품이며 허용 결정은 만들지 않습니다(현재 판정 요청 계약에 출발 주소가 없어 `src/decider.mjs`에는 연결하지 않았습니다). `patterns.json`: MITRE ATT&CK T1110 근거 설명(기준 숫자는 학습용 가정).
-- 실행기 `scripts/xdr-run.mjs`는 수업에서 준 공식 실행기를 그대로 씁니다. `xdr/fixtures/practice/`는 한 줄씩 들어오는 연습용 원본 경보와 정답표입니다.
-- 실행: `npm run xdr:run -- brute-force` → `xdr/brute-force/result.json`(`aleph.xdr.result.v1`). 시험: `npm run test:r5`. 가상 경보 연습이며 심판 판정이나 실제 차단이 아닙니다.
+무차별 로그인 및 웹 주입 모듈은 xdr/README.md에 실행·패턴·만료 규칙을 기록했습니다. 2026-10-07 운영 심판에서 두 과제 모두 통과했고 보너스 합산 180/600점을 확인했습니다. 6단계는 XDR 모듈·기존 자료실 API·로그인을 보존하고 별도 src/decider.mjs만 갱신합니다. 추가 XDR deny overlay는 별도 모듈이며 확인된 릴레이 출발 주소가 있는 호스트에서만 사용할 수 있습니다.
 
-## 보너스 xdr-02: 웹 주입 공격 탐지
+npm run xdr:build 후 npm run xdr:run -- brute-force 및 npm run xdr:run -- web-injection 으로 result.json을 다시 생성합니다. 모호한 경보의 실제 Jev 연결 정보가 없으므로 현재는 unavailable 알림 fallback이며, Jev 응답을 받았다고 기록하지 않습니다. npm run xdr:replay는 허용하는 시험용 기본 정책을 사용한 연결 모의 시험이고 운영 접속 판정이 아닙니다.
 
-가상 Wazuh 웹 접근 경보(`xdr/fixtures/web-injection.json`)에서 SQL 주입·스크립트 주입·경로 거슬러 올라가기(`../`)·명령 구분자 형태를 가려냅니다. 같은 주소에서 반복되는 명확한 시도만 block, 한두 번뿐이거나 낱말만 닮은 것은 alert, 정상은 record입니다. 근거는 MITRE ATT&CK T1190(MOVEit CVE-2023-34362 같은 사고)이고, 판정기(`src/decider.mjs`)의 규칙은 고치지 않았습니다.
+## 6단계 기기 등록 정책과 운영 연결 범위
 
-- `xdr/web-injection/read-alerts.mjs`: 경보에서 시각·출발 주소·계정·규칙 수준·설명(과 경보 번호)만 뽑고 요청 주소·비밀값처럼 보이는 값은 출력하지 않습니다. 원본은 고치지 않습니다.
-- `patterns.json`: T1190 근거 패턴 4개(SQL 구문, 스크립트 태그, `../` 반복, 명령 구분자). 패턴마다 이름·조건·근거 한 줄. 기준 숫자는 학습용 가정입니다.
-- `decide.mjs`: **다른 파일을 불러오지 않는 단일 파일** `decide(alert)` → `{action, confidence, reason}`. 공격 표기 + 규칙 수준 10 이상 + 같은 주소 5번 이상 반복이면 block, 애매하면 Jev에게 확신도를 묻고(0.85 이상 block, 0.5 이상 alert, 그 아래 record) 응답이 없으면 alert입니다. reason에는 근거 패턴 이름을 적습니다. "삽입 표식은 아닙니다" 같은 부정 문장은 공격으로 세지 않습니다. 횟수 요약이 없는 원본 경보는 요청 주소의 실제 모양을 보고 같은 주소의 5분 안 반복을 셉니다. Jev 주소는 `JEV_URL` 환경변수.
-- `apply-actions.mjs`(+ 공통 `xdr/shared.mjs`): block의 출발 주소만 만료 시각(실행 시각 + 1시간)·근거 경보 번호가 붙은 거부 규칙(`ztna-deny-rules.json`)으로 만듭니다. 내부망·허용 목록(`allowlist.json`) 주소는 막지 않고 알림만 남깁니다. 알림은 `xdr/alerts.log`에 한 줄씩 쌓이며 `module` 표시로 brute-force·web-injection 줄이 서로 지워지지 않습니다.
-- `gate.mjs`: 판정기에 확인 단계로 꽂을 부품(`webInjectionStep`). 허용 결정은 만들지 않고 일치하는 거부 규칙만 알립니다. 현재 판정 요청 계약에 출발 주소가 없어 아직 `src/decider.mjs`에는 연결하지 않았습니다.
-- 실행: `npm run xdr:run -- web-injection` → `xdr/web-injection/result.json`. 시험: `npm run test:r5`. 가상 경보 연습이며 심판 판정이나 실제 차단이 아닙니다.
+6단계 당시 allowedRoutes는 notes 서비스의 GET /api/notes, GET /api/notes/:id, GET /notes/:id였습니다. 8단계 이후 모호한 목록 경로를 GET /api/my/notes로 좁혔습니다. 마지막 경로는 공식 엔진 요청 연습의 경로입니다. 서비스·method·pathPattern만 담고 비밀값은 없습니다. 공개 배포 식별기의 단계 범위는 기존 제출 계약에 맞춰 1~12를 지원합니다.
 
-## 알려진 약점 (아직 해결 안 됨)
+src/decider.mjs는 공식 aleph.decision.v1 18필드 입력을 검사하고 deviceRegistered === true일 때만 해당 자료실 읽기를 허용합니다. 미등록·확인 불가 입력은 device_not_registered, 미허용 서비스·route/path 불일치는 route_not_allowed로 거부합니다. 8단계 이후 소유/역할 증거가 없는 쓰기는 write_not_allowed입니다. 응답은 공식 5필드이며 RULE_IDS는 device_registered, route_not_allowed, step_up_required, resource_zones, write_not_allowed입니다. 제출 파일은 외부 import 없이 독립 실행됩니다.
 
-- 서버 함수는 서버 전용 키(RLS를 우회하는 역할)로 DB를 읽기 때문에, 실제 방어선은 API의 소유자 검사입니다. 이 검사에 빈틈이 생기면 RLS가 막아 주지 못합니다.
-- 화면의 로그인에는 공개용 publishable 키가 필요해서 `/api/config`가 이 키를 브라우저에 줍니다. 직접 권한을 회수했으므로 이 키로는 자료를 읽을 수 없지만, 키 자체는 브라우저에 보입니다.
-- 옛 공개 커밋(예: 첫 커밋 f0e9f7d)과 옛 배포에는 과거 메모가 남아 있어 과거 노출은 해소되지 않았습니다.
+엔진이 로그인·기기 인증서·주체 결합을 먼저 검증한다는 계약에 의존합니다. subjectId를 Supabase 사용자 ID와 비교하거나 브라우저의 userId/role/device를 신뢰하지 않습니다. 학생 판정기는 인증서를 검증하는 엔진이나 공개 HTTP 판정 endpoint가 아닙니다.
 
-## 환경변수 (Vercel 비밀 입력란에 직접 입력)
+반별 접속 도구 설치 명령·등록부·릴레이 연결 안내는 제공받지 않았습니다. 설치 명령·CA·인증서·서명 키를 만들지 않았으며, 실제 mTLS 접속·다른 사용자 토큰과 기기 조합 시험은 미실행입니다. 11단계 보완 전에는 자료실 API가 로그인·소유권만 검사했지만, 보완 후에는 별도의 서버 승인 검증까지 요구합니다. 어댑터 미연결 상태에서는 인증됐더라도 503으로 자료 반환·변경을 중단합니다. 현재 점검 결과를 실제 기기 승인·접속 회수로 보고하지 않습니다.
 
-| 이름 | 설명 |
-| --- | --- |
-| `SUPABASE_URL` | 학습용 Supabase Project URL |
-| `SUPABASE_SECRET_KEY` | 서버 전용 secret 키. 코드·Git·제출 묶음에 넣지 않음 |
-| `SUPABASE_PUBLISHABLE_KEY` | 공개용 publishable 키 (`sb_publishable_…`) |
+실행: npm run decider:test; node --test test/*.test.mjs; npm run build -- --local.
+커밋 후 npm run bundle은 실제 비로그인 HTTP 점검과 구분된 local fixture 판정만 기록합니다. bundle-notes.json·artifacts/submission.json 및 비밀 설정은 커밋하지 않습니다.
 
-## 확인 절차
+## 8단계 자원 구역
 
-1. Supabase에서 `supabase/stage5-check.sql`을 `stage5-revoke.sql` 적용 전·후에 실행해 anon·authenticated의 권한이 모두 false로 바뀌고 service_role만 남는지 대조합니다.
-2. B 계정으로 로그인한 창에서 A의 메모가 보이지 않고, A·B가 각자 자기 메모를 추가·수정·삭제할 수 있는지 확인합니다.
-3. 시크릿 창에서 `/api/notes` → 401 + JSON, `/aleph.json` → 열림, `/data.json` → 404.
-4. 공개 키로 원본 경로를 직접 부르면 권한 오류(401/403)이거나 빈 결과여야 합니다(`npm run bundle`의 직접 점검이 확인).
-5. 저장소 검색: `git grep -n "실습용 가[상]"` → 결과 없음.
+메모는 notes, 공지는 vault_notices라는 다른 저장소와 /api/notices/:id 경로를 사용합니다. 메모는 SQL의 owner_id 조건으로 본인에게만 CRUD를 제공합니다. 공지 PUT은 검증된 사용자와 서버 환경변수 INSTRUCTOR_USER_IDS의 UUID 목록을 비교하며 요청 role은 무시합니다. 미설정 목록은 공지 수정을 허용하지 않습니다. src/decider.mjs는 notes의 정확한 읽기 경로만 허용하며 기능 ID와 쿼리 스위치는 거부합니다. 8단계 첫 심판 48점(S08_OTHER_ZONE_ALLOWED)의 원인인 모호한 GET /api/notes와 소유자·역할 검증이 불가능한 쓰기를 릴레이 허용표에서 제거했습니다. 본인 목록은 GET /api/my/notes로 구분하고 동일한 SQL 소유자 필터를 사용합니다. 기존 브라우저 /api/notes CRUD의 최종 API 소유자 검사는 보존합니다. 공지 역할의 운영 엔진 계약은 없어 해당 서비스의 릴레이 허용은 미구현입니다. sql/stage8.sql은 기존 데이터 보존형 신규 가상 공지 저장소입니다. 2026-10-13 본인 Supabase SQL Editor에서 실행하고 가상 공지 1건을 확인했습니다. 8단계 실제 심판은 9942798e0e10c8a2f756c583f67195ea4632265b 커밋의 100/100점·조건 5개·가점 3개를 확인했습니다. 시험 22개와 빌드 통과.
 
-## 다시 실행하는 방법
+## 9단계 탐지
 
-- 시험: `npm run test:r5`
-- 제출 묶음: `npm run bundle` (작업 폴더가 커밋된 상태여야 합니다)
+docs/DETECT_EVENTS.md의 제공 연습 계약만 사용합니다. 같은 가명 주체의 GET가 임의 10분 창에서 120건을 초과할 때만 burst_read 사유로 propose_revocation을 제안합니다. 정확히 120건·다른 사용자 합산·시간 밖 조회는 observe, 잘못된 묶음은 거부합니다. 토큰·메모·실명은 로그나 파일에 저장하지 않습니다. 제공 계약에 네트워크/기기 대상 필드가 없어 만들지 않았습니다. 실제 회수·경과 시간·대상 기기 결합은 운영 엔진에서 별도 검증해야 합니다. npm run detect:test와 전체 회귀를 실행하며 9단계 실제 심판은 4b68f6cc117a5c073bcc3e5eea66d2e2fac7ad3d 커밋의 100/100점·조건 4개·가점 3개를 확인했습니다.
 
-규칙 문서: [AGENTS.md](AGENTS.md). 비밀번호·토큰·서버 전용 키·실제 학생 자료는 코드·Git·제출 묶음에 넣지 않습니다.
+## 10단계 한 건 복구
+
+서비스 notes의 복구 경로는 POST /api/restore/:noteId입니다. 로그인 사용자의 UUID와 비공개 사전 사본의 owner_id를 SQL RPC vault_restore_note에서 대조하고 ID·내용 SHA-256을 검증합니다. 요청에서 백업 본문/소유자를 받지 않습니다. 새 메모는 INSERT 시 처음 사본만 보관하며 수정·삭제 때 덮어쓰지 않습니다. 백업·복구 감사 테이블은 RLS와 PUBLIC/anon/authenticated 권한 회수를 적용하고 service_role에는 읽기/제한된 복구 함수 실행만 제공합니다. 한 트랜잭션에서 대상 한 건만 복원하고 해시 재검증 후 감사 기록에 추가하며 기존 이력은 지우지 않습니다.
+
+backups/safe-policy.json은 커밋으로 고정한 공개 가능한 경로 정책 사본입니다. src/policy-recovery.mjs는 고정 SHA-256·프로젝트·버전을 확인하고 planPolicyRestore로 notes의 전/후 차이와 확인값을 반환합니다. applyPolicyRestore는 동일 차이의 확인값이 있어야 시험 정책만 새 판 번호로 적용하고 다른 서비스·감사 이력을 보존합니다. 운영 엔진 정책 쓰기는 미연결입니다. 복구 API는 현재 notes 정책이 사전 사본과 다르면 정책 복구가 필요하다고 거부합니다.
+
+초기화: 본인 Supabase SQL Editor에서 sql/stage10.sql. DB 시험: sql/stage10-check.sql은 새 가상 B 메모만 생성해 변조/삭제 복원과 타인 거부를 확인하고 전체 트랜잭션을 ROLLBACK합니다. 기존 DB 메모를 시험 때문에 지우지 않습니다. 복구 뒤 npm run decider:test → npm run fixture:7 → npm run detect:test → node --test test/*.test.mjs → npm run build -- --local → 커밋 후 npm run bundle 순서로 정상 읽기, 소유자 A/B, 무인증/위조 토큰, 미등록 기기, 복합 이상, 구역 밖·공지 쓰기, 탐지 경계, 복구 오류를 재검증합니다. 실제 mTLS·운영 재인증·회수 집행은 미실행입니다.
+
+### 복구 전 사본 재읽기와 검증
+
+10단계 첫 심판 48점(S10_BACKUP_UNVERIFIED)을 근거로 재검토했습니다. 모듈 초기화 때 읽은 캐시를 사용하지 않고 모든 복구 직전에 사전 정책 파일을 다시 읽습니다. 사본이 없거나 검증 실패면 중단하며 복구 RPC를 호출하지 않습니다. GET /api/recovery-plan은 실제 사본을 다시 읽어 고정 SHA-256·프로젝트·정책 버전 검증을 하고 복원 버전 1, notes 변경 전/후 항목, 확인값을 보여 줍니다. 검증 실패 응답은 409·backupVerified false이며 운영 정책 쓰기는 없습니다. 실행 전에 이 결과의 버전과 변경 범위를 확인한 뒤 해당 사용자 인증으로 POST /api/restore/:noteId를 호출합니다. 이후 동일 사본을 복구 API에서 다시 검증하고 사전 DB 사본의 ID·소유자·내용 해시를 확인합니다. 새 회귀 시험 포함 29개와 빌드 통과. 10단계 재제출 실제 심판은 a4950fc7f63c9cdca11e490a857b845384d69574 커밋 100/100점·조건 5개·가점 3개를 확인했습니다.
+
+## 11단계 접속 화면
+
+/connect.html은 내 자료실 접속 화면입니다. 서버의 /api/device-status 결과를 표시하며 서버에서 최근 승인됐다고 확인한 경우에만 열기 버튼을 활성화하는 UI 모델을 사용합니다. 실제 반별 어댑터는 미제공이라 현재 서버는 connected false·approval unavailable을 반환하고 승인 요청 POST /api/device-approval은 503입니다. UI 자체로 권한을 바꾸지 않고 임의 설치/role/approved 값·낡은 상태·오프라인 상태는 열기를 허용하지 않습니다. 기기 승인 상태의 vault.connection.v1은 학생 UI 전용 내부 형식이며 운영 엔진 요청 aleph.decision.v1에 필드를 더하지 않습니다.
+
+설치형 웹 화면 메타데이터와 정적 UI만 저장하는 service worker를 추가했습니다. 메모/API 응답/토큰/개인키는 캐시나 브라우저 저장소에 넣지 않습니다. 오프라인에는 안내만 보여 주고 보호 요청을 중지하며 재접속 때 서버 상태를 새로 확인합니다. 실제 네이티브 접속 도구·키 보관·서명·경로/본문 서명 검증은 ALEPH SDP 엔진 제공 범위이며 운영 연결/승인된 실제 기기 요청/변조 서명 시험은 미검증입니다. 로컬 전체 시험 32개·빌드 통과, 실제 심판은 제출 후 기록합니다. 기존 로그인·메모 CRUD·소유자 검사와 XDR는 보존합니다.
+
+### 11단계 기본 진입점과 승인 전 화면
+
+첫 심판 40점(S11_APPROVED_SCREEN_CLOSED, S11_DATA_BEFORE_APPROVAL)을 근거로 기본 주소 /를 승인 화면으로 변경했습니다. rel=manifest 설치 메타데이터는 기본 페이지에 연결되며 승인 전에는 로그인 폼·메모 목록·편집 화면이 없습니다. 기존 자료실 HTML과 로그인/CRUD 동작은 /vault.html에 보존했습니다. 이 첫 보완은 50점으로, S11_DATA_BEFORE_APPROVAL이 남았습니다. 화면 잠금만으로 운영 mTLS 집행 완료를 뜻하지 않습니다.
+
+### 승인 전 자료 노출 재검토
+
+기존 /vault.html은 로그인만으로 메모를 요청할 수 있었습니다. 이제 이 화면도 서버 승인 상태를 먼저 확인하며 승인 전에는 메모 요청을 보내지 않습니다. 응답이 도착하기 전 승인이 취소되거나 로그아웃·오프라인·페이지 이동이 발생하면 내용을 표시하지 않고 목록·편집기를 비웁니다. 탭 복귀와 주기적 상태 확인도 승인 상태를 다시 검사합니다.
+
+메모 목록·단건·쓰기, 반 공지, 복원 API는 로그인 검증 다음에 src/protected-access.mjs의 서버 전용 검증을 매 요청마다 호출합니다. 브라우저의 approved/role/deviceRegistered나 헤더·쿼리로 승인을 부여하지 않습니다. 제공 어댑터가 없으면 503(device_verification_unavailable), 승인 거부면 403이며 저장소에 접근하지 않습니다. 현재 기본 어댑터는 미연결입니다. 따라서 실제 승인 사용자의 운영 CRUD는 연결 전에는 사용할 수 없습니다. 기존 CRUD·소유권·공지 역할·복원 로직은 보존했고, 서버 승인 검증을 주입한 로컬 시험에서 정상 동작을 확인했습니다. 이 시험은 운영 기기 승인 증거가 아닙니다.
+
+실행: node --test test/*.test.mjs (36개 통과), node scripts/build-public.mjs --local. 배포 뒤 /vault.html을 직접 열어 승인 전 자료와 로그인 폼이 없는지 확인합니다. 실제 승인 정상 요청·서명 변조 검증에는 공식 어댑터 연결이 필요합니다. 심판 재제출 결과는 별도 기록합니다.
+
+11단계 실제 재판정: a4b7722385e4af9b6cb107e307201c61fb15f3b2에서 100/100점, 조건 6개·가점 3개. 이 판정과 운영 어댑터 미연결 상태는 별도로 기록합니다.
+
+## 12단계 탈환 작전실
+
+/operations.html에서 GET /api/operations-status의 새 관측 결과를 읽습니다. 7건의 제한된 실제 HTTP 점검(공개 화면200, 무인증 메모/본인목록/공지쓰기/복원401, 정적자료404, 사본 검증200)과 4건의 판정/탐지 가상 시험을 구분합니다. 각 실행에는 기대 결과·실제 응답·관측자가 생성한 요청 ID·확인 시각이 있습니다. 배포 커밋은 Vercel의 서버 배포 메타데이터에서 읽습니다. 새 관측 실패 시 이전 성공 수치와 표를 비웁니다. 메모 제목/본문·토큰·실명·기기 키를 읽거나 표시하지 않습니다.
+
+실제 승인 사용자 조회·타인 메모 거부·회수 후 재조회는 공식 연결/시험 세션이 없어 미실행이며 요청 ID·시각은 null입니다. data/attack-matrix.json에는 도감의 41종 시험 이름과 기대 조건을 적었지만 실행 기록을 만들지 않았습니다. 이 계획 파일의 passed 값을 입력해도 API는 성공 근거로 받지 않습니다. 게임 심판의 기존 승인 기록을 현재 운영 엔진의 41종 재현 완료로 확대하지 않습니다. 회수 수치는 미연결/null이고, 탐지 제안은 local_fixture로 표시합니다. 복구 버전은 실제 사본 검증 API에서 읽으며 운영 정책 쓰기는 없습니다.
+
+첫 두 심판 접수는 UNV_RUN_ENVIRONMENT로 확인불가였습니다. [운영 측 공개 점검 표본](https://github.com/ChoiTimo/byteback-sample-pass/blob/main/src/attack-check.mjs)과 대조해 자기 점검/작전실 HTTP 요청의 관측 메타데이터를 alephEvidence의 caseId/requestKey로 맞췄습니다. 사례 ID는 반환한 실제 점검 ID에 연결하고 요청 키는 새 UUID로 생성합니다. 이 메타데이터를 HTTP 헤더·URL에 보내거나 신원/승인 근거로 사용하지 않습니다. 제출 묶음의 기존 attackId/expected/observed 3필드 계약은 유지합니다. 환경 오류의 원인을 이 차이라고 확정하지 않았습니다. 보완 뒤 회귀40개 통과, 실제 재제출 결과는 별도 확인합니다.
+
+세 번째도 같은 확인불가였습니다. 재검토에서 작전실 endpoint 하나의 네트워크 실패가 자기 점검 전체를 예외로 중단하는 상황을 재현했습니다. src/bundle-checks.mjs는 독립 HTTP 점검을 함께 실행하며 요청과 본문 읽기 전체에5초 제한을 둡니다. AbortSignal을 무시하는 환경도 명시적 시간 제한으로 끝납니다. 실행 못한 항목은 observed의 not_run으로 남기고 다른 항목은 계속 관측합니다. HTTP응답이 있으면 그 상태를 남기며 응답/JSON을 읽지 못한 것을 공격 차단으로 기록하지 않습니다. 공개 로그인 설정을 읽지 못했을 때 원본 API는 실행 못함으로 남깁니다. 원본 API 주소가 다른 출처라면 설정 오류로 중단합니다. 정책·보호 API·미연결 승인 검증은 유지합니다. 이 재현을 실제 심판 환경 오류의 원인으로 확정하지 않고 재제출로 확인합니다.
+
+ace0819 접수도 환경 오류였습니다. 공개 표본에 있는 npm test와 npm run check를 우리 저장소에서 실행하면 Missing script로 즉시 종료하는 차이를 재현했습니다. package.json에 표준 test/check 명령을 연결했습니다. npm ci 후 npm test는 비밀 설정이 필요 없는 로컬 빌드를 먼저 수행하고 기존 전체 회귀시험을 실행합니다. npm run check는 기존 bundle 명령과 같으며 커밋된 깨끗한 저장소와 ignored bundle-notes.json이 필요합니다. 제출 계약이나 시험 결과를 변경하지 않습니다. 심판이 이 명령을 호출했는지는 확인되지 않았으므로 환경 오류의 원인으로 단정하지 않습니다.
+
+3c44d80 접수도 확인불가였습니다. 최신 공개 표본은 runAttackChecks(baseUrl)로 호출하지만 R5 진입점은 config객체만 받아, URL입력 때 점검을 시작하기 전에 구현되지 않은 단계라는 오류로 종료하는 차이를 재현했습니다. 이제 설정 객체와 URL 문자열을 모두 받습니다. URL 방식은 공개 aleph.config.json만 읽고 입력 URL의HTTPS·출처·경로 검증과 원본API 출처 검사도 유지합니다. .env/비밀키를 읽거나 운영 승인으로 사용하지 않습니다. 두 방식이 동일한20건을 실행하는 회귀시험을 추가했습니다. 심판의 실제 호출방식은 공개되지 않았으므로 원인 확정은 재판정이 필요합니다.
+
+### 검사한 커밋에서 재현하기
+
+학생이 만든 부분은 src/decider.mjs, src/detect.mjs, public 접속/작전실 화면, api 자료실/사본 검증/복원, SQL 보관·복원 절차, 자기 점검 코드입니다. 제공 엔진은 ALEPH SDP engine이며 기기 등록·키 보관·로그인과 기기 결합·요청 서명 확인·판정 집행·감사 보관을 맡습니다. 이 저장소에는 제공 엔진의 키·바이너리·설치 명령을 포장하지 않습니다.
+
+1. 설치: 이 공개 저장소를 clone하고 확인할 심판 커밋으로 git checkout한 뒤 npm ci를 실행합니다(Node.js22 이상). 기존 프로젝트의 서버 비밀 설정은 공식 Vercel 설정 화면에 유지하며 Git에 넣지 않습니다. 새 DB라면 해당 단계의 sql 안내를 읽고 학습 전용 프로젝트에만 적용합니다. 현재 DB는 다시 초기화할 필요가 없습니다.
+2. 실행: node --test test/*.test.mjs, npm run decider:test, npm run detect:test, node scripts/build-public.mjs --local. Vercel에 같은 커밋을 배포하고 /aleph.json의 저장소·커밋을 대조합니다. /에서 승인 상태, /operations.html에서 관측표를 엽니다. 승인 전 보호 요청은 거부되고, 검증 어댑터 미연결일 때 인증된 요청도503입니다. 정상 승인 CRUD는 공식 연결 후 별도 재시험합니다.
+3. 점검: 변경을 커밋하고 ignored bundle-notes.json에 실제 구현과 막힌 점을 적은 뒤 npm run bundle. artifacts/submission.json은 실제 HEAD/원격과 새 자기 점검으로 생성하며 커밋하지 않습니다. 로컬 시험을 심판 또는 운영 승인으로 보고하지 않습니다.
+4. 중지: Vercel의 기존 배포를 내리거나 프로젝트를 일시 중지하고, 제공 엔진이 연결돼 있다면 해당 자료실 허용 경로를 끕니다. DB·백업·감사 자료는 지우지 않습니다.
+5. 복구: git status와 diff로 이번 변경을 확인하고 필요한 내용을 보존한 뒤 검사한 커밋을 별도 checkout해 재배포합니다. reset --hard를 사용하지 않습니다. 정책 사본 버전/해시/범위를 확인하고 필요할 때 복원할 메모 ID 하나만 지정합니다. 다른 행과 서비스 규칙·감사 기록은 보존합니다. 복구 뒤 위 정상·금지 시험과 bundle, 작전실 새 관측을 다시 실행합니다.

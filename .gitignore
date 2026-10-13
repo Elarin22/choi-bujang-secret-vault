@@ -4,3 +4,10 @@ bundle-notes.json
 .env.*
 node_modules/
 public/aleph.json
+
+public/app.js
+public/connect.js
+public/operations.js
+xdr/alerts.log
+xdr/deny-rules.json
+xdr/replay-result.json

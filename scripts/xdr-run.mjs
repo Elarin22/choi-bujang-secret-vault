@@ -1,6 +1,8 @@
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { publishDecisions } from '../xdr/ztna-overlay.mjs';
+import { respond as respondKnownCve } from '../xdr/known-cve/respond.mjs';
 
 const MODULE_KEYS = ['brute-force', 'web-injection', 'known-cve', 'persistence', 'privilege', 'exfiltration'];
 const ACTIONS = new Set(['block', 'alert', 'record']);
@@ -50,16 +52,6 @@ export async function runXdr({ root, moduleKey, writeError = (line) => console.e
     decisions.push({ alertId, action, confidence, reason });
     counts[action] += 1;
   }
-  if (moduleKey === 'brute-force' || moduleKey === 'web-injection' || moduleKey === 'known-cve' || moduleKey === 'persistence') {
-    const integrationPath = join(root, 'xdr', moduleKey, moduleKey === 'known-cve' || moduleKey === 'persistence' ? 'respond.mjs' : 'apply-actions.mjs');
-    try {
-      await access(integrationPath);
-      const { applyActions } = await import(pathToFileURL(integrationPath).href);
-      await applyActions({ root, alerts: fixture.alerts, decisions });
-    } catch (error) {
-      if (error?.code !== 'ENOENT') throw error;
-    }
-  }
 
   const result = { schema: 'aleph.xdr.result.v1', moduleKey, decisions, counts };
   const outDir = join(root, 'xdr', moduleKey);
@@ -72,7 +64,12 @@ const isMain = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLTo
 if (isMain) {
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
   try {
-    await runXdr({ root, moduleKey: process.argv[2] });
+    const moduleKey = process.argv[2];
+    const result = await runXdr({ root, moduleKey });
+    const fixture = JSON.parse(await readFile(join(root, 'xdr', 'fixtures', `${moduleKey}.json`), 'utf8'));
+    if (moduleKey === 'known-cve') await respondKnownCve(root, fixture, result);
+    else await publishDecisions(root, fixture, result);
+    console.log(`${moduleKey}: block ${result.counts.block}, alert ${result.counts.alert}, record ${result.counts.record}`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : '실행 오류');
     process.exitCode = 1;

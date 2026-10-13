@@ -1,0 +1,416 @@
+{
+  "schema": "vault.attack.matrix.v1",
+  "source": "https://aleph-omega.vercel.app/defense",
+  "cases": [
+    {
+      "id": "s01-01",
+      "stage": 1,
+      "name": "나주반달곰탕",
+      "expected": "공개된 가상 자료를 관찰",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s01-02",
+      "stage": 1,
+      "name": "삶은소보로",
+      "expected": "공개된 가상 자료를 관찰",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s02-01",
+      "stage": 2,
+      "name": "하동케첩국",
+      "expected": "정적 자료 노출 방지",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s02-02",
+      "stage": 2,
+      "name": "맛간고등어",
+      "expected": "정적 자료 노출 방지",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s02-03",
+      "stage": 2,
+      "name": "초당취두부",
+      "expected": "정적 자료 노출 방지",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s03-01",
+      "stage": 3,
+      "name": "포동포동남포동고래고기",
+      "expected": "서명·만료·발급자·대상 로그인 검증",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s03-02",
+      "stage": 3,
+      "name": "횡성투마이너스한우",
+      "expected": "서명·만료·발급자·대상 로그인 검증",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s03-03",
+      "stage": 3,
+      "name": "짜장면목없음",
+      "expected": "서명·만료·발급자·대상 로그인 검증",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s03-04",
+      "stage": 3,
+      "name": "의정부속부대끼는찌개",
+      "expected": "서명·만료·발급자·대상 로그인 검증",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s03-05",
+      "stage": 3,
+      "name": "메밀면피",
+      "expected": "서명·만료·발급자·대상 로그인 검증",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s04-01",
+      "stage": 4,
+      "name": "안비벼지는비빔밥",
+      "expected": "본인 자료만 허용",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s04-02",
+      "stage": 4,
+      "name": "돌아이하르방",
+      "expected": "본인 자료만 허용",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s04-03",
+      "stage": 4,
+      "name": "공주딱밤",
+      "expected": "본인 자료만 허용",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s05-01",
+      "stage": 5,
+      "name": "영덕대게이트",
+      "expected": "서버 전용 원본 자료 접근",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s05-02",
+      "stage": 5,
+      "name": "과메기억상실",
+      "expected": "서버 전용 원본 자료 접근",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s05-03",
+      "stage": 5,
+      "name": "남원추어요",
+      "expected": "서버 전용 원본 자료 접근",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s06-01",
+      "stage": 6,
+      "name": "나태한해태",
+      "expected": "등록 기기와 로그인 결합 검증",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s06-02",
+      "stage": 6,
+      "name": "의성6쪽마누라",
+      "expected": "등록 기기와 로그인 결합 검증",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s06-03",
+      "stage": 6,
+      "name": "김보성녹차",
+      "expected": "등록 기기와 로그인 결합 검증",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s06-04",
+      "stage": 6,
+      "name": "청양후추",
+      "expected": "등록 기기와 로그인 결합 검증",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s07-01",
+      "stage": 7,
+      "name": "금산산삼",
+      "expected": "복합 이상 추가 확인과 정상 허용",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s07-02",
+      "stage": 7,
+      "name": "조치원복슬복슬아",
+      "expected": "복합 이상 추가 확인과 정상 허용",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s07-03",
+      "stage": 7,
+      "name": "울산흔들바지",
+      "expected": "복합 이상 추가 확인과 정상 허용",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s07-04",
+      "stage": 7,
+      "name": "순창된장고추장",
+      "expected": "복합 이상 추가 확인과 정상 허용",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s08-01",
+      "stage": 8,
+      "name": "갓김치사량",
+      "expected": "구역 밖·타인·일반 학생 공지 수정 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s08-02",
+      "stage": 8,
+      "name": "충무공김밥",
+      "expected": "구역 밖·타인·일반 학생 공지 수정 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s08-03",
+      "stage": 8,
+      "name": "성주참외롭다",
+      "expected": "구역 밖·타인·일반 학생 공지 수정 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s08-04",
+      "stage": 8,
+      "name": "경주화남빵",
+      "expected": "구역 밖·타인·일반 학생 공지 수정 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s09-01",
+      "stage": 9,
+      "name": "대구막창드라마",
+      "expected": "의심 대상 회수 제안 및 재접속 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s09-02",
+      "stage": 9,
+      "name": "제주흑돈까스",
+      "expected": "의심 대상 회수 제안 및 재접속 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s09-03",
+      "stage": 9,
+      "name": "나폴리맛소금",
+      "expected": "의심 대상 회수 제안 및 재접속 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s09-04",
+      "stage": 9,
+      "name": "개발세발낙지",
+      "expected": "의심 대상 회수 제안 및 재접속 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s10-01",
+      "stage": 10,
+      "name": "닭크웹",
+      "expected": "사전 사본 검증·한 건 복구·방어 재시험",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s10-02",
+      "stage": 10,
+      "name": "동래해물피자",
+      "expected": "사전 사본 검증·한 건 복구·방어 재시험",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s10-03",
+      "stage": 10,
+      "name": "속초꼴뚜기순대",
+      "expected": "사전 사본 검증·한 건 복구·방어 재시험",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s11-01",
+      "stage": 11,
+      "name": "대구두꺼운만두",
+      "expected": "앱 요청 서명과 경로·본문 무결성",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s11-02",
+      "stage": 11,
+      "name": "호박엿장수마음대로",
+      "expected": "앱 요청 서명과 경로·본문 무결성",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s11-03",
+      "stage": 11,
+      "name": "부산돼지미역국밥",
+      "expected": "앱 요청 서명과 경로·본문 무결성",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s12-01",
+      "stage": 12,
+      "name": "1첩반상",
+      "expected": "한 제출본의 통합 연속 공격 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s12-02",
+      "stage": 12,
+      "name": "천안호날두과자",
+      "expected": "한 제출본의 통합 연속 공격 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    },
+    {
+      "id": "s12-03",
+      "stage": 12,
+      "name": "양양송이버섯고양이",
+      "expected": "한 제출본의 통합 연속 공격 거부",
+      "status": "not_run",
+      "source": "official_engine_unconnected",
+      "requestId": null,
+      "checkedAt": null
+    }
+  ]
+}

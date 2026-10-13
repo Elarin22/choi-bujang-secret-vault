@@ -1,24 +1,36 @@
 // The student changes this check as each stage adds an attack to the same app.
 // Never return tokens, private keys, real names, or note bodies.
-import { Buffer } from 'node:buffer';
-
-const b64 = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
-
-async function probe(app, path, init = {}) {
-  const response = await fetch(new URL(path, app), {
-    redirect: 'error', signal: AbortSignal.timeout(10000), ...init,
-  });
-  let data = null;
-  if (response.ok) {
-    try { data = await response.json(); } catch { /* non-JSON is not exposed data */ }
+import { runBundleChecks } from './bundle-checks.mjs';
+import { readFileSync } from 'node:fs';
+export async function runAttackChecks(input, options) {
+  // R5 bundle callers pass config; the current public example passes the URL.
+  // Read only the public repository configuration, never an env file or key.
+  const config = typeof input === 'string'
+    ? { ...JSON.parse(readFileSync(new URL('../aleph.config.json', import.meta.url), 'utf8')), publicAppUrl: input }
+    : input;
+  if (!config || typeof config !== 'object' || Array.isArray(config)) throw new Error('invalid_check_configuration');
+  if (Number.isInteger(config.step) && config.step >= 3 && config.step <= 12) return runBundleChecks(config, options);
+  if (config.step === 2) {
+    const app = new URL(config.publicAppUrl);
+    if (app.protocol !== 'https:' || app.username || app.password || app.pathname !== '/' || app.search || app.hash) {
+      throw new Error('실제 HTTPS 배포 주소를 확인하세요.');
+    }
+    const request = (path) => fetch(new URL(path, app), { redirect: 'error', signal: AbortSignal.timeout(10000) });
+    const staticResponse = await request('/data.json');
+    const staticBody = await staticResponse.text();
+    let staticNotes = false;
+    try { staticNotes = Array.isArray(JSON.parse(staticBody).notes) && JSON.parse(staticBody).notes.length > 0; } catch {}
+    const apiResponse = await request('/api/notes');
+    let count = 0;
+    try { const body = await apiResponse.json(); count = Array.isArray(body.notes) ? body.notes.length : 0; } catch {}
+    return [
+      { attackId: 'static_note_seed', expected: '공개 정적 자료 경로는 404이며 메모 없음',
+        observed: `HTTP ${staticResponse.status}; notes present: ${staticNotes}` },
+      { attackId: 'anonymous_api_read', expected: '2단계의 공개 API에서 가상 카드 네 건 반환; 인증은 후속 단계',
+        observed: `HTTP ${apiResponse.status}; note count: ${count}` },
+    ];
   }
-  return { status: response.status, data };
-}
-
-const rejected = (r) => r.status === 401 || r.status === 403;
-
-export async function runAttackChecks(config) {
-  if (![3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(config.step)) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
+  if (config.step !== 1) throw new Error('이 단계의 공격 점검을 src/attack-check.mjs에 구현해 주세요.');
   let app;
   try {
     app = new URL(config.publicAppUrl);
@@ -29,132 +41,20 @@ export async function runAttackChecks(config) {
       || app.pathname !== '/' || app.hostname.endsWith('.example')) {
     throw new Error('aleph.config.json의 실제 배포 주소를 먼저 넣어 주세요.');
   }
-  const issuer = config.identityProvider?.issuer;
-  if (typeof issuer !== 'string' || issuer.includes('REPLACE')) {
-    throw new Error('aleph.config.json의 identityProvider에 실제 Supabase Project URL을 넣어 주세요.');
-  }
-  const forged = `${b64({ alg: 'ES256', typ: 'JWT' })}.${b64({ iss: issuer, aud: 'authenticated',
-    role: 'authenticated', sub: '00000000-0000-4000-8000-000000000000', exp: 4102444800 })}.${b64('forged')}`;
-  const file = await probe(app, '/data.json');
-  const anon = await probe(app, '/api/notes');
-  const fake = await probe(app, '/api/notes', { headers: { Authorization: `Bearer ${forged}` } });
-  const write = await probe(app, '/api/notes', { method: 'POST',
-    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'x', body: 'x' }) });
-  let direct = null;
-  if (config.step >= 4) {
+  if (typeof config.sampleMarker !== 'string' || !config.sampleMarker) throw new Error('가상 메모의 확인 표시를 넣어 주세요.');
+  const response = await fetch(new URL('/data.json', app), {
+    redirect: 'error', signal: AbortSignal.timeout(10000),
+  });
+  let visible = false;
+  if (response.ok) {
     try {
-      const conf = await (await fetch(new URL('/api/config', app), { signal: AbortSignal.timeout(10000) })).json();
-      const original = typeof config.originalApiUrl === 'string' && config.originalApiUrl.startsWith('https://')
-        ? config.originalApiUrl : new URL('/rest/v1/notes', conf.supabaseUrl).href;
-      const response = await fetch(`${original}?select=id&limit=1`, {
-        redirect: 'error', signal: AbortSignal.timeout(10000),
-        headers: { apikey: conf.publishableKey, Authorization: `Bearer ${conf.publishableKey}` } });
-      const rows = response.ok ? await response.json().catch(() => null) : null;
-      direct = { status: response.status, rows: Array.isArray(rows) ? rows.length : 0 };
-    } catch { direct = { status: 0, rows: 0 }; }
-  }
-  let local = null;
-  let stepUpLocal = null;
-  let zoneLocal = null;
-  if (config.step >= 6) {
-    const { decide } = await import('./decider.mjs');
-    const { fixtureRequests } = await import('../scripts/fixture-7.mjs');
-    const { normal } = fixtureRequests();
-    const ok = await decide(normal);
-    const bad = await decide({ ...normal, requestId: normal.requestId, deviceRegistered: false });
-    const { suspicious } = fixtureRequests();
-    const risky = await decide(suspicious);
-    const again = await decide({ ...suspicious, requestId: normal.requestId, stepUp: { verified: true, authAgeSeconds: 60 } });
-    const forged = await decide({ ...suspicious, signals: { ...suspicious.signals, source: 'client_header' } });
-    if (config.step >= 7) {
-      stepUpLocal = `로컬 가상 사건: 정상 ${ok.decision}, 복합 이상 ${risky.decision}(${risky.reasonCode}), 다시 확인 뒤 ${again.decision}, 출처 위조 신호 ${forged.decision}(신호로 쓰지 않음). 심판 판정이 아님`;
-    }
-    if (config.step >= 8) {
-      const own = await decide({ ...normal, requestId: normal.requestId });
-      const edit = await decide({ ...normal, requestId: normal.requestId, method: 'PUT', path: '/notices/demo', route: 'PUT /notices/:id' });
-      const write = await decide({ ...normal, requestId: normal.requestId, method: 'PUT', path: '/notes/demo', route: 'PUT /notes/:id' });
-      const unknown = await decide({ ...normal, requestId: normal.requestId, path: '/notes/export', route: 'GET /notes/:id' });
-      const other = await decide({ ...normal, requestId: normal.requestId, method: 'GET', path: '/admin', route: 'GET /admin' });
-      zoneLocal = `로컬 가상 요청: 자기 메모 ${own.decision}, 공지 수정 ${edit.decision}(${edit.reasonCode}), 메모 수정 ${write.decision}(${write.reasonCode}), :id 자리 export ${unknown.decision}, 알 수 없는 경로 ${other.decision}(${other.reasonCode}). 심판 판정이 아님`;
-    }
-    local = `로컬 가상 요청: 등록 기기 ${ok.decision}(${ok.reasonCode}), 미등록 기기 ${bad.decision}(${bad.reasonCode}). 심판 판정이 아님`;
-  }
-  let detectLocal = null;
-  if (config.step >= 9) {
-    const { detect } = await import('./detect.mjs');
-    const start = Date.UTC(2026, 9, 1);
-    const reads = (count, sub) => Array.from({ length: count }, (_, i) => ({ at: new Date(start + i * 2000).toISOString(), method: 'GET', identity: { sub } }));
-    const normalOut = detect(reads(30, 'learner_fixture'));
-    const burstOut = detect(reads(121, 'learner_fixture'));
-    detectLocal = `로컬 가상 사건: 정상 30건 ${normalOut.action}, 10분 안 121건 ${burstOut.action}(${burstOut.reasonCode ?? '-'}). 실제 회수·시간은 심판이 확인하며 이 점검은 심판 판정이 아님`;
-  }
-  let policyLocal = null;
-  if (config.step >= 10) {
-    try {
-      const { readFileSync } = await import('node:fs');
-      const { planPolicyRestore } = await import('./policy-recovery.mjs');
-      const backup = JSON.parse(readFileSync(new URL('../backups/safe-policy.json', import.meta.url), 'utf8'));
-      const plan = planPolicyRestore({ projectId: config.repoUrl, policyRevision: config.policyRevision ?? 1, allowedRoutes: config.allowedRoutes ?? [], audit: [] }, backup);
-      policyLocal = `로컬 확인: 안전 정책 사본 검증 통과, 현재 메모 정책과 차이 ${plan.unchanged ? '없음' : `있음(추가 ${plan.added.length}, 제거 ${plan.removed.length})`}. 실제 복원·배포 시험은 미실행`;
-    } catch (error) {
-      policyLocal = `안전 정책 사본 검증 실패(${error.message}). 복원은 중단해야 함`;
+      const data = await response.json();
+      visible = data?.sampleMarker === config.sampleMarker && Array.isArray(data.notes)
+        && data.notes.length > 0;
+    } catch {
+      // A non-JSON response is a failed check, not a successful deployment.
     }
   }
-  let deviceLocal = null;
-  if (config.step >= 11) {
-    const { connectionView } = await import('../public/connection-model.js');
-    const now = Date.now();
-    const live = await probe(app, '/api/device-status');
-    const liveView = connectionView(live.data, true, now);
-    const fresh = (approval) => ({ schema: 'vault.connection.v1', authority: 'ALEPH SDP engine', connected: true, approval, checkedAt: new Date(now).toISOString() });
-    const installOnly = connectionView({ ...fresh('approved'), authority: 'student_server' }, true, now);
-    deviceLocal = `실제 요청 /api/device-status HTTP ${live.status}: 자료 열기 ${liveView.canOpen ? '가능' : '불가'}(${liveView.label}). 로컬 판정: 승인 대기 ${connectionView(fresh('pending'), true, now).canOpen ? '열림' : '닫힘'}, 서버가 아닌 출처의 승인 표시 ${installOnly.canOpen ? '열림' : '닫힘'}, 엔진 확인 승인 ${connectionView(fresh('approved'), true, now).canOpen ? '열림' : '닫힘'}. 공식 어댑터 연결과 실제 승인 기기 시험은 미실행`;
-  }
-  let opsLocal = null;
-  if (config.step >= 12) {
-    const live = await probe(app, '/api/ops-summary');
-    const m = live.data?.schema === 'vault.ops.summary.v1' ? live.data.matrix : null;
-    opsLocal = m && Number.isSafeInteger(m.total)
-      ? `실제 요청 /api/ops-summary HTTP ${live.status}: 정상·금지 요청 표 ${m.total}행 중 기대와 같음 ${m.passed}, 다름 ${m.failed}, 미실행 ${m.notRun}. 41종 공격 시험은 미실행. 심판 판정이 아님`
-      : `실제 요청 /api/ops-summary HTTP ${live.status}: 요약 형식을 받지 못함. 아무 항목도 확인된 것으로 보지 않음`;
-  }
-  let notice = null;
-  if (config.step >= 8) {
-    const id = '00000000-0000-4000-8000-000000000000';
-    notice = {
-      read: await probe(app, '/api/notices'),
-      edit: await probe(app, `/api/notices/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'x' }) }),
-    };
-  }
-  const seen = (r) => Array.isArray(r.data) && r.data.length > 0;
-  return [
-    { attackId: 'static_data_json_read', expected: '/data.json에서 가상 메모가 보이지 않아야 함',
-      observed: file.status === 404 ? '/data.json에서 가상 메모가 보이지 않음 (HTTP 404)' : `/data.json 응답 HTTP ${file.status}, 확인 필요` },
-    { attackId: 'anonymous_api_read', expected: '로그인 없이 /api/notes를 부르면 거부',
-      observed: rejected(anon) ? `비로그인 요청이 거부됨 (HTTP ${anon.status})` : `비로그인 요청이 거부되지 않음 (HTTP ${anon.status}${seen(anon) ? ', 메모 보임' : ''})` },
-    { attackId: 'forged_token_read', expected: '서명이 가짜인 토큰은 거부',
-      observed: rejected(fake) ? `가짜 토큰이 거부됨 (HTTP ${fake.status})` : `가짜 토큰이 거부되지 않음 (HTTP ${fake.status})` },
-    { attackId: 'anonymous_api_write', expected: '로그인 없이 메모 추가는 거부',
-      observed: rejected(write) ? `비로그인 추가 요청이 거부됨 (HTTP ${write.status})` : `비로그인 추가 요청이 거부되지 않음 (HTTP ${write.status})` },
-    ...(local ? [{ attackId: 'device_registered_local', expected: '등록 기기는 allow, 미등록 기기는 deny·device_not_registered',
-      observed: local }] : []),
-    ...(stepUpLocal ? [
-      { attackId: 'step_up_local', expected: '정상 사건은 allow, 복합 이상 사건은 step_up, 다시 확인 뒤 allow', observed: stepUpLocal },
-      { attackId: 'step_up_real_block', expected: '다시 로그인 전에는 실제 자료가 막히고 새 로그인 뒤 허용됨',
-        observed: '미실행: 이 저장소 자료 API는 판정기 결과를 받지 않아 실제 재로그인 차단은 시험하지 않음' }] : []),
-    ...(notice ? [
-      { attackId: 'anonymous_notice_read', expected: '로그인 없이 공지 목록을 부르면 거부',
-        observed: rejected(notice.read) ? `비로그인 공지 조회가 거부됨 (HTTP ${notice.read.status})` : `비로그인 공지 조회가 거부되지 않음 (HTTP ${notice.read.status})` },
-      { attackId: 'anonymous_notice_edit', expected: '로그인 없이 공지 수정은 거부',
-        observed: rejected(notice.edit) ? `비로그인 공지 수정이 거부됨 (HTTP ${notice.edit.status})` : `비로그인 공지 수정이 거부되지 않음 (HTTP ${notice.edit.status})` },
-      { attackId: 'zone_rules_local', expected: '자기 메모 읽기 allow, 공지·메모 쓰기(소유자·강사 확인 불가)·알 수 없는 경로·export 자리 deny', observed: zoneLocal }] : []),
-    ...(deviceLocal ? [{ attackId: 'device_gate_local', expected: '승인이 서버에서 확인되기 전에는 자료 화면이 열리지 않음(설치·요청 표시만으로는 안 열림)', observed: deviceLocal }] : []),
-    ...(opsLocal ? [{ attackId: 'ops_room_live', expected: '작전실 요약이 서버 기록과 같은 수치를 돌려주고 실행하지 않은 시험은 미실행으로 구분함', observed: opsLocal }] : []),
-    ...(policyLocal ? [{ attackId: 'policy_backup_local', expected: '검증된 안전 정책 사본이 있고 현재 메모 정책과 대조됨', observed: policyLocal }] : []),
-    ...(detectLocal ? [{ attackId: 'burst_detect_local', expected: '정상 조회는 observe, 10분 안 120건 초과만 propose_revocation(burst_read)', observed: detectLocal }] : []),
-    ...(direct ? [{ attackId: 'anon_data_api_read', expected: 'anon 키로 Supabase Data API에서 notes를 직접 읽을 수 없어야 함',
-      observed: direct.status === 0 ? 'Data API 직접 확인 실패(주소·키 설정 확인 필요)'
-        : direct.status >= 400 || direct.rows === 0
-          ? `anon 키 직접 읽기가 거부되거나 빈 결과임 (HTTP ${direct.status})` : `anon 키로 notes ${direct.rows}건이 읽힘 (HTTP ${direct.status})` }] : []),
-  ];
+  return [{ attackId: 'anonymous_note_read', expected: '비로그인 화면에서 가상 메모를 확인',
+    observed: visible ? '비로그인 요청에서 공개 가상 메모 확인 표시가 보임' : `비로그인 요청에서 확인 표시가 보이지 않음 (HTTP ${response.status})` }];
 }

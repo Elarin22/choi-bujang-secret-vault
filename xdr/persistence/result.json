@@ -5,98 +5,98 @@
     {
       "alertId": "ps-01",
       "action": "block",
-      "confidence": 0.9,
-      "reason": "unsigned_new_service: 서명 없는 새 서비스 등록 - 규칙 수준 12, 서명 없음·평소 목록 없음·자동 시작 (T1543 자동 시작 서비스 신호)"
+      "confidence": 0.92,
+      "reason": "ps_unsigned_new_service: 서명 없는 새 서비스 등록, 자동 시작, 규칙 수준 12, 반복 1번 (T1543/T1053)"
     },
     {
       "alertId": "ps-02",
       "action": "block",
       "confidence": 0.95,
-      "reason": "unsigned_scheduled_task: 서명 없는 낯선 예약 작업 - 규칙 수준 12, 서명 없음·평소 목록 없음·자동 시작, 2회 반복 (T1053 로그온·부팅 예약 작업 신호)"
+      "reason": "ps_unsigned_scheduled_task: 서명 없는 예약 작업, 자동 시작, 규칙 수준 12, 반복 2번 (T1543/T1053)"
     },
     {
       "alertId": "ps-03",
       "action": "block",
-      "confidence": 0.9,
-      "reason": "startup_location_change: 시작 폴더에 서명 없는 항목 생성·변경 - 규칙 수준 13, 서명 없음·평소 목록 없음·자동 시작 (T1543 계열 로그인 자동 실행 신호)"
+      "confidence": 0.92,
+      "reason": "ps_startup_location_change: 시작 위치의 서명 없는 항목, 자동 시작, 규칙 수준 13, 반복 1번 (T1543/T1053)"
     },
     {
       "alertId": "ps-04",
       "action": "block",
       "confidence": 0.95,
-      "reason": "unsigned_new_service: 서명 없는 새 서비스 등록 - 규칙 수준 11, 서명 없음·평소 목록 없음·자동 시작, 3회 반복 (T1543 자동 시작 서비스 신호)"
+      "reason": "ps_unsigned_new_service: 서명 없는 새 서비스 등록, 자동 시작, 규칙 수준 11, 반복 3번 (T1543/T1053)"
     },
     {
       "alertId": "ps-05",
       "action": "block",
-      "confidence": 0.9,
-      "reason": "unsigned_scheduled_task: 서명 없는 낯선 예약 작업 - 규칙 수준 13, 서명 없음·평소 목록 없음·자동 시작 (T1053 로그온·부팅 예약 작업 신호)"
+      "confidence": 0.92,
+      "reason": "ps_unsigned_scheduled_task: 서명 없는 예약 작업, 자동 시작, 규칙 수준 13, 반복 1번 (T1543/T1053)"
     },
     {
       "alertId": "ps-06",
       "action": "block",
-      "confidence": 0.9,
-      "reason": "startup_location_change: 시작 폴더에 서명 없는 항목 생성·변경 - 규칙 수준 12, 서명 없음·평소 목록 없음·자동 시작 (T1543 계열 로그인 자동 실행 신호)"
+      "confidence": 0.92,
+      "reason": "ps_startup_location_change: 시작 위치의 서명 없는 항목, 자동 시작, 규칙 수준 12, 반복 1번 (T1543/T1053)"
     },
     {
       "alertId": "ps-07",
       "action": "alert",
       "confidence": 0.6,
-      "reason": "unsigned_scheduled_task: 서명 없는 낯선 예약 작업 - 규칙 수준 8, 자동 시작 아니오, 근거 부족 (T1053 로그온·부팅 예약 작업 신호)"
+      "reason": "ps_unsigned_scheduled_task: 서명 없는 예약 작업, 기준 미만 또는 확인 자료 부족, 알림만 남김"
     },
     {
       "alertId": "ps-08",
       "action": "alert",
       "confidence": 0.6,
-      "reason": "unsigned_new_service: 서명 없는 새 서비스 등록 - 규칙 수준 7, 자동 시작 예, 근거 부족 (T1543 자동 시작 서비스 신호)"
+      "reason": "ps_unsigned_new_service: 서명 없는 새 서비스 등록, 기준 미만 또는 확인 자료 부족, 알림만 남김"
     },
     {
       "alertId": "ps-09",
       "action": "alert",
       "confidence": 0.6,
-      "reason": "startup_location_change: 시작 폴더에 서명 없는 항목 생성·변경 - 규칙 수준 6, 자동 시작 예, 근거 부족 (T1543 계열 로그인 자동 실행 신호)"
+      "reason": "ps_startup_location_change: 시작 위치의 서명 없는 항목, 기준 미만 또는 확인 자료 부족, 알림만 남김"
     },
     {
       "alertId": "ps-10",
       "action": "alert",
       "confidence": 0.6,
-      "reason": "unsigned_new_service: 서명 없는 새 서비스 등록 - 규칙 수준 9, 자동 시작 아니오, 근거 부족 (T1543 자동 시작 서비스 신호)"
+      "reason": "ps_unsigned_new_service: 서명 없는 새 서비스 등록, 기준 미만 또는 확인 자료 부족, 알림만 남김"
     },
     {
       "alertId": "ps-11",
       "action": "alert",
       "confidence": 0.5,
-      "reason": "unsigned_new_service: 서명 없는 새 서비스 등록 - 설명 문장만 있고 이벤트 자료가 없어 알림까지만 (T1543 자동 시작 서비스 신호)"
+      "reason": "ps_unconfirmed: 설명 문장만 있고 이벤트 자료 없음, 알림만 남김"
     },
     {
       "alertId": "ps-12",
       "action": "record",
       "confidence": 0.05,
-      "reason": "normal_persistence: 서명됨 또는 평소 목록에 있음 (규칙 수준 3)"
+      "reason": "ps_normal: 평소 목록에 있는 항목"
     },
     {
       "alertId": "ps-13",
       "action": "record",
       "confidence": 0.05,
-      "reason": "normal_persistence: 서명됨 또는 평소 목록에 있음 (규칙 수준 2)"
+      "reason": "ps_normal: 평소 목록에 있는 항목"
     },
     {
       "alertId": "ps-14",
       "action": "record",
-      "confidence": 0.05,
-      "reason": "normal_persistence: 알려진 지속성 형태 아님"
+      "confidence": 0.1,
+      "reason": "ps_normal: 지속성 위치나 이벤트가 아님"
     },
     {
       "alertId": "ps-15",
       "action": "record",
       "confidence": 0.05,
-      "reason": "normal_persistence: 서명됨 또는 평소 목록에 있음 (규칙 수준 3)"
+      "reason": "ps_normal: 평소 목록에 있는 항목"
     },
     {
       "alertId": "ps-16",
       "action": "record",
       "confidence": 0.05,
-      "reason": "normal_persistence: 서명됨 또는 평소 목록에 있음 (규칙 수준 3)"
+      "reason": "ps_normal: 평소 목록에 있는 항목"
     }
   ],
   "counts": {

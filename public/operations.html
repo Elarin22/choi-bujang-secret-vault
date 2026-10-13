@@ -1,0 +1,14 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BYTE BACK · 탈환 작전실</title><link rel="stylesheet" href="/operations.css"></head><body><main>
+<nav><a href="/">내 자료실 접속</a><a href="/connect.html">접속 도구</a><a href="/operations.html" aria-current="page">탈환 작전실</a></nav>
+<div class="eyebrow">BYTE BACK · 관측과 재확인</div><h1>탈환 작전실</h1>
+<p>서버가 실제로 관측한 공개·금지 요청과 로컬 가상 시험을 보여 줍니다. 운영 엔진의 기기 승인·회수와 공식 41종 재현은 별도이며, 미실행을 통과로 표시하지 않습니다.</p>
+<button id="refresh">실제 결과 다시 확인</button><p id="status" role="status">서버 결과 미확인</p>
+<div class="grid"><section class="card"><h2>판정 규칙</h2><p id="rules">미확인</p></section><section class="card"><h2>탐지 사건</h2><p id="detection">미실행</p></section>
+<section class="card"><h2>회수 상태</h2><p id="revocation">미연결</p></section><section class="card"><h2>복구 사본</h2><p id="recovery">미확인</p></section></div>
+<section class="card"><h2>실제 관측 기록</h2><p id="counts">미확인</p><p>요청 ID는 관측자가 생성한 상관 번호입니다. local_fixture는 실제 사용자 접속이나 운영 회수의 증거가 아닙니다.</p>
+<div class="table-scroll"><table><thead><tr><th>점검</th><th>요청</th><th>출처</th><th>기대</th><th>실제 결과</th><th>상태</th><th>관측 요청 ID</th><th>확인 시각 UTC</th></tr></thead><tbody id="checks"></tbody></table></div></section>
+<section class="card"><h2>공식 41종 시험 목록</h2><p id="official-count">미실행</p><p>도감의 시험 이름과 단계별 기대 조건입니다. 게임 심판의 승인 기록과 현재 운영 엔진 재현 기록은 구분합니다. 실제 사건이 없는 항목에는 요청 ID·시각을 만들지 않습니다.</p>
+<div class="table-scroll"><table><thead><tr><th>단계</th><th>공격</th><th>기대 조건</th><th>재현 상태</th><th>요청 ID</th><th>시각</th></tr></thead><tbody id="matrix"></tbody></table></div></section>
+<section class="card"><h2>출처와 남은 연결</h2><p>학생 작업: 판정기·탐지·접속 화면·자료실 API·사본 검증과 복구. 제공 엔진: ALEPH SDP engine의 기기 키·로그인 결합·요청 서명 검증·판정 집행·감사 보관. 현재 반별 연결 안내가 없어 실제 엔진 연결은 미검증입니다. 메모 본문·토큰·실명·개인키는 이 화면에서 다루지 않습니다.</p></section>
+</main><script type="module" src="/operations.js"></script></body></html>

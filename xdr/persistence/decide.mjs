@@ -1,100 +1,85 @@
-// 단일 파일 판정 모듈: 다른 파일·패키지를 불러오지 않고, 파일을 읽거나 쓰지 않고, 바깥에 묻지 않고 혼자 계산합니다.
-// 입력: Wazuh 원본 경보, 또는 {id, sourceIp, level, ...} 요약.
-// 근거: MITRE ATT&CK T1543(시스템 프로세스 생성·변경), T1053(예약 작업). 기준 숫자는 학습용 가정입니다.
-// 파일 경로·서명 값은 패턴 확인에만 쓰고 reason 에는 넣지 않습니다.
-
-// xdr/persistence/patterns.json 의 패턴 (이름·근거)
-const PATTERNS = Object.freeze({
-  unsigned_new_service: { name: '서명 없는 새 서비스 등록', evidence: 'T1543 자동 시작 서비스 신호' },
-  unsigned_scheduled_task: { name: '서명 없는 낯선 예약 작업', evidence: 'T1053 로그온·부팅 예약 작업 신호' },
-  startup_location_change: { name: '시작 폴더에 서명 없는 항목 생성·변경', evidence: 'T1543 계열 로그인 자동 실행 신호' },
-});
+// Standalone, pure classification. Keep PATTERNS synchronized with patterns.json.
+// 근거: MITRE ATT&CK T1543 (시스템 프로세스 생성·변경), T1053 (예약 작업). 기준 숫자는 학습용 가정입니다.
+// 경로·서명 값은 패턴 확인에만 쓰고 reason 에는 넣지 않습니다. 파일을 읽거나 쓰지 않고 바깥에 묻지 않습니다.
+const PATTERNS = Object.freeze([
+  { name: 'ps_unsigned_new_service' },
+  { name: 'ps_unsigned_scheduled_task' },
+  { name: 'ps_startup_location_change' },
+  { name: 'ps_unconfirmed' },
+  { name: 'ps_normal' },
+]);
 
 const BLOCK_AT = 0.85;
 const ALERT_AT = 0.5;
-const BLOCK_LEVEL = 10;   // 규칙 수준 이 값 이상이면 명확한 공격 후보
-const REPEAT_COUNT = 2;   // 같은 항목이 이 횟수 이상 반복되면 확신도를 더 올림
+const BLOCK_LEVEL = 10;  // 규칙 수준 이 값 이상이고 서명 없음·목록 밖·자동 시작이 모두 맞으면 명확한 지속성 심기
+const REPEAT_COUNT = 2;  // 같은 항목이 이 횟수 이상 반복되면 확신도를 조금 올림
 
-const STARTUP_PATH = /(?:\\|\/)(?:startup|시작 프로그램)(?:\\|\/)|\\(?:run|runonce)$/iu;
-const SERVICE_EVENT = /^(?:service_created|service|svc)$/iu;
-const TASK_EVENT = /^(?:task_created|scheduled_task|task)$/iu;
-const FILE_EVENT = /^(?:file_changed|file_created|integrity|syscheck)$/iu;
-const SERVICE_WORD = /서비스|service/iu;
-const TASK_WORD = /예약 작업|scheduled task|schtasks/iu;
-const UNSIGNED_WORD = /서명 없는|unsigned/iu;
-// "서명 없는 서비스가 아닙니다" 처럼 서명 없음 자체를 부정하는 문장만 제외한다 ("이벤트 자료는 없습니다"는 제외 대상이 아님)
+const SERVICE_EVENTS = new Set(['service_created', 'service', 'svc']);
+const TASK_EVENTS = new Set(['task_created', 'scheduled_task', 'task']);
+const FILE_EVENTS = new Set(['file_changed', 'file_created', 'integrity', 'syscheck']);
+const STARTUP_PATH = /(?:startup|시작 프로그램|start menu)(?:[\\/]|$)/iu;
+const WEAK_UNSIGNED = /서명 없는|unsigned/iu;
+const WEAK_TARGET = /서비스|예약 작업|시작|service|task/iu;
+// "서명 없는 서비스가 아닙니다" 처럼 서명 없음 자체를 부정하는 문장은 약한 신호로도 쓰지 않는다.
 const NEGATED = /서명 없는[^.]{0,20}(?:아닙니다|아니다)/u;
 
-function flatten(value, depth = 0) {
-  if (value == null || depth > 4) return [];
-  if (typeof value === 'string') return [value];
-  if (typeof value === 'number' || typeof value === 'boolean') return [String(value)];
-  if (Array.isArray(value)) return value.flatMap((item) => flatten(item, depth + 1));
-  if (typeof value === 'object') return Object.values(value).flatMap((item) => flatten(item, depth + 1));
-  return [];
-}
+const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const flag = (value) => {
+  if (value === true || value === 'True' || value === 'true') return true;
+  if (value === false || value === 'False' || value === 'false') return false;
+  return null;
+};
 
-function normalizeAlert(alert) {
-  const a = alert && typeof alert === 'object' ? alert : {};
-  const data = a.data && typeof a.data === 'object' ? a.data : {};
-  const description = String(a.rule?.description ?? a.description ?? '');
-  const level = Number(a.rule?.level ?? a.level ?? 0);
-  const countRaw = Number(data.count ?? a.count ?? 0);
-  const event = String(data.event ?? a.event ?? '').toLowerCase();
-  const path = String(data.path ?? a.path ?? '');
+function decision(confidence, name, detail) {
   return {
-    id: String(a.id ?? a.alertId ?? ''),
-    description,
-    level: Number.isFinite(level) ? level : 0,
-    count: Number.isFinite(countRaw) && countRaw >= 0 ? countRaw : 0,
-    event,
-    path,
-    // 서명 여부: 명시된 true/false만 쓴다. 값이 없으면 알 수 없음(undefined).
-    signed: typeof data.signed === 'boolean' ? data.signed : (typeof a.signed === 'boolean' ? a.signed : undefined),
-    listed: String(data.baseline ?? a.baseline ?? '').toLowerCase() === 'listed',
-    autostart: data.autostart === true || a.autostart === true || STARTUP_PATH.test(path),
+    action: confidence >= BLOCK_AT ? 'block' : confidence >= ALERT_AT ? 'alert' : 'record',
+    confidence,
+    reason: `${name}: ${detail}`,
   };
 }
 
-const done = (confidence, patternId, note) => ({
-  action: confidence >= BLOCK_AT ? 'block' : confidence >= ALERT_AT ? 'alert' : 'record',
-  confidence,
-  reason: patternId ? `${patternId}: ${PATTERNS[patternId].name} - ${note} (${PATTERNS[patternId].evidence})` : `normal_persistence: ${note}`,
-});
-
-// 반환: { action: 'block'|'alert'|'record', confidence: 0~1, reason: string(근거 패턴 이름 포함) }
 export function decide(alert) {
-  const item = normalizeAlert(alert);
-  if (!item.description && !item.event && !item.path) return { action: 'record', confidence: 0, reason: 'invalid_alert: 내용이 없는 경보' };
+  if (!object(alert) || !object(alert.rule) || !object(alert.data)) {
+    return decision(0.5, 'ps_unconfirmed', '자료가 불완전한 사건, 알림만 남김');
+  }
+  const data = alert.data;
+  const event = typeof data.event === 'string' ? data.event.toLowerCase() : '';
+  const path = typeof data.path === 'string' ? data.path.slice(0, 512) : '';
+  const description = String(alert.rule.description ?? '').slice(0, 2000);
+  const level = Number.isFinite(Number(alert.rule.level)) ? Number(alert.rule.level) : 0;
+  const count = Number.isFinite(Number(data.count)) ? Number(data.count) : 1;
 
-  const negated = NEGATED.test(item.description);
-  // 이벤트 자료가 있으면 그것으로 종류를 정하고, 없을 때만 설명 문장을 읽는다 (설명만으로는 차단하지 않는다).
-  let kind = null;
-  if (SERVICE_EVENT.test(item.event)) kind = 'unsigned_new_service';
-  else if (TASK_EVENT.test(item.event)) kind = 'unsigned_scheduled_task';
-  else if (FILE_EVENT.test(item.event) && (item.autostart || STARTUP_PATH.test(item.path))) kind = 'startup_location_change';
+  const listed = data.baseline === 'listed';
+  const unlisted = data.baseline === 'none';
+  const signed = flag(data.signed);
+  const unsigned = signed === false;
+  const autostart = flag(data.autostart) === true;
+  const isService = SERVICE_EVENTS.has(event);
+  const isTask = TASK_EVENTS.has(event);
+  const startup = FILE_EVENTS.has(event) && STARTUP_PATH.test(path);
+  const persistenceEvent = isService || isTask || startup;
+  const weakMention = !NEGATED.test(description) && WEAK_UNSIGNED.test(description) && WEAK_TARGET.test(description);
+  const name = isService ? 'ps_unsigned_new_service' : isTask ? 'ps_unsigned_scheduled_task' : 'ps_startup_location_change';
+  const label = isService ? '서명 없는 새 서비스 등록' : isTask ? '서명 없는 예약 작업' : '시작 위치의 서명 없는 항목';
 
-  if (kind) {
-    const unsigned = item.signed === false;
-    // 1) 명확한 공격: 서명 없음 + 평소 목록에 없음 + 자동 시작 + 높은 규칙 수준 → block
-    if (unsigned && !item.listed && item.autostart && item.level >= BLOCK_LEVEL) {
-      const confidence = item.count >= REPEAT_COUNT ? 0.95 : 0.9;
-      return done(confidence, kind, `규칙 수준 ${item.level}, 서명 없음·평소 목록 없음·자동 시작${item.count >= REPEAT_COUNT ? `, ${item.count}회 반복` : ''}`);
-    }
-    // 2) 애매함: 평소 목록에 없고 서명을 확인하지 못했거나 서명 없음 → alert
-    if (!item.listed && item.signed !== true) {
-      return done(0.6, kind, `규칙 수준 ${item.level}, 자동 시작 ${item.autostart ? '예' : '아니오'}, 근거 부족`);
-    }
-    // 3) 서명됐거나 평소 목록에 있음 → 정상
-    return done(0.05, null, `서명됨 또는 평소 목록에 있음 (규칙 수준 ${item.level})`);
+  // 1) 평소 목록에 있는 항목은 운영 기준대로 정상 이벤트
+  if (listed) return decision(0.05, 'ps_normal', '평소 목록에 있는 항목');
+
+  // 2) 지속성 위치나 이벤트가 아닌 경우: 설명 문장만으로는 알림까지만
+  if (!persistenceEvent) {
+    if (weakMention) return decision(0.5, 'ps_unconfirmed', '설명 문장만 있고 이벤트 자료 없음, 알림만 남김');
+    return decision(0.1, 'ps_normal', '지속성 위치나 이벤트가 아님');
   }
 
-  // 이벤트 자료 없이 설명 문장만 있는 경우: 알림까지만
-  if (!negated && (UNSIGNED_WORD.test(item.description) && (SERVICE_WORD.test(item.description) || TASK_WORD.test(item.description)))) {
-    const pattern = TASK_WORD.test(item.description) ? 'unsigned_scheduled_task' : 'unsigned_new_service';
-    return done(0.5, pattern, '설명 문장만 있고 이벤트 자료가 없어 알림까지만');
+  // 3) 명확한 지속성 심기: 서명 없음 + 평소 목록 밖 + 자동 시작 + 높은 규칙 수준 → block
+  if (unsigned && unlisted && autostart && level >= BLOCK_LEVEL) {
+    const confidence = count >= REPEAT_COUNT ? 0.95 : 0.92;
+    return decision(confidence, name, `${label}, 자동 시작, 규칙 수준 ${level}, 반복 ${count}번 (T1543/T1053)`);
   }
 
-  // 정상 이벤트 (서명됐거나 평소 목록에 있는 일반 변경)
-  return done(item.level <= 3 ? 0.05 : 0.1, null, '알려진 지속성 형태 아님');
+  // 4) 애매함: 목록 밖이지만 수준이 낮거나 자동 시작이 아니거나 서명 확인이 없음 → alert
+  if (unlisted && (unsigned || signed === null || autostart)) {
+    return decision(0.6, name, `${label}, 기준 미만 또는 확인 자료 부족, 알림만 남김`);
+  }
+  return decision(0.55, 'ps_unconfirmed', '목록 밖 지속성 이벤트, 근거 부족으로 알림만 남김');
 }

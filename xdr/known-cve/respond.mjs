@@ -1,10 +1,26 @@
-import { applyDenyRules, RULE_TTL_SECONDS } from '../shared.mjs';
+import { publishDecisions, withXdr } from '../ztna-overlay.mjs';
 
-export { RULE_TTL_SECONDS };
-// decide 결과 중 block 의 출발 주소만 ZTNA 거부 규칙 후보(xdr/known-cve/ztna-deny-rules.json)로 만들고,
-// 알림은 xdr/alerts.log 에 한 줄씩 쌓는다. 규칙에는 만료 시각과 근거 경보 번호가 붙는다.
-// 내부망·예약 주소와 허용 목록 주소는 정상 사용자일 수 있어 규칙을 만들지 않고 알림만 남긴다. 판정기의 기존 규칙은 고치지 않는다.
-export function applyActions({ root, alerts, decisions, now, ttlSeconds }) {
-  return applyDenyRules({ root, moduleKey: 'known-cve', alerts, decisions, now, ttlSeconds });
+// The existing base policy remains the final authority for all unmatched events.
+export function connectDecider(baseDecide, rules) {
+  return withXdr(baseDecide, rules.filter(rule => rule.moduleKey === 'known-cve'));
 }
-export { applyActions as respond };
+export async function respond(root, fixture, result) {
+  if (fixture?.moduleKey !== 'known-cve' || result?.moduleKey !== 'known-cve'
+      || !Array.isArray(fixture.alerts) || !Array.isArray(result.decisions)
+      || result.decisions.length !== fixture.alerts.length) throw new Error('known-cve 응답 형식을 확인하세요.');
+  const expected = new Set(fixture.alerts.map(alert => alert.id));
+  if (expected.size !== fixture.alerts.length) throw new Error('중복 경보 번호를 확인하세요.');
+  const decisions = result.decisions.map(row => {
+    if (!expected.delete(row.alertId) || !Number.isFinite(row.confidence)
+        || row.confidence < 0 || row.confidence > 1
+        || row.action !== (row.confidence >= 0.85 ? 'block' : row.confidence >= 0.5 ? 'alert' : 'record')
+        || typeof row.reason !== 'string'
+        || !/^kc_(remote_lookup|cve_reference|scanner_trace|unconfirmed|normal|invalid):/u.test(row.reason)) {
+      throw new Error('known-cve 판정 결과를 확인하세요.');
+    }
+    // Audit only the static pattern name; no original URL, account or secret.
+    return { alertId: row.alertId, action: row.action, confidence: row.confidence,
+      reason: row.reason.split(':', 1)[0] };
+  });
+  return publishDecisions(root, fixture, { ...result, decisions });
+}

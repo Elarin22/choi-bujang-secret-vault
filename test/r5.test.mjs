@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { deploymentIdentity } from '../scripts/deployment-identity.mjs';
@@ -32,56 +31,26 @@ test('build identity uses Vercel Git and deployment metadata', () => {
   assert.throws(() => deploymentIdentity({ ...env, VERCEL_GIT_COMMIT_SHA: 'short' }, config));
 });
 
-test('step 3 attack check sends no real credentials and expects rejection', async () => {
+test('first attack check reads public data.json without credentials', async () => {
   const originalFetch = globalThis.fetch;
-  const seen = [];
-  const cfg = { ...config, step: 3, identityProvider: { issuer: 'https://abcdefghij.supabase.co/auth/v1' } };
+  let requestUrl;
+  let options;
   try {
     globalThis.fetch = async (url, init) => {
-      seen.push([String(url), init.method ?? 'GET']);
-      return String(url).endsWith('/data.json') ? new Response('nf', { status: 404 }) : new Response('{}', { status: 401 });
+      requestUrl = String(url);
+      options = init;
+      return new Response(JSON.stringify({ sampleMarker: 'SAMPLE_NOTE_1', notes: [{ title: '가상' }] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
     };
-    const results = await runAttackChecks(cfg);
-    assert.equal(results.length, 4);
-    assert.ok(results.every((r) => /거부|보이지 않음/u.test(r.observed)));
-    assert.equal(seen.length, 4);
-    globalThis.fetch = async () => new Response(JSON.stringify([{ id: 'a' }]), { status: 200 });
-    const open = await runAttackChecks(cfg);
-    assert.match(open[1].observed, /거부되지 않음/u);
-    globalThis.fetch = async (url) => {
-      const u = String(url);
-      if (u.endsWith('/api/config')) return new Response(JSON.stringify({ supabaseUrl: 'https://abcdefghij.supabase.co', publishableKey: 'sb_publishable_x' }), { status: 200 });
-      if (u.includes('/rest/v1/')) return new Response('{"code":"42501"}', { status: 401 });
-      return u.endsWith('/data.json') ? new Response('nf', { status: 404 }) : new Response('{}', { status: 401 });
-    };
-    const four = await runAttackChecks({ ...cfg, step: 4 });
-    assert.equal(four.length, 5);
-    assert.match(four[4].observed, /거부/u);
-    const seenUrls = [];
-    const inner = globalThis.fetch;
-    globalThis.fetch = async (url, init) => { seenUrls.push(String(url)); return inner(url, init); };
-    const five = await runAttackChecks({ ...cfg, step: 5, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
-    assert.equal(five.length, 5);
-    assert.ok(seenUrls.includes('https://abcdefghij.supabase.co/rest/v1/notes?select=id&limit=1'));
-    const six = await runAttackChecks({ ...cfg, step: 6, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
-    assert.ok(six.some((r) => r.attackId === 'device_registered_local' && /deny\(device_not_registered\)/u.test(r.observed)));
-    const seven = await runAttackChecks({ ...cfg, step: 7, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
-    assert.ok(seven.some((r) => r.attackId === 'step_up_local' && /복합 이상 step_up\(step_up_required\)/u.test(r.observed)));
-    assert.ok(seven.some((r) => r.attackId === 'step_up_real_block' && r.observed.startsWith('미실행')));
-    const eight = await runAttackChecks({ ...cfg, step: 8, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
-    assert.ok(eight.some((r) => r.attackId === 'zone_rules_local' && /공지 수정 deny\(write_not_allowed\)/u.test(r.observed)));
-    assert.ok(eight.filter((r) => r.attackId.startsWith('anonymous_notice')).every((r) => /거부됨/u.test(r.observed)));
-    assert.ok(eight.length <= 20);
-    const nine = await runAttackChecks({ ...cfg, step: 9, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes' });
-    assert.ok(nine.some((r) => r.attackId === 'burst_detect_local' && /propose_revocation\(burst_read\)/u.test(r.observed)));
-    const real = JSON.parse(readFileSync(new URL('../aleph.config.json', import.meta.url), 'utf8'));
-    const ten = await runAttackChecks({ ...cfg, step: 10, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes', repoUrl: real.repoUrl, allowedRoutes: real.allowedRoutes, policyRevision: real.policyRevision });
-    assert.ok(ten.some((r) => r.attackId === 'policy_backup_local' && /검증 통과/u.test(r.observed)));
-    assert.ok(ten.length <= 20);
-    const eleven = await runAttackChecks({ ...cfg, step: 11, originalApiUrl: 'https://abcdefghij.supabase.co/rest/v1/notes', repoUrl: real.repoUrl, allowedRoutes: real.allowedRoutes, policyRevision: real.policyRevision });
-    assert.ok(eleven.some((r) => r.attackId === 'device_gate_local' && /자료 열기 불가/u.test(r.observed) && /승인 대기 닫힘/u.test(r.observed)));
-    assert.ok(eleven.length <= 20 && eleven.every((r) => r.observed.length <= 300));
-    await assert.rejects(runAttackChecks({ ...cfg, identityProvider: { issuer: 'https://REPLACE-X.supabase.co/auth/v1' } }));
+    const [result] = await runAttackChecks(config);
+    assert.equal(requestUrl, 'https://student-defense.vercel.app/data.json');
+    assert.equal(options.redirect, 'error');
+    assert.match(result.observed, /확인 표시가 보임/u);
+    globalThis.fetch = async () => new Response('<html>not the data</html>', { status: 200 });
+    const [failed] = await runAttackChecks(config);
+    assert.match(failed.observed, /보이지 않음/u);
   } finally {
     globalThis.fetch = originalFetch;
   }
