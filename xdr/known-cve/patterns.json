@@ -1,0 +1,42 @@
+{
+  "schema": "xdr.known-cve.patterns.v1",
+  "source": "CVE-2021-44228 형태 요청 / MITRE ATT&CK T1190 Exploit Public-Facing Application (https://attack.mitre.org/techniques/T1190/)",
+  "thresholdNote": "규칙 수준·반복 횟수 기준 숫자는 학습용 가정입니다. 이 파일은 근거 설명용이고 실제 판정 기준은 단일 파일 decide.mjs 안에 있습니다.",
+  "patterns": [
+    {
+      "id": "remote_lookup_in_header",
+      "name": "요청 머리글 안의 원격 조회 구문(jndi 형태)",
+      "mitre": { "id": "T1190", "name": "Exploit Public-Facing Application" },
+      "condition": "User-Agent·Referer·X-Forwarded-For 같은 요청 머리글 값에 ${jndi:...} 모양의 원격 조회 구문이 들어 있음",
+      "evidence": "CVE-2021-44228: 오래된 로그 라이브러리가 머리글 값 속 조회 구문을 풀어 바깥 서버에서 코드를 불러오는 취약점이며, 이 모양의 머리글은 그 악용 시도의 대표 신호입니다."
+    },
+    {
+      "id": "remote_lookup_in_args",
+      "name": "요청 인자 안의 원격 조회 구문(jndi 형태)",
+      "mitre": { "id": "T1190", "name": "Exploit Public-Facing Application" },
+      "condition": "요청 주소의 질의 문자열이나 본문 인자에 ${jndi:...} 모양(퍼센트 인코딩 포함)의 원격 조회 구문이 들어 있음",
+      "evidence": "CVE-2021-44228: 로그에 남는 사용자 입력 어디든 같은 조회 구문이 풀리므로 인자 안의 이 모양도 같은 악용 시도입니다."
+    },
+    {
+      "id": "obfuscated_lookup",
+      "name": "글자를 쪼갠 조회 구문(우회 표기)",
+      "mitre": { "id": "T1190", "name": "Exploit Public-Facing Application" },
+      "condition": "${${lower:j}ndi:...} 처럼 중첩 치환으로 jndi 글자를 숨긴 조회 구문이 들어 있음",
+      "evidence": "CVE-2021-44228: 단순 문자열 차단을 피하려고 중첩 치환으로 같은 조회 구문을 만드는 우회가 널리 알려져 있어 같은 악용 시도로 봅니다."
+    },
+    {
+      "id": "vuln_scanner_trace",
+      "name": "알려진 취약점 점검 도구의 흔적",
+      "mitre": { "id": "T1190", "name": "Exploit Public-Facing Application" },
+      "condition": "User-Agent 나 요청 주소에 log4j-scan, nuclei, interactsh 같은 공개 점검 도구 이름이 보임 (조회 구문이 함께 있으면 확신도 상승)",
+      "evidence": "T1190: 공개된 취약점 점검 도구로 외부 공개 앱을 훑는 것은 악용 전 정찰 신호이지만, 도구 흔적만으로는 점검일 수도 있어 알림까지만 합니다."
+    },
+    {
+      "id": "described_lookup_signal",
+      "name": "경보 설명이 알려 주는 원격 조회 표기",
+      "mitre": { "id": "T1190", "name": "Exploit Public-Facing Application" },
+      "condition": "요청 원문이 없는 요약 경보의 설명에 원격 조회 구문·jndi 형태가 같은 주소에서 반복됐다고 적혀 있음",
+      "evidence": "CVE-2021-44228 형태 요청 경보는 설명에 같은 표기를 남기므로, 원문이 없을 때는 반복 횟수와 규칙 수준으로 악용 여부를 가늠합니다."
+    }
+  ]
+}

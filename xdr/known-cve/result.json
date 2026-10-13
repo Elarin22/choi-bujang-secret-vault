@@ -1,0 +1,95 @@
+{
+  "schema": "aleph.xdr.result.v1",
+  "moduleKey": "known-cve",
+  "decisions": [
+    {
+      "alertId": "kc-01",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 12, 조회 구문 확인 (CVE-2021-44228 머리글 악용 신호)"
+    },
+    {
+      "alertId": "kc-02",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "remote_lookup_in_args: 요청 인자 안의 원격 조회 구문(jndi 형태) - 규칙 수준 13, 조회 구문 확인 (CVE-2021-44228 인자 악용 신호)"
+    },
+    {
+      "alertId": "kc-03",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 12, 조회 구문 확인, 점검 도구 흔적 동반 (CVE-2021-44228 머리글 악용 신호)"
+    },
+    {
+      "alertId": "kc-04",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 11, 조회 구문 확인 (CVE-2021-44228 머리글 악용 신호)"
+    },
+    {
+      "alertId": "kc-05",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "remote_lookup_in_args: 요청 인자 안의 원격 조회 구문(jndi 형태) - 규칙 수준 14, 조회 구문 확인 (CVE-2021-44228 인자 악용 신호)"
+    },
+    {
+      "alertId": "kc-06",
+      "action": "block",
+      "confidence": 0.95,
+      "reason": "remote_lookup_in_args: 요청 인자 안의 원격 조회 구문(jndi 형태) - 규칙 수준 12, 조회 구문 확인 (CVE-2021-44228 인자 악용 신호)"
+    },
+    {
+      "alertId": "kc-07",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "described_lookup_signal: 경보 설명이 알려 주는 원격 조회 표기 - 낱말만 닮음, 조회 구문 모양은 없음 (CVE-2021-44228 형태 요청 경보 설명)"
+    },
+    {
+      "alertId": "kc-08",
+      "action": "alert",
+      "confidence": 0.6,
+      "reason": "vuln_scanner_trace: 알려진 취약점 점검 도구의 흔적 - 점검 도구 흔적만 있고 조회 구문은 없음 (T1190 점검 도구 정찰 신호)"
+    },
+    {
+      "alertId": "kc-09",
+      "action": "alert",
+      "confidence": 0.5,
+      "reason": "described_lookup_signal: 경보 설명이 알려 주는 원격 조회 표기 - 낱말만 닮음, 조회 구문 모양은 없음 (CVE-2021-44228 형태 요청 경보 설명)"
+    },
+    {
+      "alertId": "kc-10",
+      "action": "alert",
+      "confidence": 0.7,
+      "reason": "remote_lookup_in_header: 요청 머리글 안의 원격 조회 구문(jndi 형태) - 규칙 수준 9, 반복·근거 부족 (CVE-2021-44228 머리글 악용 신호)"
+    },
+    {
+      "alertId": "kc-11",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_request: 알려진 악용 형태 아님"
+    },
+    {
+      "alertId": "kc-12",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_request: 알려진 악용 형태 아님"
+    },
+    {
+      "alertId": "kc-13",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_request: 알려진 악용 형태 아님"
+    },
+    {
+      "alertId": "kc-14",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "normal_request: 알려진 악용 형태 아님"
+    }
+  ],
+  "counts": {
+    "block": 6,
+    "alert": 4,
+    "record": 4
+  }
+}
