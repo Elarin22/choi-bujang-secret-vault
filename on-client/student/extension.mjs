@@ -1,6 +1,12 @@
 // 이 파일은 학생이 같은 프로젝트에서 이어서 구현합니다.
 // 제공 UI를 받은 것만으로 단계 완료를 인정하지 않습니다.
 export function createStudentView() {
+  let eventFilters = { kind: 'all', appId: 'all', access: 'all', expandedId: null };
+  let eventDataSignature = null;
+  const resetEventView = () => {
+    eventFilters = { kind: 'all', appId: 'all', access: 'all', expandedId: null };
+  };
+
   return {
     renderIdentity({ me, devices, sessions } = {}) {
       const root = document.createElement('section');
@@ -146,7 +152,155 @@ export function createStudentView() {
       if (decision === 'challenge') addText('p', '이 앱이 추가 인증 또는 확인 절차를 대신 수행하지 않습니다.');
       return root;
     },
-    renderEvents() { return '학생 구현 대기: 본인 접속·XDR 기록을 연결하세요.'; },
+    renderEvents({ status, mode, data, error } = {}) {
+      const root = document.createElement('section');
+      root.className = 'student-events';
+      root.setAttribute('aria-label', '학생 구현: 내 접속 기록과 XDR 경보');
+      const make = (tag, text, className) => {
+        const element = document.createElement(tag);
+        if (text !== undefined && text !== null) element.textContent = text;
+        if (className) element.className = className;
+        return element;
+      };
+      const title = make('h3', '내 접속 기록과 XDR 경보');
+      root.append(title);
+
+      if (status === 'loading') {
+        resetEventView();
+        eventDataSignature = null;
+        root.append(make('p', '기록을 불러오는 중', 'student-events-loading'));
+        return root;
+      }
+      if (status === 'error') {
+        resetEventView();
+        eventDataSignature = null;
+        const message = error?.message || '오류 내용을 확인할 수 없습니다.';
+        if (error?.code === 'CONTRACT_MISMATCH' || error?.code === 'ENGINE_RESULT_UNVERIFIED') {
+          root.append(make('p', `기록 확인 불가: ${message}`, 'student-events-unknown'));
+        } else {
+          root.append(make('p', `기록을 불러오지 못했습니다: ${message}`, 'student-events-error'));
+        }
+        return root;
+      }
+      if (status !== 'ok' || !Array.isArray(data)) {
+        resetEventView();
+        eventDataSignature = null;
+        root.append(make('p', '기록 확인 불가', 'student-events-unknown'));
+        return root;
+      }
+
+      const signature = JSON.stringify(data);
+      if (signature !== eventDataSignature) resetEventView();
+      eventDataSignature = signature;
+      root.append(make('p', '서버가 전달한 본인 기록만 표시합니다. 전체 로그나 다른 사용자 기록은 아닙니다.', 'student-events-scope'));
+      if (mode === 'demo') root.append(make('p', '예제 자료', 'student-events-mode'));
+
+      const accessLabels = { allowed: '접근 허용', denied: '접근 거부', unknown: '확인 불가' };
+      const sessionLabels = { active: '활성', expired: '만료', revoked: '철회됨', unknown: '확인 불가' };
+      const deviceLabels = { compliant: '보안 기준 충족', noncompliant: '보안 기준 미충족', unknown: '확인 불가' };
+      const stateText = (kind, value) => {
+        const labels = { access: accessLabels, session: sessionLabels, device: deviceLabels }[kind];
+        if (typeof value === 'string' && Object.hasOwn(labels, value)) return `${labels[value]} (${value})`;
+        return `확인 불가 (unknown${value == null ? '' : `; 원래 값: ${String(value)}`})`;
+      };
+      const kindText = (kind) => ({ access: '접속 기록', xdr: 'XDR 경보' }[kind] || `확인 불가 (${String(kind)})`);
+      const appText = (appId) => appId ? String(appId) : '앱을 확인할 수 없음 (appId 없음)';
+      const sortedEvents = [...data].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+
+      const filterRow = make('div', undefined, 'student-events-filters');
+      const choices = [
+        { key: 'kind', label: '기록 종류', values: [...new Set(data.map((event) => event.kind))].sort(), text: kindText },
+        { key: 'appId', label: '업무 앱', values: [...new Set(data.map((event) => event.appId).filter((value) => typeof value === 'string'))].sort(), text: (value) => value },
+        { key: 'access', label: '접속 상태', values: [...new Set(data.map((event) => event.state?.access))].filter((value) => typeof value === 'string').sort(), text: (value) => stateText('access', value) },
+      ];
+      for (const choice of choices) {
+        const label = make('label', choice.label, 'student-events-filter');
+        const select = document.createElement('select');
+        select.setAttribute('aria-label', choice.label);
+        const allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = '전체';
+        select.append(allOption);
+        for (const value of choice.values) {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = choice.text(value);
+          select.append(option);
+        }
+        select.value = eventFilters[choice.key];
+        select.addEventListener('change', () => {
+          eventFilters[choice.key] = select.value;
+          eventFilters.expandedId = null;
+          drawList();
+        });
+        label.append(select);
+        filterRow.append(label);
+      }
+      root.append(filterRow);
+
+      const list = make('ul', undefined, 'student-events-list');
+      root.append(list);
+      const addTextRows = (parent, heading, rows) => {
+        parent.append(make('h4', heading));
+        if (!Array.isArray(rows) || rows.length === 0) {
+          parent.append(make('p', '없음'));
+          return;
+        }
+        const items = make('ul');
+        for (const row of rows) items.append(make('li', `${row.id || 'ID 확인 불가'}: ${row.text ?? ''}`));
+        parent.append(items);
+      };
+      const detailFor = (event) => {
+        const detail = make('section', undefined, 'student-event-detail');
+        detail.setAttribute('data-student-event-detail', event.id);
+        detail.hidden = eventFilters.expandedId !== event.id;
+        detail.append(make('h4', '기록 상세'));
+        detail.append(make('p', `사건 ID: ${event.id}`));
+        detail.append(make('p', `업무 앱: ${appText(event.appId)}`));
+        addTextRows(detail, '근거', event.evidence);
+        addTextRows(detail, '규칙', event.rules);
+        detail.append(make('h4', '현재 상태'));
+        for (const [key, label] of [['access', '접속'], ['session', '세션'], ['device', '기기']]) {
+          detail.append(make('p', `${label}: ${stateText(key, event.state?.[key])}`));
+        }
+        return detail;
+      };
+      function drawList() {
+        list.replaceChildren();
+        const visible = sortedEvents.filter((event) =>
+          (eventFilters.kind === 'all' || event.kind === eventFilters.kind)
+          && (eventFilters.appId === 'all' || event.appId === eventFilters.appId)
+          && (eventFilters.access === 'all' || event.state?.access === eventFilters.access));
+        if (visible.length === 0) {
+          list.append(make('li', '선택한 조건에 맞는 기록이 없습니다.', 'student-events-filter-empty'));
+          return;
+        }
+        for (const event of visible) {
+          const item = make('li', undefined, 'student-event');
+          item.setAttribute('data-student-event-id', event.id);
+          item.append(make('h4', event.summary || '요약 없음'));
+          item.append(make('p', `사건 ID: ${event.id} · 시각: ${event.at} · 종류: ${kindText(event.kind)} · 업무 앱: ${appText(event.appId)}`));
+          const button = make('button', '상세 보기', 'student-event-detail-button');
+          button.type = 'button';
+          button.setAttribute('aria-label', `${event.id} 상세`);
+          button.setAttribute('aria-expanded', eventFilters.expandedId === event.id ? 'true' : 'false');
+          const detail = detailFor(event);
+          button.addEventListener('click', () => {
+            eventFilters.expandedId = eventFilters.expandedId === event.id ? null : event.id;
+            detail.hidden = eventFilters.expandedId !== event.id;
+            button.setAttribute('aria-expanded', detail.hidden ? 'false' : 'true');
+          });
+          item.append(button, detail);
+          list.append(item);
+        }
+      }
+      drawList();
+      if (data.length === 0) {
+        filterRow.hidden = true;
+        list.replaceChildren(make('li', '표시할 기록이 없습니다.', 'student-events-empty'));
+      }
+      return root;
+    },
     renderStatus() { return '학생 구현 대기: 기기·세션·알림과 연결 점검 상태를 구분하세요.'; },
     renderVulnerabilities() { return '학생 구현 대기: 정확한 설치 버전·OSV 출처·조회 시각·부분 결과·조회 실패를 구분하세요.'; },
     renderAiConnection() { return '학생 구현 대기: 모델 응답 점검과 실제 사건 설명을 구분하고 AI 오류·취소·수동 복구를 안내하세요.'; },
