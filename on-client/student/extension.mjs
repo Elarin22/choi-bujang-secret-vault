@@ -64,12 +64,12 @@ export function createStudentView() {
       root.append(deviceSection);
       if (me?.status === 'ok' && me.data?.device) {
         const device = me.data.device;
-        deviceSection.append(node('p', `현재 기기: ${device.label || '이름 확인 불가'} · ID: ${device.id || '확인 불가'} · ${deviceStatus(device.status)}`));
+        deviceSection.append(node('p', `현재 기기: ${device.label || '이름 확인 불가'} · ID: ${device.id || '확인 불가'} · ${deviceStatus(device.status)} (${device.status || 'unknown'})`));
       }
       if (addResourceState(deviceSection, devices, '기기 목록')) {
         const list = node('ul', null, 'student-identity-list');
         for (const device of Array.isArray(devices.data) ? devices.data : []) {
-          list.append(node('li', `${device.label || '이름 확인 불가'} · ID: ${device.id || '확인 불가'} · ${deviceStatus(device.status)}`));
+          list.append(node('li', `${device.label || '이름 확인 불가'} · ID: ${device.id || '확인 불가'} · ${deviceStatus(device.status)} (${device.status || 'unknown'})`));
         }
         if (!list.childNodes.length) deviceSection.append(node('p', '표시할 기기가 없습니다.'));
         else deviceSection.append(list);
@@ -80,12 +80,12 @@ export function createStudentView() {
       root.append(sessionSection);
       if (me?.status === 'ok' && me.data?.session) {
         const session = me.data.session;
-        sessionSection.append(node('p', `현재 세션: ID ${session.id || '확인 불가'} · ${sessionStatus(session.status)}`));
+        sessionSection.append(node('p', `현재 세션: ID ${session.id || '확인 불가'} · ${sessionStatus(session.status)} (${session.status || 'unknown'})`));
       }
       if (addResourceState(sessionSection, sessions, '세션 목록')) {
         const list = node('ul', null, 'student-identity-list');
         for (const session of Array.isArray(sessions.data) ? sessions.data : []) {
-          list.append(node('li', `ID: ${session.id || '확인 불가'} · ${sessionStatus(session.status)}`));
+          list.append(node('li', `ID: ${session.id || '확인 불가'} · ${sessionStatus(session.status)} (${session.status || 'unknown'})`));
         }
         if (!list.childNodes.length) sessionSection.append(node('p', '표시할 세션이 없습니다.'));
         else sessionSection.append(list);
