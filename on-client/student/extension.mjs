@@ -488,8 +488,126 @@ export function createStudentView() {
       return root;
     },
     renderVulnerabilities() { return '학생 구현 대기: 정확한 설치 버전·OSV 출처·조회 시각·부분 결과·조회 실패를 구분하세요.'; },
-    renderAiConnection() { return '학생 구현 대기: 모델 응답 점검과 실제 사건 설명을 구분하고 AI 오류·취소·수동 복구를 안내하세요.'; },
-    renderExplanation() { return '학생 구현 대기: 선택한 사건의 근거·규칙·현재 상태와 AI 설명을 연결하세요. 제안은 자동 실행하지 않습니다.'; },
+    renderAiConnection({ status, data, error, checkedAt } = {}) {
+      const root = document.createElement('section');
+      root.className = 'student-ai-connection';
+      root.setAttribute('aria-label', '학생 구현: AI 연결 점검');
+
+      const addText = (tag, text, className) => {
+        const element = document.createElement(tag);
+        element.textContent = text;
+        if (className) element.className = className;
+        root.append(element);
+      };
+      const safeCode = (value) => typeof value === 'string' && /^[A-Z0-9_:-]{1,80}$/.test(value)
+        ? value
+        : 'AI_REQUEST_UNVERIFIED';
+      const safeMessage = typeof error?.message === 'string' && error.message.trim()
+        ? error.message
+        : '오류 내용을 확인할 수 없습니다.';
+
+      addText('h3', 'AI 연결 점검');
+      if (status === 'idle') {
+        addText('p', 'AI 연결 점검 전', 'student-ai-connection-idle');
+        addText('p', '다시 점검하려면 위쪽의 현재 API 연결 점검 버튼을 직접 누르세요.');
+        return root;
+      }
+      if (status === 'loading') {
+        addText('p', 'AI 연결 점검 중', 'student-ai-connection-loading');
+        addText('p', '요청을 자동으로 다시 보내지 않습니다.');
+        return root;
+      }
+      if (status === 'error') {
+        const code = safeCode(error?.code);
+        addText('p', `요청 실패 (${code}): ${safeMessage}`, 'student-ai-connection-error');
+        addText('p', '이 상태는 접근 거부 판정이 아니라 AI 연결 점검 실패입니다.');
+
+        const guidance = {
+          ON_AI_PROVISIONING_PENDING: '담당자에게 계정 연결과 앱 권한 확인을 요청하세요.',
+          WB_CLCO_AUTH_REQUIRED: '계정 연결을 다시 확인하고 담당자에게 확인을 요청하세요.',
+          WB_CLCO_ACCESS_BLOCKED: '계정 연결을 다시 확인하고 담당자에게 앱 권한 확인을 요청하세요.',
+          ON_AI_AUTHORIZATION_CHANGED: '계정 연결을 다시 확인하고 담당자에게 앱 권한 확인을 요청하세요.',
+          WB_CLCO_COHORT_BUDGET_EXHAUSTED: '반 사용량을 담당자에게 확인하세요.',
+          WB_CLCO_LIMIT_REACHED: '이용 한도를 담당자에게 확인하세요.',
+          WB_CLCO_RATE_LIMITED: '요청 제한입니다. 잠시 뒤 직접 다시 점검하세요.',
+          WB_CLCO_SESSION_CLOSED: '이용 시간을 확인하세요.',
+          WB_CLCO_TIMEOUT: '시간 초과입니다. 잠시 뒤 직접 다시 점검하세요.',
+          REQUEST_TIMEOUT: '시간 초과입니다. 잠시 뒤 직접 다시 점검하세요.',
+          ENGINE_TIMEOUT: '시간 초과입니다. 잠시 뒤 직접 다시 점검하세요.',
+          TIMEOUT: '시간 초과입니다. 잠시 뒤 직접 다시 점검하세요.',
+          NETWORK_ERROR: '네트워크 오류입니다. 연결을 확인하고 잠시 뒤 직접 다시 점검하세요.',
+          WB_CLCO_CANCELLED: '취소됨. 이전 결과는 현재 결과가 아닙니다.',
+          CANCELLED: '취소됨. 이전 결과는 현재 결과가 아닙니다.',
+          REQUEST_CANCELLED: '취소됨. 이전 결과는 현재 결과가 아닙니다.',
+          MODEL_NOT_CONFIGURED: '담당자에게 사용할 모델 허용 설정 확인을 요청하세요.',
+          ON_AI_MODEL_LIST_EMPTY: '담당자에게 모델 허용 설정 확인을 요청하세요.',
+        }[code];
+        if (guidance) addText('p', guidance, 'student-ai-connection-guidance');
+        else addText('p', '원인을 확인할 수 없습니다. 담당자에게 확인을 요청하세요.', 'student-ai-connection-guidance');
+        addText('p', '다시 점검은 사용자가 위쪽 버튼을 직접 눌러야 합니다.');
+        return root;
+      }
+      if (status === 'ok') {
+        const authorization = data?.audienceAuthorization;
+        const authorizationLabel = authorization === 'test'
+          ? '시험 연결 점검(test)'
+          : authorization === 'verified'
+            ? '앱 권한 확인 후 점검(verified)'
+            : '확인 불가(unknown)';
+        const modelCount = Number.isFinite(data?.modelCount) ? String(data.modelCount) : '확인 불가';
+        const time = typeof checkedAt === 'string' && checkedAt ? checkedAt : '확인 불가';
+
+        addText('p', `점검 결과: ${authorizationLabel}`, 'student-ai-connection-result');
+        if (data?.transportChecked === true) addText('p', '앱 서버를 통한 연결 경로 점검 완료');
+        addText('p', `사용 가능한 모델 수: ${modelCount}`);
+        addText('p', `점검 시각: ${time}`);
+        addText('p', '연결만 점검했으며 사건 설명은 아직 실행하지 않았습니다.');
+        return root;
+      }
+
+      addText('p', 'AI 연결 점검 확인 불가', 'student-ai-connection-unknown');
+      addText('p', '다시 점검하려면 위쪽의 현재 API 연결 점검 버튼을 직접 누르세요.');
+      return root;
+    },
+    renderExplanation({ event, explanation, checkedAt } = {}) {
+      const root = document.createElement('section');
+      root.className = 'student-explanation';
+      root.setAttribute('aria-label', '학생 구현: 사건 설명');
+      const addText = (tag, text, className) => {
+        const element = document.createElement(tag);
+        element.textContent = text;
+        if (className) element.className = className;
+        root.append(element);
+      };
+      const safeCode = (value) => typeof value === 'string' && /^[A-Z0-9_:-]{1,80}$/.test(value)
+        ? value
+        : 'AI_REQUEST_UNVERIFIED';
+
+      addText('h3', '사건 설명');
+      if (explanation?.status === 'ok' && event?.id != null) {
+        const eventId = String(event.id);
+        root.setAttribute('data-student-explanation-event', eventId);
+        addText('p', `사건 ID: ${eventId}`);
+        addText('p', `설명: ${typeof explanation.data?.summary === 'string' ? explanation.data.summary : '설명을 확인할 수 없습니다.'}`);
+        if (typeof checkedAt === 'string' && checkedAt) addText('p', `설명 확인 시각: ${checkedAt}`);
+        return root;
+      }
+      if (explanation?.status === 'error') {
+        const code = safeCode(explanation.error?.code);
+        const message = typeof explanation.error?.message === 'string' && explanation.error.message.trim()
+          ? explanation.error.message
+          : '오류 내용을 확인할 수 없습니다.';
+        addText('p', `사건 설명 실패 (${code}): ${message}`, 'student-explanation-error');
+        addText('p', '기록은 그대로 유지됩니다.');
+        return root;
+      }
+      if (explanation?.status === 'loading') {
+        addText('p', '사건 설명을 요청하는 중입니다.', 'student-explanation-loading');
+        return root;
+      }
+      addText('p', event?.id != null ? '사건 설명을 아직 요청하지 않았습니다.' : '사건을 선택하면 설명 상태를 표시합니다.');
+      return root;
+    },
     renderAction() { return '학생 구현 대기: 현재 사건·조치·실제 대상·사람 확인·ACK와 원천 효과·unknown을 구분하세요.'; },
   };
 }
