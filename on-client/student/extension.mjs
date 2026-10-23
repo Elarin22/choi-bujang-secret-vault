@@ -714,6 +714,90 @@ export function createStudentView() {
       }
       return root;
     },
-    renderAction() { return '학생 구현 대기: 현재 사건·조치·실제 대상·사람 확인·ACK와 원천 효과·unknown을 구분하세요.'; },
+    renderAction({ status = 'idle', event = null, actionId = null, target = null, receipt = null, observation = null, message = '', confirmationExpiresAt = null, error = null } = {}) {
+      const root = document.createElement('section');
+      root.className = 'student-action';
+      root.setAttribute('aria-label', '학생 구현: 조치 상태');
+      const addText = (tag, text, className) => {
+        const element = document.createElement(tag);
+        element.textContent = text;
+        if (className) element.className = className;
+        root.append(element);
+        return element;
+      };
+      const hasValue = (value) => value !== null && value !== undefined && value !== '';
+      const rawStatus = typeof status === 'string' ? status : 'unknown';
+      const labels = {
+        idle: '아직 미실행(idle)',
+        loading: '조치 상태 확인 중(loading) · 결과 미확인',
+        prepared: '준비됨·미실행(prepared)',
+        executing: '서버에 전달 중(executing) · 결과가 아직 확인되지 않았습니다',
+        pending: '서버 접수·처리 중(pending) · 접수(ACK)는 효과 확인이 아닙니다',
+        denied: '연동 시스템 거절(denied)',
+        failed: '연동 시스템 실패(failed)',
+        unknown: '결과 불명(unknown) · 효과 없음으로 판단할 수 없습니다',
+        expired: '확인 기한 지남(expired) · 다시 준비해야 합니다',
+        error: '요청이 처리되지 않았습니다(error)',
+      };
+      const effectConfirmed = rawStatus === 'succeeded' && observation?.effectApplied === true;
+      if (effectConfirmed) {
+        addText('p', '효과 확인(succeeded)', 'student-action-observed');
+        if (hasValue(observation.observedAt)) addText('p', `관측 시각: ${String(observation.observedAt)}`);
+        addText('p', 'effectApplied: true');
+      } else if (rawStatus === 'succeeded') {
+        addText('p', '결과 불명(unknown) · effectApplied: true가 확인되지 않아 효과를 판단할 수 없습니다', 'student-action-unknown');
+        addText('p', '전달된 상태 코드: succeeded');
+      } else {
+        addText('p', labels[rawStatus] || `결과 불명(unknown) · 원래 상태 코드: ${rawStatus}`, rawStatus === 'denied' || rawStatus === 'failed' || rawStatus === 'error' ? 'student-action-error' : 'student-action-state');
+      }
+
+      if (rawStatus === 'idle') addText('p', '조치가 아직 실행되지 않았습니다. 제공 화면의 조치 준비와 사람 확인 절차를 이용하세요.');
+      if (rawStatus === 'loading' || rawStatus === 'executing' || rawStatus === 'pending') {
+        addText('p', '현재 전달 또는 조회 상태만 표시하며, 연동 시스템의 효과 결과는 아직 확인되지 않았습니다.');
+      }
+      if (rawStatus === 'unknown') addText('p', '효과 없음으로 간주하지 마세요. 제공 화면에서 연동 시스템 결과만 다시 조회하세요.');
+      if (rawStatus === 'expired') addText('p', '이번 확인 기한은 지났습니다. 제공 화면에서 대상을 다시 확인하고 조치를 준비하세요.');
+      if (rawStatus === 'error') {
+        if (hasValue(error?.code)) addText('p', `오류 코드: ${String(error.code)}`);
+        if (hasValue(error?.message)) addText('p', `요청 오류: ${String(error.message)}`);
+        else if (hasValue(message)) addText('p', `요청 오류: ${String(message)}`);
+      }
+      if (rawStatus === 'denied' || rawStatus === 'failed') {
+        if (hasValue(message)) addText('p', `서버 메시지: ${String(message)}`);
+        else addText('p', '연동 시스템이 별도 메시지를 전달하지 않았습니다.');
+      }
+      if (rawStatus === 'loading' && hasValue(message)) addText('p', String(message));
+
+      if (event && hasValue(event.id)) {
+        root.setAttribute('data-student-action-event', String(event.id));
+        addText('p', `사건 ID: ${String(event.id)}`);
+        const evidenceIds = Array.isArray(event.evidence) ? event.evidence.map((item) => item?.id).filter(hasValue) : [];
+        addText('p', `근거 ID: ${evidenceIds.length ? evidenceIds.map(String).join(', ') : '없음'}`);
+      }
+      if (hasValue(actionId)) addText('p', `조치 ID: ${String(actionId)}`);
+      if (target && (hasValue(target.id) || hasValue(target.generation))) {
+        addText('p', `실제 대상 ID: ${hasValue(target.id) ? String(target.id) : '확인 불가'}`);
+        addText('p', `대상 세대: ${hasValue(target.generation) ? String(target.generation) : '확인 불가'}`);
+      }
+      if (receipt) {
+        if (hasValue(receipt.requestId)) {
+          root.setAttribute('data-student-action-request', String(receipt.requestId));
+          addText('p', `요청 ID: ${String(receipt.requestId)}`);
+        }
+        if (hasValue(receipt.receiptId)) addText('p', `접수 ID: ${String(receipt.receiptId)}`);
+        if (hasValue(receipt.version)) addText('p', `영수증 버전: ${String(receipt.version)}`);
+      }
+      if (rawStatus === 'prepared' && hasValue(confirmationExpiresAt)) {
+        addText('p', `사람 확인 기한: ${String(confirmationExpiresAt)}`);
+        addText('p', '준비만 된 상태이며 아직 실행되지 않았습니다. 제공 화면에서 실제 대상과 조치를 확인하세요.');
+      }
+      if (effectConfirmed && hasValue(receipt?.receiptId)) addText('p', `영수증 ID: ${String(receipt.receiptId)}`);
+      if (observation && rawStatus !== 'succeeded' && hasValue(observation.observedAt)) {
+        addText('p', `관측 시각: ${String(observation.observedAt)}`);
+        addText('p', `effectApplied: ${String(observation.effectApplied)}`);
+      }
+      if (rawStatus === 'expired' && hasValue(error?.message)) addText('p', `안내: ${String(error.message)}`);
+      return root;
+    },
   };
 }
