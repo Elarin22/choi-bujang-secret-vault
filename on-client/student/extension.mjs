@@ -688,7 +688,7 @@ export function createStudentView() {
         ['session', '세션', ['active', 'expired', 'revoked', 'unknown']],
         ['device', '기기', ['compliant', 'noncompliant', 'unknown']],
       ];
-      const unknownStates = stateLabels.filter(([key, , allowed]) => !allowed.includes(event.state[key]));
+      const unknownStates = stateLabels.filter(([key, , knownValues]) => event.state[key] === 'unknown' || !knownValues.includes(event.state[key]));
       if (unknownStates.length) {
         for (const [key, label] of unknownStates) addText('p', `${label}: 확인 불가(${String(event.state[key])})`);
       } else {
