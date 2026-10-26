@@ -22,7 +22,7 @@
 
 ## 2. 처음 실행하기
 
-준비할 것: Node.js 22~24(수업 기준 **24.19.0**). 없으면 https://nodejs.org 에서 설치한 뒤 PowerShell 창을 새로 엽니다.
+준비할 것: 앱 package.json에 지정된 Node.js **24.19.0**. 시작 도구의 사전 버전 검사는 package.json의 고정 버전을 대신하지 않습니다. 다른 버전은 지원 기준으로 확인하지 않았습니다. 없으면 https://nodejs.org 에서 24.19.0을 설치한 뒤 PowerShell 창을 새로 엽니다.
 
 1. 파일 탐색기에서 앱 폴더(`on-client`)를 엽니다.
 2. 주소 표시줄에 `powershell`을 입력하고 Enter를 누릅니다. 그 폴더에서 PowerShell 창이 열립니다.
@@ -55,7 +55,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\start-alekov.ps1
 | 화면 메시지 | 할 일 |
 |---|---|
 | `Node.js 가 없습니다` | Node.js 24.19.0을 설치하고 PowerShell 창을 새로 연 뒤 다시 실행합니다. |
-| `지금 Node.js 는 vXX 입니다` | Node.js 22~24 버전을 설치합니다. |
+| `지금 Node.js 는 vXX 입니다` | package.json에 지정된 Node.js 24.19.0을 설치합니다. |
 | `포트 5189 를 다른 프로그램이 쓰고 있습니다` | 그 프로그램은 그대로 둡니다. 명령 끝에 ` -Port 5190`을 붙여 실행하고, 브라우저 주소도 `:5190`으로 엽니다. |
 | `앱 폴더가 아닙니다` 또는 `시작 틀 폴더가 아닙니다` | `on-client` 폴더 안에서 실행했는지 확인합니다. |
 | `바로가기(링크)로 연결된 폴더` | 바로가기나 링크가 아닌 실제 폴더에서 실행합니다. |

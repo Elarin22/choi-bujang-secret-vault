@@ -31,7 +31,7 @@ choi-bujang-secret-vault/              Git 최상위 폴더
 | 항목 | 프로젝트 기준 | 이 PC에서 확인한 값 |
 |---|---|---|
 | Windows PowerShell | `tools/start-alekov.ps1` 실행에 필요 | 사용 가능. PowerShell 버전은 확인하지 않음 |
-| Node.js | 실행 도구는 22~24 지원, 수업 기준 및 앱 `engines`는 24.19.0 | `node --version` → `v24.19.0` |
+| Node.js | 앱 package.json이 지정하고 재현에서 확인한 기준은 24.19.0. 다른 버전은 지원 여부를 확인하지 않음 | node --version → v24.19.0 |
 | 앱 시작 틀 | `on-client/package.json`의 패키지 버전 | `0.2.11` |
 | npm | `npm start` 대체 실행에만 사용. 앱 `package.json`에는 npm 버전 고정 없음 | `npm --version` → `11.17.0` |
 | 브라우저 | 로컬 주소를 여는 브라우저 | 종류·버전 및 화면 동작은 확인하지 않음 |
