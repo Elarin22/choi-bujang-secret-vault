@@ -8,13 +8,13 @@
 |---|---|
 | 저장소 | `https://github.com/Elarin22/choi-bujang-secret-vault.git` |
 | 브랜치 | `main` |
-| 최신 재현 실행 커밋 | edd7a1897b62a10fd14cc65b6c2e165d71d19585 (이전 6e950e4… 기록도 아래에 보존) |
+| 최신 재현 실행 커밋 | ed7239af319c464d9e36acdf36be1e6a9ef04dab (현재 제출 커밋에서 2026-10-26 재실행 완료; 이전 edd7a18… 실행은 이력에 보존) |
 | 코드 버전 | `on-client/package.json`의 `alekov-client-starter` `0.2.11` |
-| 원본 보존 | 원본 작업 폴더를 수정하지 않았고, 확인 당시 작업 트리는 깨끗했습니다. |
+| 재현 격리 | 실행은 원본 작업 폴더와 분리된 별도 clone에서 했습니다. 기록 갱신으로 원본 저장소에는 현재 이 문서 변경이 남아 있습니다. |
 | 원격 상태 | 이번 제출 커밋의 GitHub push 여부와 원격에서의 접근성은 확인하지 않았습니다. |
-| 재현 취득 방법 | 최초 09cc241…과 c0fad73…은 원본 로컬 Git 폴더에서 별도 clone했고, 6e950e4…과 edd7a18…은 별도 detached worktree로 확인했습니다. GitHub에서 clone하지 않아 원격 접근 성공은 확인하지 않았습니다. |
-| 최신 별도 체크아웃 | %USERPROFILE%\Documents\ChatGPT\ALEPH_공방전\repro-22-edd7a1897b62a10fd14cc65b6c2e165d71d19585 — 이 PC의 실제 작업 위치이며, 다른 PC에서는 새 폴더 경로로 바꿉니다. |
-| 최신 체크아웃 확인 | git rev-parse HEAD가 edd7a18…와 일치했고 detached 작업 트리가 깨끗했습니다. 최초 09cc241… 실행 정보는 아래 이력에 보존합니다. |
+| 재현 취득 방법 | 최초 09cc241…과 c0fad73…은 원본 로컬 Git 폴더에서 별도 clone했고, 이후 커밋들은 detached 체크아웃으로 확인했습니다. ed7239af는 원본 저장소를 공유하는 별도 clone에 detached HEAD로 체크아웃해 실행했습니다. GitHub에서 clone하지 않아 원격 접근 성공은 확인하지 않았습니다. |
+| 최신 별도 체크아웃 | C:\Users\user\.codex\.chatgpt-projects\g-p-6acccfe683548191b168fed3b91f6367\repro-ed7239af319c464d9e36acdf36be1e6a9ef04dab — ed7239af를 detached HEAD로 실행한 이 PC의 별도 폴더입니다. |
+| 최신 체크아웃 확인 | git rev-parse HEAD가 제출 커밋 ed7239af319c464d9e36acdf36be1e6a9ef04dab와 일치했고 detached 작업 트리가 깨끗했습니다. 해당 커밋의 실행 결과를 아래 최신 이력에 기록했습니다. |
 
 최초 재현 기준은 `09cc241132f8126d9d270aa5b6a9d2c9dc83b102`이며, 이 기록 문서를 포함한 `f68c666709dad51cc83e519c666c2f56d797f91b`도 별도 폴더에서 추가 실행 확인했습니다. 후속 기록 커밋은 이 문서만 바꾸며 앱 코드·설정은 바꾸지 않습니다. 제출 시 과제 화면에는 실제 최종 커밋 40자리를 입력하고 원문 검토 결과를 확인합니다.
 
@@ -33,7 +33,7 @@
 
 ```powershell
 git clone --no-checkout https://github.com/Elarin22/choi-bujang-secret-vault.git <새 폴더>
-git -C <새 폴더> checkout --detach edd7a1897b62a10fd14cc65b6c2e165d71d19585
+git -C <새 폴더> checkout --detach ed7239af319c464d9e36acdf36be1e6a9ef04dab
 Set-Location <새 폴더>\on-client
 node --version
 npm --version
@@ -96,13 +96,27 @@ d4378376911a44c59c44a64d5dfa4f5424bdc0bd에서 c0fad73fcded15e6301ecad28a2f62d72
 공식 시작 도구 tools/start-alekov.ps1 -Port 5190의 첫 격리 실행은 20초 안에 HTTP 응답을 확인하지 못해 시간 초과로 끝났습니다. 원인을 확정하지 못했습니다. 같은 체크아웃에서 허용된 실행으로 다시 시작했을 때 도구는 http://127.0.0.1:5190/의 HTTP 응답과 서버 시작 메시지를 확인했습니다. 실행 창에서 Ctrl+C로 종료했고 포트 5190이 닫혔습니다. 성공한 결과는 이 재시도에서 관찰한 로컬 서버 시작·종료뿐입니다.
 
 브라우저에서 주소를 열거나 메뉴를 마우스·Tab·Enter로 조작하지 않았습니다. 현재 계정 값, 외부 SDP·XDR·AI 연결, OSV 조회, DB 백업·복원도 확인하지 않았으므로 미확인입니다. 6e950e4…는 c0fad73… 뒤의 재현 기록 문서 변경 커밋이며, 앱 코드·설정은 바뀌지 않았습니다. 해당 커밋의 별도 체크아웃 실행 결과는 아래에 기록했습니다.
-### 이번 제출 커밋 별도 폴더 재현 확인
+### 이전 제출 커밋 edd7a189 별도 폴더 재현 확인
 
-edd7a1897b62a10fd14cc65b6c2e165d71d19585를 원본 작업 폴더와 분리된 repro-22-edd7a1897b62a10fd14cc65b6c2e165d71d19585 작업 트리에 detached HEAD로 체크아웃했습니다. 2026-10-26 10:34경 (UTC+09:00) git rev-parse HEAD가 이 40자리와 일치했고 작업 트리가 깨끗했습니다. Node.js v24.19.0, npm 11.17.0, Git 2.55.0.windows.5를 확인했습니다.
+이전 제출 기준 커밋 edd7a1897b62a10fd14cc65b6c2e165d71d19585를 별도 detached 체크아웃에서 실행했던 기록입니다. 해당 커밋은 현재 제출 커밋 ed7239af319c464d9e36acdf36be1e6a9ef04dab의 부모이며, 현재 제출본의 최신 재현 근거는 아래 ed7239af 기록입니다.
 
 앱 폴더에서 tools/start-alekov.ps1 -Port 5190을 실행했습니다. 시작 도구가 http://127.0.0.1:5190/의 HTTP 응답을 확인하고 서버 시작 메시지를 출력했습니다. 실행 창에서 Ctrl+C로 종료한 뒤 포트 5190이 닫힌 것을 확인했습니다. 이는 해당 제출 커밋에서 확인한 로컬 서버 시작·종료 결과입니다.
 
 브라우저에서 페이지를 열거나 메뉴를 조작하지 않았습니다. 실제 계정 값과 SDP·XDR·AI 연결, OSV 조회, DB 백업·복원은 확인하지 않았으므로 미확인입니다. edd7a18…은 6e950e4… 뒤에 학생 실행 기록만 갱신한 커밋이며 앱 코드·설정은 변경하지 않았습니다. 이 실행을 문서화하는 다음 커밋도 기록 문서만 바뀝니다.
+### 현재 제출 커밋 ed7239af 별도 폴더 재현 확인
+
+현재 제출 커밋 ed7239af319c464d9e36acdf36be1e6a9ef04dab을 원본 작업 폴더와 분리된 아래 폴더에 clone하고 detached HEAD로 체크아웃했습니다.
+
+실제 체크아웃 경로: C:\Users\user\.codex\.chatgpt-projects\g-p-6acccfe683548191b168fed3b91f6367\repro-ed7239af319c464d9e36acdf36be1e6a9ef04dab
+
+2026-10-26 10:48경 (UTC+09:00)에 git rev-parse HEAD가 제출 커밋의 전체 SHA와 일치하고 체크아웃 작업 트리가 깨끗한 것을 확인했습니다. 환경은 Node.js v24.19.0, npm 11.17.0, Git 2.55.0.windows.5였고, on-client/package.json 버전은 0.2.11입니다.
+
+앱 폴더에서 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\start-alekov.ps1 -Port 5190 명령으로 시작했습니다. 시작 도구가 서버 응답을 확인해 시작 메시지를 출력했습니다. 별도로 PowerShell 요청을 보내 http://127.0.0.1:5190/ 응답이 HTTP 200, 콘텐츠 형식이 text/html; charset=utf-8, 본문 크기가 17136바이트임을 확인했습니다. 실행 창에서 Ctrl+C로 종료했고 이후 TCP 연결 확인에서 포트 5190이 더 이상 열려 있지 않았습니다. 종료 후 제출 커밋 체크아웃은 깨끗했습니다.
+
+현재 제출 커밋 ed7239af는 기존 실행 커밋 edd7a189의 바로 다음 커밋입니다. edd7a189와 ed7239af 사이의 변경은 다음 문서 5개뿐입니다: on-client/docs/CONNECTION_TROUBLESHOOT.md, on-client/docs/FINAL_PRODUCT_GUIDE.md, on-client/docs/STUDENT_LAUNCH_GUIDE.md, on-client/docs/STUDENT_RELEASE_RECORD.md, on-client/docs/STUDENT_RUNBOOK.md. on-client/src/, package.json, 실행 설정에는 변경이 없습니다. 따라서 ed7239af 자체를 별도 체크아웃해 실행 확인했고, 앞선 edd7a189의 실행 결과도 코드·버전이 동일한 보조 이력으로 연결됩니다.
+
+브라우저에서 페이지를 열거나 메뉴를 조작하지 않았습니다. 실제 계정 값, SDP·XDR·AI 외부 연결, OSV 조회, DB 백업·복원도 확인하지 않았으므로 미확인입니다. 이 재현 기록의 업데이트는 실행 후 작성됩니다. 이 기록만 후속 커밋으로 반영하는 경우에도 변경 범위는 기록 문서에 한정되며 앱 코드·설정·버전은 ed7239af에서 검증한 것과 같습니다.
+
 ## 3. 데이터 보존·백업·복원 계획과 제한
 
 ### 데이터 범위
