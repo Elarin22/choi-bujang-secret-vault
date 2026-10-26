@@ -1,5 +1,7 @@
 # 22단계 최종 커밋 재현·릴리스 기록
 
+> 최신 별도 폴더 재현의 기준과 관찰은 [STUDENT_CLEAN_REPRODUCTION.md](STUDENT_CLEAN_REPRODUCTION.md)에 분리해 기록했습니다. 아래 절은 이전 실행들의 연혁이며, 현재 실행 결과와 합산하지 않습니다.
+
 ## 1. 기록 범위와 원문 기준
 
 이 문서는 학생이 수행한 로컬 재현 결과와 확인하지 못한 항목을 기록합니다. 서버가 명령을 실행했거나 새 환경을 직접 검증했다는 뜻이 아닙니다. AI의 원문 검토도 실행 성공 증명이 아닙니다.
@@ -8,13 +10,13 @@
 |---|---|
 | 저장소 | `https://github.com/Elarin22/choi-bujang-secret-vault.git` |
 | 브랜치 | `main` |
-| 최신 재현 실행 커밋 | ed7239af319c464d9e36acdf36be1e6a9ef04dab (현재 제출 커밋에서 2026-10-26 재실행 완료; 이전 edd7a18… 실행은 이력에 보존) |
+| 최신 별도 폴더 재현 기록 | [STUDENT_CLEAN_REPRODUCTION.md](STUDENT_CLEAN_REPRODUCTION.md)의 `eeffa481ed2de880260d5b54735420a8d0cb7224` 실행 기록. 후속 문서 커밋과 구분하며, 다른 커밋 결과를 합산하지 않음 |
 | 코드 버전 | `on-client/package.json`의 `alekov-client-starter` `0.2.11` |
 | 재현 격리 | 실행은 원본 작업 폴더와 분리된 별도 clone에서 했습니다. 기록 갱신으로 원본 저장소에는 현재 이 문서 변경이 남아 있습니다. |
 | 원격 상태 | 이번 제출 커밋의 GitHub push 여부와 원격에서의 접근성은 확인하지 않았습니다. |
-| 재현 취득 방법 | 최초 09cc241…과 c0fad73…은 원본 로컬 Git 폴더에서 별도 clone했고, 이후 커밋들은 detached 체크아웃으로 확인했습니다. ed7239af는 원본 저장소를 공유하는 별도 clone에 detached HEAD로 체크아웃해 실행했습니다. GitHub에서 clone하지 않아 원격 접근 성공은 확인하지 않았습니다. |
-| 최신 별도 체크아웃 | C:\Users\user\.codex\.chatgpt-projects\g-p-6acccfe683548191b168fed3b91f6367\repro-ed7239af319c464d9e36acdf36be1e6a9ef04dab — ed7239af를 detached HEAD로 실행한 이 PC의 별도 폴더입니다. |
-| 최신 체크아웃 확인 | git rev-parse HEAD가 제출 커밋 ed7239af319c464d9e36acdf36be1e6a9ef04dab와 일치했고 detached 작업 트리가 깨끗했습니다. 해당 커밋의 실행 결과를 아래 최신 이력에 기록했습니다. |
+| 재현 취득 방법 | 과거 실행은 아래 이력에 보존합니다. 최신 `eeffa481…`은 원본 작업 저장소를 원본으로 새 별도 clone한 뒤 detached HEAD로 실행했습니다. GitHub clone 및 원격 접근은 확인하지 않았습니다. |
+| 최신 별도 체크아웃 | `C:\Users\user\Documents\ChatGPT\ALEPH_공방전\repro-eeffa481ed2de880260d5b54735420a8d0cb7224` — 별도 폴더 재현 위치입니다. 상세 내용은 `STUDENT_CLEAN_REPRODUCTION.md`에 있습니다. |
+| 최신 체크아웃 확인 | `git rev-parse HEAD`가 `eeffa481ed2de880260d5b54735420a8d0cb7224`와 일치했고 detached 작업 트리가 깨끗했습니다. 앱 시작·종료 관찰은 `STUDENT_CLEAN_REPRODUCTION.md`에 기록했습니다. |
 
 최초 재현 기준은 `09cc241132f8126d9d270aa5b6a9d2c9dc83b102`이며, 이 기록 문서를 포함한 `f68c666709dad51cc83e519c666c2f56d797f91b`도 별도 폴더에서 추가 실행 확인했습니다. 후속 기록 커밋은 이 문서만 바꾸며 앱 코드·설정은 바꾸지 않습니다. 제출 시 과제 화면에는 실제 최종 커밋 40자리를 입력하고 원문 검토 결과를 확인합니다.
 
@@ -33,7 +35,7 @@
 
 ```powershell
 git clone --no-checkout https://github.com/Elarin22/choi-bujang-secret-vault.git <새 폴더>
-git -C <새 폴더> checkout --detach ed7239af319c464d9e36acdf36be1e6a9ef04dab
+git -C <새 폴더> checkout --detach eeffa481ed2de880260d5b54735420a8d0cb7224
 Set-Location <새 폴더>\on-client
 node --version
 npm --version
