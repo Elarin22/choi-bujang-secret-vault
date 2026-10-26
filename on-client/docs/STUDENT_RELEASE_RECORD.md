@@ -8,13 +8,13 @@
 |---|---|
 | 저장소 | `https://github.com/Elarin22/choi-bujang-secret-vault.git` |
 | 브랜치 | `main` |
-| 재현한 코드 커밋 | `09cc241132f8126d9d270aa5b6a9d2c9dc83b102` |
+| 최신 재현 실행 커밋 | c0fad73fcded15e6301ecad28a2f62d7265b9cff (최초 09cc241… 기록도 아래에 보존) |
 | 코드 버전 | `on-client/package.json`의 `alekov-client-starter` `0.2.11` |
 | 원본 보존 | 원본 작업 폴더를 수정하지 않았고, 확인 당시 작업 트리는 깨끗했습니다. |
 | 원격 상태 | 확인 당시 `main`은 `origin/main`보다 1개 커밋 앞섰습니다. 이 커밋의 GitHub push 여부와 원격에서의 접근성은 확인하지 않았습니다. |
 | 재현 취득 방법 | 원본 로컬 Git 폴더를 대상으로 별도 폴더에 clone한 뒤 위 커밋을 detached HEAD로 체크아웃했습니다. GitHub에서 clone하지 않았으므로 원격 접근 성공을 뜻하지 않습니다. |
-| 별도 체크아웃 | `%USERPROFILE%\Documents\ChatGPT\ALEPH_공방전\repro-22-09cc241132f8126d9d270aa5b6a9d2c9dc83b102` — 이 PC의 실제 작업 위치이며, 다른 PC에서는 새 폴더 경로로 바꿉니다. |
-| 체크아웃 확인 | `git rev-parse HEAD`가 위 40자리와 일치했고, detached 작업 트리가 깨끗했습니다. |
+| 최신 별도 체크아웃 | %USERPROFILE%\Documents\ChatGPT\ALEPH_공방전\repro-22-c0fad73fcded15e6301ecad28a2f62d7265b9cff — 이 PC의 실제 작업 위치이며, 다른 PC에서는 새 폴더 경로로 바꿉니다. |
+| 최신 체크아웃 확인 | git rev-parse HEAD가 c0fad73…와 일치했고 detached 작업 트리가 깨끗했습니다. 최초 09cc241… 실행 정보는 아래 이력에 보존합니다. |
 
 최초 재현 기준은 `09cc241132f8126d9d270aa5b6a9d2c9dc83b102`이며, 이 기록 문서를 포함한 `f68c666709dad51cc83e519c666c2f56d797f91b`도 별도 폴더에서 추가 실행 확인했습니다. 후속 기록 커밋은 이 문서만 바꾸며 앱 코드·설정은 바꾸지 않습니다. 제출 시 과제 화면에는 실제 최종 커밋 40자리를 입력하고 원문 검토 결과를 확인합니다.
 
@@ -33,7 +33,7 @@
 
 ```powershell
 git clone --no-checkout https://github.com/Elarin22/choi-bujang-secret-vault.git <새 폴더>
-git -C <새 폴더> checkout --detach 09cc241132f8126d9d270aa5b6a9d2c9dc83b102
+git -C <새 폴더> checkout --detach c0fad73fcded15e6301ecad28a2f62d7265b9cff
 Set-Location <새 폴더>\on-client
 node --version
 npm --version
@@ -82,6 +82,13 @@ Node.js `v24.19.0`, npm `11.17.0`, Git `2.55.0.windows.5`에서 `tools/start-ale
 앱 폴더에서 `tools/start-alekov.ps1 -Port 5190`을 실행했습니다. 기본 포트 `5189`는 이미 사용 중이어서 다른 프로세스를 중지하지 않고 `5190`을 사용했습니다. 시작 도구가 `http://127.0.0.1:5190/`에서 HTTP 응답을 확인하고 서버 시작 메시지를 출력했습니다. 실행한 PowerShell에서 `Ctrl+C`로 종료한 뒤 포트 `5190`이 닫힌 것을 확인했습니다. 이는 제출 기준 커밋의 로컬 서버 시작·종료 확인이며 브라우저 UI·메뉴·외부 연결 검증은 아닙니다.
 
 `d437…`은 `fcb424443ba92852d980a2b7303a7ea59e601bf2` 뒤에 재현 기록만 갱신한 커밋입니다. `09cc241…`과 비교한 앱 폴더 차이는 실행 기록 문서뿐입니다. 이 문서의 다음 변경 커밋은 아직 실행한 것으로 기록하지 않으며, 이전 앱 실행 결과를 새 문서 커밋의 별도 실행으로 합산하지 않습니다.
+### 현재 제출 커밋 별도 폴더 재현 확인
+
+c0fad73fcded15e6301ecad28a2f62d7265b9cff를 원본 작업 폴더와 분리된 repro-22-c0fad73fcded15e6301ecad28a2f62d7265b9cff에 clone하고 detached HEAD로 체크아웃했습니다. 2026-10-26 09:41경 (UTC+09:00) git rev-parse HEAD가 이 40자리와 일치했고 작업 트리가 깨끗했습니다. Node.js v24.19.0, npm 11.17.0, Git 2.55.0.windows.5를 확인했습니다. 앱 폴더에서 tools/start-alekov.ps1 -Port 5190을 실행했습니다. 시작 도구가 http://127.0.0.1:5190/의 HTTP 응답과 서버 시작 메시지를 확인했습니다. Ctrl+C로 종료한 뒤 포트 5190이 닫힌 것을 확인했습니다.
+
+이 재현은 현재 제출 커밋의 로컬 서버 시작·종료 확인입니다. 브라우저에서 주소를 열거나 메뉴를 마우스·Tab·Enter로 조작하지 않았으며, 현재 계정 값·외부 연결·OSV 조회·DB 백업/복원도 확인하지 않았습니다. 따라서 해당 항목은 미확인입니다.
+
+d4378376911a44c59c44a64d5dfa4f5424bdc0bd에서 c0fad73fcded15e6301ecad28a2f62d7265b9cff까지의 변경 파일은 on-client/docs/FINAL_PRODUCT_GUIDE.md와 이 실행 기록 문서뿐이며 앱 코드·설정은 바뀌지 않았습니다. 이 기록을 담을 다음 커밋은 별도의 문서 전용 갱신이며, 아직 실행한 것으로 적지 않습니다. 다음 제출본의 앱 코드는 이 문서에 기록한 c0fad73… 재현 결과와 동일합니다.
 ## 3. 데이터 보존·백업·복원 계획과 제한
 
 ### 데이터 범위
