@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
-  <title>케셰브 · ZTNA &amp; XDR</title>
+  <title>Heeeyaazz · ZTNA &amp; XDR 보안 Agent</title>
   <link rel="stylesheet" href="/style.css">
   <script type="module" src="/app.js"></script>
 </head>
@@ -15,8 +15,8 @@
   <header class="topbar">
     <div class="brand">
       <img class="alekov-art brand-icon" src="/assets/alekov/alekov-app-icon.webp" alt="" aria-hidden="true" width="32" height="32" draggable="false">
-      <span class="brand-mark" id="brand-mark-fallback" aria-hidden="true" hidden>A</span>
-      <span class="brand-name">케셰브 <small>ZTNA &amp; XDR 보안 Agent</small></span>
+      <span class="brand-mark" id="brand-mark-fallback" aria-hidden="true" hidden>H</span>
+      <span class="brand-name">Heeeyaazz <small>ZTNA &amp; XDR 보안 Agent</small></span>
     </div>
     <div class="topbar-status">
       <span id="mode-badge" class="mode-badge" data-mode="loading" role="status" aria-live="polite">상태 확인 중</span>
@@ -45,6 +45,57 @@
 
       <section id="view-protection" class="view" role="tabpanel" aria-labelledby="tab-protection">
         <h1>보호 현황</h1>
+        <section class="dashboard" aria-labelledby="dashboard-title">
+          <h2 id="dashboard-title">보안 요약</h2>
+          <p class="muted dashboard-scope">아래 상태는 서버가 반환한 현재 자료를 요약합니다. 예제 자료는 별도로 표시하며 전체 로그나 새로운 위협 탐지를 뜻하지 않습니다.</p>
+          <div class="dashboard-summary" aria-label="보안 상태 카드 네 개">
+            <article id="dashboard-user-card" class="summary-card" data-state="loading" aria-labelledby="dashboard-user-title">
+              <h3 id="dashboard-user-title">사용자·세션</h3>
+              <p id="dashboard-user-value" class="summary-value">불러오는 중</p>
+              <p id="dashboard-user-detail" class="muted"></p>
+              <span id="dashboard-user-source" class="tag"></span>
+            </article>
+            <article id="dashboard-device-card" class="summary-card" data-state="loading" aria-labelledby="dashboard-device-title">
+              <h3 id="dashboard-device-title">현재 기기</h3>
+              <p id="dashboard-device-value" class="summary-value">불러오는 중</p>
+              <p id="dashboard-device-detail" class="muted"></p>
+              <span id="dashboard-device-source" class="tag"></span>
+            </article>
+            <article id="dashboard-access-card" class="summary-card" data-state="idle" aria-labelledby="dashboard-access-title">
+              <h3 id="dashboard-access-title">업무 앱 판정</h3>
+              <p id="dashboard-access-value" class="summary-value">요청 전</p>
+              <p id="dashboard-access-detail" class="muted">업무 앱 메뉴에서 앱을 선택해 요청하세요.</p>
+              <span id="dashboard-access-source" class="tag">확인 불가</span>
+            </article>
+            <article id="dashboard-source-card" class="summary-card" data-state="loading" aria-labelledby="dashboard-source-title">
+              <h3 id="dashboard-source-title">연결·자료 상태</h3>
+              <p id="dashboard-source-value" class="summary-value">확인 중</p>
+              <p id="dashboard-source-detail" class="muted"></p>
+              <span id="dashboard-source-badge" class="tag">확인 불가</span>
+            </article>
+          </div>
+          <div class="dashboard-lower">
+            <section class="card dashboard-panel" aria-labelledby="dashboard-trend-title">
+              <h3 id="dashboard-trend-title">기록 추이</h3>
+              <p class="muted">화면에 전달된 최근 최대 40건을 날짜별로 집계합니다. 전체 로그나 새 탐지 결과가 아닙니다.</p>
+              <div id="dashboard-trend-status" aria-live="polite"></div>
+              <ol id="dashboard-trend-chart" class="trend-chart" aria-label="조회된 기록의 날짜별 건수"></ol>
+              <p id="dashboard-trend-legend" class="trend-legend" hidden><span>접속 기록</span><span>XDR 경보</span></p>
+              <section class="system-metrics" aria-labelledby="dashboard-system-title">
+                <h4 id="dashboard-system-title">내 PC 상태</h4>
+                <p class="muted system-metrics-note">이 PC에서 직접 읽은 값입니다. 예제 자료 및 SDP 연결과 별도이며 과거 측정값은 저장하지 않습니다. Windows 경고·오류 건수는 침해나 공격 탐지 결과가 아닙니다.</p>
+                <div id="dashboard-system-metrics" aria-live="polite"><p class="muted">측정 전</p></div>
+              </section>
+              <button id="dashboard-open-apps" type="button" class="btn">업무 앱 판정 열기</button>
+            </section>
+            <section class="card dashboard-panel" aria-labelledby="dashboard-events-title">
+              <h3 id="dashboard-events-title">최근 보안 기록</h3>
+              <p class="muted">받은 최근 최대 40건 중 최신 5건입니다. 전체 로그가 아닙니다.</p>
+              <div id="dashboard-recent-events" aria-live="polite"></div>
+              <button id="dashboard-open-records" type="button" class="btn">전체 보안 기록 열기</button>
+            </section>
+          </div>
+        </section>
 
         <div class="grid-2">
           <section class="card provided" aria-labelledby="identity-title">

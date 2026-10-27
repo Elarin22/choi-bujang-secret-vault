@@ -14,6 +14,9 @@ const MODE_LABELS = {
   disconnected: '연결 없음',
   unknown: '연결 상태 확인 불가',
 };
+const DASHBOARD_MODE_LABELS = {
+  connected: '실제 연결 자료', demo: '예제 자료(demo) · 실제 연결 아님', disconnected: '연결 없음', unknown: '확인 불가',
+};
 
 const DECISIONS = {
   allow: { label: '허용', note: '서버가 이 앱 접속을 허용했습니다.' },
@@ -32,7 +35,7 @@ const STATE_NAMES = { access: '접속', session: '세션', device: '기기' };
 
 const KIND_LABELS ={ access: '접속 기록', xdr: 'XDR 사건' };
 
-const STUDENT_GET_PATHS = ['/api/me', '/api/apps', '/api/events', '/api/devices', '/api/sessions', '/api/vulnerabilities'];
+const STUDENT_GET_PATHS = ['/api/me', '/api/apps', '/api/events', '/api/devices', '/api/sessions', '/api/vulnerabilities', '/api/local-system-metrics'];
 
 const RESOURCE_LABELS = {
   me: '로그인 정보',
@@ -53,6 +56,7 @@ const state = {
   events: { status: 'loading' },
   devices: { status: 'loading' },
   sessions: { status: 'loading' },
+  systemMetrics: { status: 'idle' },
   access: { status: 'idle' },
   diagnostics: { status: 'idle' },
   vulnerabilities: { status: 'idle' },
@@ -232,7 +236,11 @@ function loadingBox() {
 function normalizeMeta(meta) {
   const mode = meta && ['connected', 'demo', 'disconnected'].includes(meta.mode) ? meta.mode : 'unknown';
   const checkedAt = meta && typeof meta.checkedAt === 'string' ? meta.checkedAt : null;
-  return { mode, checkedAt };
+  const source = meta && isRecord(meta.sdpConnection) ? meta.sdpConnection : null;
+  const sdpConnection = source && ['connected', 'disconnected', 'unknown'].includes(source.status)
+    ? { status: source.status, reasonCode: typeof source.reasonCode === 'string' ? source.reasonCode : null }
+    : null;
+  return { mode, checkedAt, ...(sdpConnection ? { sdpConnection } : {}) };
 }
 
 function localFailure(code, message, meta = { mode: 'disconnected', checkedAt: null }) {
@@ -372,6 +380,7 @@ function trackError(key, resource) {
   else state.errors.delete(key);
   renderErrors();
   renderStudent('status');
+  renderDashboard();
 }
 
 // 현재 세대에서 끝난 응답의 mode가 모두 같을 때만 그 mode를 표시한다. 섞이거나 없으면 확인 불가.
@@ -391,6 +400,7 @@ function renderMode() {
   badge.textContent = MODE_LABELS[mode];
   $('checked-at').textContent = state.checkedAt ? `확인 시각 ${formatTime(state.checkedAt)}` : '';
   renderStudent('status');
+  renderDashboard();
 }
 
 function renderErrors() {
@@ -438,6 +448,345 @@ function setupNav() {
   }
 }
 
+function setDashboardCard(name, status, value, detail, mode = 'unknown') {
+  const card = $(`dashboard-${name}-card`);
+  if (!card) return;
+  card.dataset.state = status;
+  $(`dashboard-${name}-value`).textContent = value;
+  $(`dashboard-${name}-detail`).textContent = detail;
+  const badge = $(`dashboard-${name}-source`) || $('dashboard-source-badge');
+  if (badge) { badge.textContent = DASHBOARD_MODE_LABELS[mode] || DASHBOARD_MODE_LABELS.unknown; badge.dataset.mode = mode; }
+}
+
+function dashboardEventRows(events) { return [...events].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)); }
+function dashboardDateKey(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '시각 확인 불가';
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function renderDashboardTrend() {
+  const status = $('dashboard-trend-status'), chart = $('dashboard-trend-chart');
+  const legend = $('dashboard-trend-legend'), recent = $('dashboard-recent-events'), resource = state.events;
+  if (!status || !chart || !recent || !legend) return;
+  chart.replaceChildren(); recent.replaceChildren(); legend.hidden = true;
+  if (resource.status === 'loading') {
+    setChildren(status, stateBox('loading', '보안 기록을 불러오는 중입니다.'));
+    setChildren(recent, stateBox('loading', '최근 기록을 불러오는 중입니다.')); return;
+  }
+  if (resource.status === 'error') {
+    const message = resource.error?.message || '원인을 확인할 수 없습니다.';
+    setChildren(status, stateBox('error', `추이를 표시하지 못했습니다: ${message}`));
+    setChildren(recent, stateBox('error', `기록을 불러오지 못했습니다: ${message}`)); return;
+  }
+  const rows = dashboardEventRows(resource.data);
+  const sourceLabel = DASHBOARD_MODE_LABELS[resource.meta?.mode || 'unknown'] || DASHBOARD_MODE_LABELS.unknown;
+  setChildren(status, el('p', { className: 'muted', text: `${sourceLabel} · 받은 기록 ${rows.length}건에서 집계` }));
+  if (rows.length === 0) {
+    setChildren(chart, el('li', { className: 'dashboard-empty', text: '표시할 기록이 없습니다.' }));
+    setChildren(recent, el('p', { className: 'dashboard-empty', text: '표시할 기록이 없습니다.' })); return;
+  }
+  const byDate = new Map();
+  for (const event of rows) {
+    const date = dashboardDateKey(event.at);
+    if (!byDate.has(date)) byDate.set(date, { access: 0, xdr: 0 });
+    const counts = byDate.get(date);
+    if (event.kind === 'access') counts.access += 1;
+    else if (event.kind === 'xdr') counts.xdr += 1;
+  }
+  const dates = [...byDate.entries()].filter(([date]) => date !== '시각 확인 불가').slice(0, 7).reverse();
+  const maxTotal = Math.max(1, ...dates.map(([, count]) => count.access + count.xdr));
+  for (const [date, count] of dates) {
+    const row = el('li', { className: 'trend-row' });
+    row.append(el('time', { className: 'trend-date', text: date }));
+    const track = el('div', { className: 'trend-bar-track', 'aria-hidden': 'true' });
+    const accessBar = el('span', { className: 'trend-bar-access' }), xdrBar = el('span', { className: 'trend-bar-xdr' });
+    accessBar.style.width = `${(count.access / maxTotal) * 100}%`; xdrBar.style.width = `${(count.xdr / maxTotal) * 100}%`;
+    track.append(accessBar, xdrBar);
+    row.append(track, el('span', { className: 'trend-count', text: `접속 기록 ${count.access}건 · XDR 경보 ${count.xdr}건` }));
+    chart.append(row);
+  }
+  if (dates.length > 0) legend.hidden = false;
+  const preview = rows.slice(0, 5).map((event) => {
+    const kindLabel = KIND_LABELS[event.kind] || '종류 확인 불가';
+    const sourceTag = resource.meta?.mode === 'demo'
+      ? el('span', { className: 'tag tag-demo', text: '예제 자료(demo)' })
+      : el('span', { className: 'tag', text: sourceLabel });
+    const main = el('div', { className: 'dashboard-event-main' }, [
+      el('div', { className: 'event-head' }, [el('span', { className: 'tag', text: kindLabel }), sourceTag]),
+      el('p', { text: event.summary || '요약 없음' }),
+      el('p', { className: 'dashboard-event-meta', text: `${formatTime(event.at)} · 앱 ${event.appId || '확인 불가'} · 기록 ${event.id}` }),
+    ]);
+    const button = el('button', { type: 'button', className: 'btn', text: '상세 보기', 'aria-label': `${event.id} 보안 기록 상세 보기`, onclick: () => {
+      selectView('records', { focus: true });
+      const item = [...$('records-list').querySelectorAll('[data-event-id]')].find((candidate) => candidate.dataset.eventId === event.id);
+      item?.querySelector('button')?.focus();
+    } });
+    return el('li', { className: 'dashboard-event' }, [main, button]);
+  });
+  setChildren(recent, el('ol', { className: 'dashboard-events' }, preview));
+}
+
+const SYSTEM_METRIC_LABELS = { cpu: 'CPU 사용률', memory: '메모리', disk: '시스템 드라이브' };
+const SYSTEM_METRIC_NOTES = {
+  cpu: '1초 구간에서 계산한 전체 CPU 사용률 표본입니다.',
+  memory: '운영체제가 보고한 물리 메모리 전체에서 사용 가능 메모리를 뺀 값입니다.',
+  disk: '일반 사용자에게 사용 가능한 시스템 드라이브 공간입니다.',
+};
+
+function validMetricTime(value) {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
+function validLocalMetric(metric, kind) {
+  if (!isRecord(metric) || !['ok', 'unknown'].includes(metric.status) || !validMetricTime(metric.measuredAt)) return false;
+  if (metric.status === 'unknown') return typeof metric.reason === 'string' && metric.reason.length > 0 && metric.reason.length <= 240;
+  if (kind === 'cpu') return Number.isFinite(metric.percent) && metric.percent >= 0 && metric.percent <= 100 && metric.unit === '%' && metric.sampleIntervalMs === 1000;
+  if (kind === 'memory') return [metric.usedBytes, metric.availableBytes, metric.totalBytes].every(Number.isSafeInteger)
+    && metric.usedBytes >= 0 && metric.availableBytes >= 0 && metric.totalBytes > 0
+    && metric.usedBytes + metric.availableBytes === metric.totalBytes && Number.isFinite(metric.usedPercent)
+    && metric.usedPercent >= 0 && metric.usedPercent <= 100 && metric.unit === 'bytes';
+  return kind === 'disk' && typeof metric.volume === 'string' && metric.volume.length <= 8
+    && Number.isSafeInteger(metric.availableBytes) && Number.isSafeInteger(metric.totalBytes)
+    && metric.availableBytes >= 0 && metric.totalBytes > 0 && metric.availableBytes <= metric.totalBytes && metric.unit === 'bytes';
+}
+
+function validLocalSystemMetrics(data) {
+  if (!isRecord(data) || !['cpu', 'memory', 'disk'].every((kind) => validLocalMetric(data[kind], kind))) return false;
+  const validWindowsSection = (section) => isRecord(section) && ['ok', 'unknown'].includes(section.status) && validMetricTime(section.checkedAt)
+    && (section.status === 'unknown' ? typeof section.reasonCode === 'string' : true);
+  const network = data.network;
+  if (!validWindowsSection(network)) return false;
+  if (network.status === 'ok' && (!Array.isArray(network.interfaces) || network.interfaces.length > 64 || network.interfaces.some((row) =>
+    !isRecord(row) || typeof row.name !== 'string' || row.name.length > 256 || typeof row.type !== 'string' || row.type.length > 64
+    || !['ipv4', 'ipv6', 'gateways', 'dnsServers'].every((key) => Array.isArray(row[key]) && row[key].length <= 128 && row[key].every((value) => typeof value === 'string' && value.length <= 128))))) return false;
+  const firewall = data.firewall;
+  if (!validWindowsSection(firewall)) return false;
+  if (firewall.status === 'ok' && (!Array.isArray(firewall.profiles) || firewall.profiles.length !== 3
+    || firewall.profiles.some((row) => !isRecord(row) || !['Domain', 'Private', 'Public'].includes(row.name) || typeof row.enabled !== 'boolean')
+    || new Set(firewall.profiles.map((row) => row.name)).size !== 3)) return false;
+  const events = data.events;
+  if (!isRecord(events) || events.windowHours !== 24 || !validMetricTime(events.windowStart) || !validMetricTime(events.windowEnd)) return false;
+  return ['system', 'application'].every((name) => {
+    const row = events[name];
+    return validWindowsSection(row) && (row.status === 'unknown' || [row.errors, row.warnings].every((value) => Number.isSafeInteger(value) && value >= 0));
+  });
+}
+
+function gibibytes(bytes) {
+  return (bytes / (1024 ** 3)).toFixed(2);
+}
+
+function measuredTime(value) {
+  if (!validMetricTime(value)) return '측정 시각 확인 불가';
+  const date = new Date(value);
+  const offset = -date.getTimezoneOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  const absolute = Math.abs(offset);
+  const zone = `UTC${sign}${String(Math.floor(absolute / 60)).padStart(2, '0')}:${String(absolute % 60).padStart(2, '0')}`;
+  return `${date.toLocaleString('ko-KR')} (${zone})`;
+}
+
+function metricValue(kind, metric) {
+  if (metric.status !== 'ok') return '확인 불가';
+  if (kind === 'cpu') return `${metric.percent.toFixed(1)} %`;
+  if (kind === 'memory') return `사용 ${gibibytes(metric.usedBytes)} GiB / 전체 ${gibibytes(metric.totalBytes)} GiB (${metric.usedPercent.toFixed(1)} %)`;
+  return `${metric.volume} 사용 가능 ${gibibytes(metric.availableBytes)} GiB / 전체 ${gibibytes(metric.totalBytes)} GiB`;
+}
+
+function metricProgress(kind, metric) {
+  if (metric.status !== 'ok') return null;
+  const values = {
+    cpu: { percent: metric.percent, label: 'CPU 사용률', visible: null },
+    memory: { percent: metric.usedPercent, label: '메모리 사용률', visible: null },
+    disk: {
+      percent: (metric.availableBytes / metric.totalBytes) * 100,
+      label: '시스템 드라이브 사용 가능 공간 비율',
+      visible: `사용 가능 비율 ${((metric.availableBytes / metric.totalBytes) * 100).toFixed(1)} %`,
+    },
+  }[kind];
+  if (!values || !Number.isFinite(values.percent) || values.percent < 0 || values.percent > 100) return null;
+  const percentage = values.percent.toFixed(1);
+  return el('div', { className: `system-metric-meter system-metric-meter-${kind}` }, [
+    el('progress', {
+      className: 'system-metric-progress',
+      max: 100,
+      value: percentage,
+      'aria-label': values.label,
+      'aria-valuetext': `${values.label} ${percentage} %`,
+      'data-kind': kind,
+    }),
+    values.visible ? el('p', { className: 'system-metric-meter-label', text: values.visible }) : null,
+  ]);
+}
+
+const LOCAL_STATUS_REASONS = {
+  NETWORK_READ_DENIED: '현재 사용자 권한으로 네트워크 구성을 읽을 수 없습니다.',
+  NETWORK_CIM_UNAVAILABLE: 'Windows CIM에서 네트워크 구성을 확인할 수 없습니다.',
+  NETWORK_QUERY_FAILED: '네트워크 구성을 읽지 못했습니다.',
+  FIREWALL_READ_DENIED: '현재 사용자 권한으로 방화벽 프로필을 읽을 수 없습니다.',
+  FIREWALL_CIM_UNAVAILABLE: 'Windows CIM에서 방화벽 프로필을 확인할 수 없습니다.',
+  FIREWALL_QUERY_FAILED: '방화벽 프로필을 읽지 못했습니다.',
+  EVENT_LOG_READ_DENIED: '현재 사용자에게 이 Windows 로그의 읽기 권한이 없습니다.',
+  EVENT_LOG_CIM_UNAVAILABLE: 'Windows 이벤트 로그 조회 기능을 사용할 수 없습니다.',
+  EVENT_LOG_QUERY_FAILED: 'Windows 이벤트 로그 건수를 읽지 못했습니다.',
+  WINDOWS_ONLY: 'Windows 환경에서만 조회할 수 있습니다.',
+  POWERSHELL_UNAVAILABLE: 'PowerShell을 찾을 수 없어 Windows 상태를 읽지 못했습니다.',
+  WINDOWS_STATUS_TIMEOUT: 'Windows 상태 조회 시간이 초과됐습니다.',
+  WINDOWS_STATUS_INVALID: 'Windows 상태 응답 형식을 확인할 수 없습니다.',
+  WINDOWS_STATUS_QUERY_FAILED: 'Windows 상태 조회를 완료하지 못했습니다.',
+};
+
+function localStatusReason(code) {
+  return LOCAL_STATUS_REASONS[code] || '읽기 권한 또는 Windows 조회 상태를 확인할 수 없습니다.';
+}
+
+function stateSection(title, children) {
+  return el('section', { className: 'local-status-section' }, [el('h5', { text: title }), ...children]);
+}
+
+function statusUnknown(section) {
+  return stateBox('error', `확인 불가: ${localStatusReason(section.reasonCode)}`);
+}
+
+function renderNetworkSection(network) {
+  if (network.status === 'unknown') return stateSection('네트워크 구성', [statusUnknown(network), el('p', { className: 'system-metric-meta', text: `확인 시각: ${measuredTime(network.checkedAt)}` })]);
+  const rows = network.interfaces.map((row) => el('li', { className: 'network-interface' }, [
+    el('strong', { text: `${row.name} (${row.type})` }),
+    el('p', { text: `IPv4: ${row.ipv4.length ? row.ipv4.join(', ') : '설정 항목 없음'}` }),
+    el('p', { text: `IPv6: ${row.ipv6.length ? row.ipv6.join(', ') : '설정 항목 없음'}` }),
+    el('p', { text: `게이트웨이: ${row.gateways.length ? row.gateways.join(', ') : '설정 항목 없음'}` }),
+    el('p', { text: `DNS: ${row.dnsServers.length ? row.dnsServers.join(', ') : '설정 항목 없음'}` }),
+  ]));
+  return stateSection('네트워크 구성', [
+    el('p', { className: 'tag tag-actual', text: `이 PC 실제 조회 · 활성 인터페이스 ${rows.length}개` }),
+    el('p', { className: 'system-metric-meta', text: `측정 시각: ${measuredTime(network.checkedAt)}` }),
+    rows.length ? el('ul', { className: 'network-interface-list' }, rows) : el('p', { className: 'muted', text: '활성 네트워크 인터페이스가 없습니다.' }),
+  ]);
+}
+
+function renderFirewallSection(firewall) {
+  if (firewall.status === 'unknown') return stateSection('방화벽 프로필 (읽기 전용)', [statusUnknown(firewall), el('p', { className: 'system-metric-meta', text: `확인 시각: ${measuredTime(firewall.checkedAt)}` })]);
+  return stateSection('방화벽 프로필 (읽기 전용)', [
+    el('p', { className: 'tag tag-actual', text: '이 PC 실제 조회' }),
+    el('p', { className: 'system-metric-meta', text: `측정 시각: ${measuredTime(firewall.checkedAt)}` }),
+    el('ul', { className: 'firewall-profile-list' }, firewall.profiles.map((profile) => el('li', { text: `${profile.name}: ${profile.enabled ? '사용(Enabled: true)' : '사용 안 함(Enabled: false)'}` }))),
+    el('p', { className: 'muted', text: '방화벽 설정은 조회만 했으며 변경하지 않았습니다.' }),
+  ]);
+}
+
+function renderEventLogRow(title, row) {
+  return el('article', { className: 'event-count-card', 'data-state': row.status }, [
+    el('h6', { text: title }),
+    row.status === 'ok'
+      ? el('p', { className: 'event-count-value', text: `경고 ${row.warnings}건 · 오류 ${row.errors}건` })
+      : el('p', { className: 'event-count-value', text: '확인 불가' }),
+    row.status === 'unknown' ? el('p', { className: 'system-metric-reason', text: localStatusReason(row.reasonCode) }) : null,
+    el('p', { className: 'system-metric-meta', text: `측정 시각: ${measuredTime(row.checkedAt)}` }),
+  ]);
+}
+
+function renderEventLogs(events) {
+  return stateSection('Windows 이벤트 기록 (최근 24시간)', [
+    el('p', { className: 'muted', text: 'System 및 Application 로그의 경고·오류 수준 건수입니다. 침해나 공격 탐지 결과가 아닙니다. 이벤트 내용은 수집하거나 표시하지 않습니다.' }),
+    el('p', { className: 'system-metric-meta', text: `집계 범위: ${measuredTime(events.windowStart)} ~ ${measuredTime(events.windowEnd)}` }),
+    el('div', { className: 'event-count-list' }, [renderEventLogRow('System', events.system), renderEventLogRow('Application', events.application)]),
+  ]);
+}
+
+function renderDashboardSystemMetrics() {
+  const target = $('dashboard-system-metrics');
+  if (!target) return;
+  const resource = state.systemMetrics;
+  if (resource.status === 'loading' || resource.status === 'idle') {
+    setChildren(target, stateBox('loading', resource.status === 'loading' ? '이 PC의 자원 상태를 측정하는 중입니다.' : '아직 측정하지 않았습니다.'));
+    return;
+  }
+  if (resource.status === 'error') {
+    const message = resource.error?.message || '로컬 측정 결과를 받을 수 없습니다.';
+    const unknownRows = ['cpu', 'memory', 'disk'].map((kind) => el('article', { className: 'system-metric', 'data-state': 'unknown' }, [
+      el('h5', { text: SYSTEM_METRIC_LABELS[kind] }),
+      el('p', { className: 'system-metric-value', text: '확인 불가' }),
+      el('p', { className: 'system-metric-reason', text: message }),
+      el('p', { className: 'system-metric-meta', text: '측정 시각 확인 불가' }),
+    ]));
+    setChildren(target, el('div', { className: 'system-metric-list' }, unknownRows),
+      stateSection('네트워크 구성', [stateBox('error', `확인 불가: ${message}`)]),
+      stateSection('방화벽 프로필 (읽기 전용)', [stateBox('error', `확인 불가: ${message}`)]),
+      stateSection('Windows 이벤트 기록 (최근 24시간)', [el('p', { className: 'muted', text: 'System 및 Application 로그의 경고·오류 수준 건수입니다. 침해나 공격 탐지 결과가 아닙니다.' }), stateBox('error', `확인 불가: ${message}`)]));
+    return;
+  }
+  const rows = ['cpu', 'memory', 'disk'].map((kind) => {
+    const metric = resource.data[kind];
+    const ok = metric.status === 'ok';
+    const note = ok ? SYSTEM_METRIC_NOTES[kind] : metric.reason;
+    return el('article', { className: 'system-metric', 'data-state': ok ? 'ok' : 'unknown' }, [
+      el('h5', { text: SYSTEM_METRIC_LABELS[kind] }),
+      el('span', { className: `tag ${ok ? 'tag-actual' : 'tag-unavailable'}`, text: ok ? '이 PC 실제 측정' : '확인 불가' }),
+      el('p', { className: 'system-metric-value', text: metricValue(kind, metric) }),
+      metricProgress(kind, metric),
+      el('p', { className: 'system-metric-meta', text: `측정 시각: ${measuredTime(metric.measuredAt)}` }),
+      el('p', { className: 'system-metric-reason', text: note }),
+    ]);
+  });
+  setChildren(target, el('div', { className: 'system-metric-list' }, rows),
+    renderNetworkSection(resource.data.network),
+    renderFirewallSection(resource.data.firewall),
+    renderEventLogs(resource.data.events));
+}
+
+async function loadLocalSystemMetrics(gen, signal) {
+  const result = await request('/api/local-system-metrics', { signal });
+  if (gen !== generation) return;
+  if (!result.ok) state.systemMetrics = { status: 'error', error: result.error };
+  else if (!validLocalSystemMetrics(result.data)) state.systemMetrics = { status: 'error', error: { message: '서버에서 받은 PC 상태 형식을 확인할 수 없습니다.' } };
+  else state.systemMetrics = { status: 'ok', data: result.data };
+  renderDashboardSystemMetrics();
+}
+
+function renderDashboard() {
+  if (!$('dashboard-user-card')) return;
+  const me = state.me;
+  if (me.status === 'loading') setDashboardCard('user', 'loading', '불러오는 중', '사용자와 세션 정보를 확인하고 있습니다.', me.meta?.mode);
+  else if (me.status === 'error') setDashboardCard('user', 'error', '확인 불가', me.error?.message || '사용자 정보를 불러오지 못했습니다.', me.meta?.mode);
+  else {
+    const { user, session } = me.data;
+    setDashboardCard('user', session.status, user.label || user.id, `사용자 ID ${user.id} · 세션 ${stateLabel('session', session.status)}`, me.meta?.mode);
+  }
+  const devices = state.devices;
+  if (devices.status === 'loading') setDashboardCard('device', 'loading', '불러오는 중', '등록 기기 상태를 확인하고 있습니다.', devices.meta?.mode);
+  else if (devices.status === 'error') setDashboardCard('device', 'error', '확인 불가', devices.error?.message || '기기 정보를 불러오지 못했습니다.', devices.meta?.mode);
+  else if (devices.data.length === 0) setDashboardCard('device', 'unknown', '등록된 기기 없음', '표시할 본인 등록 기기가 없습니다.', devices.meta?.mode);
+  else {
+    const current = devices.data[0];
+    setDashboardCard('device', current.status, current.label || current.id, `기기 ID ${current.id} · ${stateLabel('device', current.status)} · 등록 ${devices.data.length}대`, devices.meta?.mode);
+  }
+  const access = state.access;
+  if (access.status === 'idle') setDashboardCard('access', 'idle', '요청 전', '업무 앱 메뉴에서 앱을 선택해 요청하세요.', access.meta?.mode);
+  else if (access.status === 'loading') setDashboardCard('access', 'loading', '판정 확인 중', `${access.appName || access.appId || '선택한 앱'}의 응답을 기다리고 있습니다.`, access.meta?.mode);
+  else if (access.status === 'error') setDashboardCard('access', 'error', '요청 실패', access.error?.message || '접근 판정을 확인할 수 없습니다.', access.meta?.mode);
+  else {
+    const decision = DECISIONS[access.data.decision] || DECISIONS.unknown;
+    setDashboardCard('access', access.data.decision, `${decision.label} (${access.data.decision})`, `${access.appName || access.data.appId} · ${access.data.reason || '사유 정보 없음'} · ${formatTime(access.data.checkedAt)}`, access.meta?.mode);
+  }
+  const primary = ['me', 'apps', 'events', 'devices', 'sessions'].map((key) => state[key]);
+  if (primary.some((resource) => resource.status === 'loading')) setDashboardCard('source', 'loading', '자료 확인 중', '다시 불러오기가 끝날 때까지 기다려 주세요.', currentMode());
+  else {
+    const mode = currentMode(), errors = [...state.errors.keys()];
+    const sdpConnection = state.me.meta?.sdpConnection;
+    const sdpStatus = sdpConnection?.status || (mode === 'disconnected' || mode === 'demo' ? 'disconnected' : 'unknown');
+    const sdpLabel = sdpStatus === 'connected' ? 'SDP 연결 확인됨' : sdpStatus === 'disconnected' ? 'SDP 미연결' : 'SDP 연결 확인 불가';
+    const reason = sdpConnection?.reasonCode === 'SDP_ADAPTER_NOT_CONFIGURED' ? 'SDP 어댑터가 설정되어 있지 않습니다.'
+      : sdpConnection?.reasonCode === 'SDP_ENGINE_DISCONNECTED' ? 'SDP 엔진이 연결되지 않았습니다.'
+        : sdpConnection?.reasonCode === 'SDP_LIVE_CONNECTION_NOT_VERIFIED' ? 'SDP 서버의 현재 응답을 확인하지 않았습니다.' : '';
+    const detail = [reason, errors.length > 0
+      ? `조회 실패 ${errors.length}건 · ${errors.map((key) => RESOURCE_LABELS[key] || key).join(', ')}`
+      : state.checkedAt ? `확인 시각 ${formatTime(state.checkedAt)}` : '확인 시각 정보 없음'].filter(Boolean).join(' · ');
+    const cardState = sdpStatus === 'connected' ? 'ok' : sdpStatus === 'disconnected' ? (mode === 'demo' ? 'demo' : 'error') : 'unknown';
+    setDashboardCard('source', cardState, sdpLabel, detail, mode);
+  }
+  renderDashboardTrend();
+}
 // ---------- 보호 현황 ----------
 
 function renderAiConnection() {
@@ -867,6 +1216,7 @@ async function requestAccess(appId, appName, button) {
 }
 
 function renderAccess() {
+  renderDashboard();
   const target = $('access-result');
   const access = state.access;
   if (access.status === 'idle') {
@@ -1198,7 +1548,16 @@ function studentData(kind) {
     if (state.events.status === 'ok') for (const event of state.events.data) {
       if (event.kind === 'xdr' || Object.values(event.state).includes('unknown')) notifications.push({ resource: 'events', code: event.kind, message: `${event.id}: ${event.summary}` });
     }
-    return structuredClone({ devices: snapshot(state.devices), sessions: snapshot(state.sessions), notifications, diagnostics: snapshot(state.diagnostics), mode: currentMode() });
+    return structuredClone({
+      me: snapshot(state.me),
+      access: { ...snapshot(state.access), appId: state.access.appId ?? state.access.data?.appId ?? null, appName: state.access.appName ?? null },
+      events: snapshot(state.events),
+      devices: snapshot(state.devices),
+      sessions: snapshot(state.sessions),
+      notifications,
+      diagnostics: snapshot(state.diagnostics),
+      mode: currentMode(),
+    });
   }
   return snapshot(state.events);
 }
@@ -1310,6 +1669,8 @@ async function loadAll() {
   refresh.disabled = true;
   refresh.textContent = '불러오는 중…';
   state.checkedAt = null;
+  state.systemMetrics = { status: 'loading' };
+  renderDashboardSystemMetrics();
   for (const key of Object.keys(PATHS)) {
     state[key] = { status: 'loading' };
     trackError(key, state[key]);
@@ -1318,7 +1679,10 @@ async function loadAll() {
   renderMode();
 
   try {
-    await Promise.all(Object.keys(PATHS).map((key) => loadResource(key, gen, controller.signal)));
+    await Promise.all([
+      ...Object.keys(PATHS).map((key) => loadResource(key, gen, controller.signal)),
+      loadLocalSystemMetrics(gen, controller.signal),
+    ]);
   } finally {
     if (gen === generation) {
       refreshController = null;
@@ -1330,6 +1694,8 @@ async function loadAll() {
 
 function init() {
   setupNav();
+  $('dashboard-open-apps').addEventListener('click', () => selectView('apps', { focus: true }));
+  $('dashboard-open-records').addEventListener('click', () => selectView('records', { focus: true }));
   $('refresh').addEventListener('click', () => loadAll());
   $('diag-load').addEventListener('click', () => loadDiagnostics());
   $('diag-copy').addEventListener('click', () => copyDiagnostics());

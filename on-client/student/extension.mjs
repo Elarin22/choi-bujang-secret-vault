@@ -1,8 +1,72 @@
 // 이 파일은 학생이 같은 프로젝트에서 이어서 구현합니다.
 // 제공 UI를 받은 것만으로 단계 완료를 인정하지 않습니다.
-export function createStudentView() {
+export function createStudentView({ api, onChange } = {}) {
   let eventFilters = { kind: 'all', appId: 'all', access: 'all', expandedId: null };
   let eventDataSignature = null;
+  let localPcStatus = { status: 'idle' };
+  let localPcRequestGeneration = 0;
+  const notifyStudentChange = () => {
+    try { onChange?.(); } catch { /* 화면 갱신 콜백 실패는 제공 화면으로 전파하지 않습니다. */ }
+  };
+  const localReasonText = (code) => ({
+    NETWORK_READ_DENIED: '현재 사용자 권한으로 네트워크 구성을 읽을 수 없습니다.',
+    NETWORK_CIM_UNAVAILABLE: 'Windows CIM에서 네트워크 구성을 확인할 수 없습니다.',
+    NETWORK_QUERY_FAILED: '네트워크 구성을 읽지 못했습니다.',
+    FIREWALL_READ_DENIED: '현재 사용자 권한으로 방화벽 프로필을 읽을 수 없습니다.',
+    FIREWALL_CIM_UNAVAILABLE: 'Windows CIM에서 방화벽 프로필을 확인할 수 없습니다.',
+    FIREWALL_QUERY_FAILED: '방화벽 프로필을 읽지 못했습니다.',
+    EVENT_LOG_READ_DENIED: '현재 사용자에게 이 Windows 로그의 읽기 권한이 없습니다.',
+    EVENT_LOG_CIM_UNAVAILABLE: 'Windows 이벤트 로그 조회 기능을 사용할 수 없습니다.',
+    EVENT_LOG_QUERY_FAILED: 'Windows 이벤트 로그 건수를 읽지 못했습니다.',
+    WINDOWS_ONLY: 'Windows 환경에서만 조회할 수 있습니다.',
+    POWERSHELL_UNAVAILABLE: 'PowerShell을 찾을 수 없습니다.',
+    WINDOWS_STATUS_TIMEOUT: 'Windows 상태 조회 시간이 초과됐습니다.',
+    WINDOWS_STATUS_INVALID: 'Windows 상태 응답 형식을 확인할 수 없습니다.',
+    WINDOWS_STATUS_QUERY_FAILED: 'Windows 상태 조회를 완료하지 못했습니다.',
+  }[code] || '읽기 권한 또는 Windows 조회 상태를 확인할 수 없습니다.');
+  const validTime = (value) => typeof value === 'string' && Number.isFinite(Date.parse(value));
+  const validWindowsSection = (value) => value && typeof value === 'object'
+    && ['ok', 'unknown'].includes(value.status) && validTime(value.checkedAt)
+    && (value.status === 'unknown' ? typeof value.reasonCode === 'string' : true);
+  const validLocalPcStatus = (data) => {
+    if (!data || typeof data !== 'object') return false;
+    const network = data.network;
+    if (!validWindowsSection(network)) return false;
+    if (network.status === 'ok' && (!Array.isArray(network.interfaces) || network.interfaces.length > 64 || network.interfaces.some((row) =>
+      !row || typeof row !== 'object' || typeof row.name !== 'string' || typeof row.type !== 'string'
+      || !['ipv4', 'ipv6', 'gateways', 'dnsServers'].every((key) => Array.isArray(row[key]) && row[key].length <= 128 && row[key].every((entry) => typeof entry === 'string' && entry.length <= 128))))) return false;
+    const firewall = data.firewall;
+    if (!validWindowsSection(firewall)) return false;
+    if (firewall.status === 'ok' && (!Array.isArray(firewall.profiles) || firewall.profiles.length !== 3
+      || firewall.profiles.some((row) => !row || !['Domain', 'Private', 'Public'].includes(row.name) || typeof row.enabled !== 'boolean')
+      || new Set(firewall.profiles.map((row) => row.name)).size !== 3)) return false;
+    const events = data.events;
+    if (!events || typeof events !== 'object' || events.windowHours !== 24 || !validTime(events.windowStart) || !validTime(events.windowEnd)) return false;
+    return ['system', 'application'].every((name) => {
+      const row = events[name];
+      return validWindowsSection(row) && (row.status === 'unknown' || [row.errors, row.warnings].every((count) => Number.isSafeInteger(count) && count >= 0));
+    });
+  };
+  const refreshLocalPcStatus = async () => {
+    const requestGeneration = ++localPcRequestGeneration;
+    localPcStatus = { status: 'loading' };
+    notifyStudentChange();
+    try {
+      const result = await api?.get?.('/api/local-system-metrics');
+      if (requestGeneration !== localPcRequestGeneration) return;
+      if (result?.ok !== true) {
+        localPcStatus = { status: 'error', error: result?.error || { message: '로컬 PC 상태를 조회하지 못했습니다.' } };
+      } else if (!validLocalPcStatus(result.data)) {
+        localPcStatus = { status: 'error', error: { message: '서버가 반환한 PC 상태 형식을 확인할 수 없습니다.' } };
+      } else {
+        localPcStatus = { status: 'ok', data: result.data };
+      }
+    } catch {
+      if (requestGeneration !== localPcRequestGeneration) return;
+      localPcStatus = { status: 'error', error: { message: '로컬 PC 상태 조회 중 오류가 발생했습니다.' } };
+    }
+    if (requestGeneration === localPcRequestGeneration) notifyStudentChange();
+  };
   const resetEventView = () => {
     eventFilters = { kind: 'all', appId: 'all', access: 'all', expandedId: null };
   };
@@ -314,10 +378,12 @@ export function createStudentView() {
       }
       return root;
     },
-    renderStatus({ devices, sessions, notifications, diagnostics, mode } = {}) {
+    renderStatus({ me, access, events, devices, sessions, notifications, diagnostics, mode } = {}) {
+      const startInitialLocalQuery = localPcStatus.status === 'idle';
+      if (startInitialLocalQuery) localPcStatus = { status: 'loading' };
       const root = document.createElement('section');
       root.className = 'student-status';
-      root.setAttribute('aria-label', '학생 구현: 상태·알림·도움정보');
+      root.setAttribute('aria-label', '학생 구현: 핵심 기능·내 PC 상태·알림·도움정보');
       const make = (tag, text, className) => {
         const element = document.createElement(tag);
         if (text !== undefined && text !== null) element.textContent = text;
@@ -341,7 +407,101 @@ export function createStudentView() {
       };
 
       root.append(make('h3', '상태·알림·도움정보'));
-      root.append(make('p', `연결 모드: ${modeLabels[safeMode]}`));
+      root.append(make('p', `업무 자료 모드: ${modeLabels[safeMode]}`));
+      const coreSection = section('핵심 기능 3가지');
+      const coreGrid = make('div', undefined, 'student-core-grid');
+      const coreCard = (title, state, value, detail) => {
+        const card = make('article', undefined, 'student-core-card');
+        card.dataset.state = state;
+        card.append(make('h5', title), make('p', value, 'student-core-value'), make('p', detail, 'student-core-detail'));
+        coreGrid.append(card);
+      };
+      const user = me?.data?.user;
+      const currentDevice = me?.data?.device;
+      const currentSession = me?.data?.session;
+      if (me?.status === 'loading') coreCard('계정·기기·세션', 'loading', '불러오는 중', '현재 로그인 자료를 확인하고 있습니다.');
+      else if (me?.status === 'error') coreCard('계정·기기·세션', 'error', '확인 불가', safeText(me.error?.message, '로그인 자료를 불러오지 못했습니다.'));
+      else if (me?.status === 'ok' && user) coreCard('계정·기기·세션', currentDevice?.status === 'noncompliant' || ['expired', 'revoked'].includes(currentSession?.status) ? 'attention' : 'ok',
+        safeText(user.label, '사용자 이름 확인 불가'), `기기 ${safeText(currentDevice?.label)} · ${stateText(deviceLabels, currentDevice?.status)} · 세션 ${stateText(sessionLabels, currentSession?.status)}`);
+      else coreCard('계정·기기·세션', 'unknown', '확인 불가', '현재 로그인 자료를 확인할 수 없습니다.');
+
+      const decisionLabels = { allow: '접근 허용', deny: '접근 거부', challenge: '추가 인증 또는 확인 필요', unknown: '확인 불가' };
+      const decisionValue = access?.data?.decision;
+      if (access?.status === 'loading') coreCard('업무 앱 접근 판정', 'loading', '판정 확인 중', safeText(access.appName || access.appId, '선택 앱'));
+      else if (access?.status === 'error') coreCard('업무 앱 접근 판정', 'error', '요청 실패', safeText(access.error?.message, '판정을 확인할 수 없습니다.'));
+      else if (access?.status === 'ok') coreCard('업무 앱 접근 판정', decisionValue === 'deny' ? 'error' : decisionValue === 'challenge' ? 'attention' : decisionValue === 'allow' ? 'ok' : 'unknown',
+        `${decisionLabels[decisionValue] || '확인 불가'} (${decisionLabels[decisionValue] ? decisionValue : 'unknown'})`, `${safeText(access.appName || access.appId, '앱 정보 확인 불가')} · ${safeText(access.data?.reason, '판정 이유 확인 불가')}`);
+      else coreCard('업무 앱 접근 판정', 'idle', '요청 전', '업무 앱에서 앱을 선택해 접속을 요청하세요.');
+
+      if (events?.status === 'loading') coreCard('접속 기록·XDR 경보', 'loading', '불러오는 중', '전달된 본인 기록을 확인하고 있습니다.');
+      else if (events?.status === 'error') coreCard('접속 기록·XDR 경보', 'error', '확인 불가', safeText(events.error?.message, '보안 기록을 불러오지 못했습니다.'));
+      else if (events?.status === 'ok' && Array.isArray(events.data)) {
+        const accessCount = events.data.filter((event) => event.kind === 'access').length;
+        const xdrCount = events.data.filter((event) => event.kind === 'xdr').length;
+        coreCard('접속 기록·XDR 경보', 'ok', `전달받은 기록 ${events.data.length}건`, `접속 ${accessCount}건 · XDR 경보 ${xdrCount}건 · 전체 로그 아님`);
+      } else coreCard('접속 기록·XDR 경보', 'unknown', '확인 불가', '서버가 전달한 기록 상태를 확인할 수 없습니다.');
+      coreSection.append(coreGrid, make('p', '세 기능은 각 메뉴의 상세 화면에서 확인할 수 있습니다.', 'student-status-note'));
+
+      const localSection = section('내 PC 상태: 네트워크·방화벽·Windows 로그');
+      localSection.append(make('p', '현재 PC에서 직접 조회한 값입니다. SDP 서버 연결과 별개입니다. Windows 경고·오류 건수는 침해나 공격 탐지 결과가 아니며 이벤트 내용을 수집하지 않습니다.', 'student-status-note'));
+      const localLive = make('p', '', 'student-local-live');
+      localLive.setAttribute('role', 'status');
+      localLive.setAttribute('aria-live', 'polite');
+      localLive.setAttribute('aria-atomic', 'true');
+      const localDetail = make('div', undefined, 'student-local-results');
+      if (localPcStatus.status === 'loading') {
+        localLive.textContent = '이 PC 상태를 조회하는 중입니다.';
+        localLive.dataset.state = 'loading';
+      } else if (localPcStatus.status === 'error') {
+        localLive.textContent = `이 PC 상태를 조회하지 못했습니다: ${safeText(localPcStatus.error?.message, '오류 내용을 확인할 수 없습니다.')}`;
+        localLive.dataset.state = 'error';
+        localDetail.append(make('p', '확인 불가: 조회에 실패한 항목의 값은 표시하지 않았습니다. 다시 조회를 누르세요.', 'student-status-error'));
+      } else if (localPcStatus.status === 'ok') {
+        localLive.textContent = '이 PC 상태 조회 완료';
+        localLive.dataset.state = 'ok';
+        const data = localPcStatus.data;
+        const timeText = (value) => validTime(value) ? new Date(value).toLocaleString('ko-KR') : '시각 확인 불가';
+        const row = (title, text, time, state = 'ok') => {
+          const item = make('article', undefined, 'student-local-card');
+          item.dataset.state = state;
+          item.append(make('h5', title), make('p', text, 'student-local-value'), make('p', `조회 시각: ${timeText(time)}`, 'student-local-time'));
+          localDetail.append(item);
+        };
+        const network = data.network;
+        if (network.status === 'unknown') row('네트워크 구성', `확인 불가: ${localReasonText(network.reasonCode)} (${safeText(network.reasonCode, 'UNKNOWN')})`, network.checkedAt, 'error');
+        else {
+          const interfaces = network.interfaces;
+          row('네트워크 구성', `활성 인터페이스 ${interfaces.length}개`, network.checkedAt);
+          for (const adapter of interfaces) {
+            localDetail.append(make('p', `${adapter.name} (${adapter.type}) · IPv4 ${adapter.ipv4.length ? adapter.ipv4.join(', ') : '없음'} · IPv6 ${adapter.ipv6.length ? adapter.ipv6.join(', ') : '없음'} · 게이트웨이 ${adapter.gateways.length ? adapter.gateways.join(', ') : '없음'} · DNS ${adapter.dnsServers.length ? adapter.dnsServers.join(', ') : '없음'}`, 'student-local-description'));
+          }
+          if (interfaces.length === 0) localDetail.append(make('p', '활성 네트워크 인터페이스가 없습니다.', 'student-local-description'));
+        }
+        const firewall = data.firewall;
+        if (firewall.status === 'unknown') row('방화벽 프로필 (읽기 전용)', `확인 불가: ${localReasonText(firewall.reasonCode)} (${safeText(firewall.reasonCode, 'UNKNOWN')})`, firewall.checkedAt, 'error');
+        else {
+          const profiles = firewall.profiles.map((profile) => `${profile.name}: ${profile.enabled ? '사용(Enabled: true)' : '사용 안 함(Enabled: false)'}`).join(' · ');
+          row('방화벽 프로필 (읽기 전용)', profiles, firewall.checkedAt);
+        }
+        localDetail.append(make('p', `Windows 이벤트 집계 범위: 최근 ${data.events.windowHours}시간 · ${timeText(data.events.windowStart)} ~ ${timeText(data.events.windowEnd)}`, 'student-local-description'));
+        const eventRow = (title, item) => {
+          if (item.status === 'unknown') row(title, `확인 불가: ${localReasonText(item.reasonCode)} (${safeText(item.reasonCode, 'UNKNOWN')})`, item.checkedAt, 'error');
+          else row(title, `경고 ${item.warnings}건 · 오류 ${item.errors}건`, item.checkedAt);
+        };
+        eventRow('System 로그', data.events.system);
+        eventRow('Application 로그', data.events.application);
+      } else {
+        localLive.textContent = '아직 이 PC 상태를 조회하지 않았습니다.';
+        localLive.dataset.state = 'idle';
+      }
+      const localRefresh = make('button', '다시 조회', 'student-local-refresh btn');
+      localRefresh.type = 'button';
+      localRefresh.disabled = localPcStatus.status === 'loading';
+      localRefresh.setAttribute('aria-label', '내 PC 상태 다시 조회');
+      localRefresh.addEventListener('click', () => { void refreshLocalPcStatus(); });
+      localSection.append(localLive, localDetail, localRefresh);
+      if (startInitialLocalQuery) queueMicrotask(() => { void refreshLocalPcStatus(); });
+
       const deviceSection = section('기기');
       const sessionSection = section('현재 세션');
       const retryLine = '다시 시도는 위쪽 다시 불러오기 버튼을 직접 누르세요.';

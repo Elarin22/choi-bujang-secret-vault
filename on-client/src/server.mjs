@@ -16,6 +16,7 @@ import {prepareLearnerSupportRequest} from './ai/learner-support-contract.mjs';
 import {createVaultOnAiService} from './ai/vault-service.mjs';
 import {createConnectionManager} from './connection/manager.mjs';
 import {createProjectScanner} from './vulnerabilities/project-scan.mjs';
+import {readLocalSystemMetrics} from './local-system-metrics.mjs';
 import {buildLocalLearnerSupportGuide,isLearnerSupportProblemKind,readLocalLearnerSupportObservation} from './learner-support/service.mjs';
 import {nativeOwn,nativePublicError} from './connection/native-login.mjs';
 import {createNativeHostContext,captureNativeHostConfiguration,readNativeHostConfiguration,openNativeHostOperation,readNativeHostOperation,assertNativeHostOperation,createNativeOperationVault,closeNativeHostOperation} from './connection/native-context.mjs';
@@ -232,6 +233,9 @@ export function createOnServer(serverOptions={}) {
   const aiSecrets=!appCredentialVault&&typeof aiEnv.ON_AI_APP_KEY==='string'?[aiEnv.ON_AI_APP_KEY]:[];
   const mappedService=()=>mappedAi??(mappedAi=createOnAiService({env:aiEnv,allowLoopbackHttp:allowLoopbackAiHttp,timeoutMs:aiTimeoutMs,appAuthorization:{}}));
   const mode=['connected','demo','disconnected'].includes(engine.evidenceMode)?engine.evidenceMode:'disconnected';
+  const sdpConnection=!sdpHostEngine||mode==='disconnected'||mode==='demo'
+    ?{status:'disconnected',reasonCode:!sdpHostEngine?'SDP_ADAPTER_NOT_CONFIGURED':'SDP_ENGINE_DISCONNECTED'}
+    :{status:'unknown',reasonCode:'SDP_LIVE_CONNECTION_NOT_VERIFIED'};
   const connectionConfigKeys=['enabled','fetchImpl','clock','startTimeoutMs','scopeTimeoutMs','finishTimeoutMs','pollIntervalMs','maxFlows','retainMs'];
   if(!Number.isSafeInteger(readTimeoutMs)||readTimeoutMs<=0||readTimeoutMs>120000
     || aiConnectionConfiguration!==undefined&&(!record(aiConnectionConfiguration)||Object.keys(aiConnectionConfiguration).some(key=>!connectionConfigKeys.includes(key))
@@ -310,7 +314,7 @@ export function createOnServer(serverOptions={}) {
       if(!request.actionContext)request.actionContext=Object.freeze(structuredClone(snapshot));
       return snapshot;
     }:undefined});
-  const meta=()=>({mode,checkedAt:clock().toISOString(),starterVersion:'0.1.0'});
+  const meta=()=>({mode,checkedAt:clock().toISOString(),starterVersion:'0.1.0',sdpConnection});
   const server=http.createServer(async(req,res)=>{
     // Register before identity/events reads: disconnects during preparation must
     // cancel the later AI operation, even when an adapter ignores cancellation.
@@ -686,6 +690,9 @@ export function createOnServer(serverOptions={}) {
         const info=(mappedAi??defaultAi).connectionInfo();
         send(200,{ok:true,data:{requestId,component:'on-client',version:'0.1.0',engine:{mode,code:mode==='disconnected'?'ENGINE_NOT_CONNECTED':mode==='demo'?'DEMO_ONLY':'ADAPTER_CONFIGURED'},
           ai:{configured:info?.configured===true,authorized:false,authorizationRequired:true},checkedAt:clock().toISOString(),workbenchRequiredAtRuntime:false}});return;
+      }
+      if(req.method==='GET'&&url.pathname==='/api/local-system-metrics'){
+        const data=await bounded(()=>readLocalSystemMetrics());send(200,{ok:true,data});return;
       }
       if(req.method==='GET'&&url.pathname==='/api/vulnerabilities'){
         const data=await bounded(signal=>scanner.scan({signal}));send(200,{ok:true,data});
